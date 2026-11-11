@@ -6,6 +6,7 @@
 - Added: a Type switch in the connection panel to change the type of an existing connection.
 - Added: crow's feet in the PNG and PowerPoint exports.
 - Added: `DiagramAPI.addConnection` takes a `kind` argument. New: `DiagramAPI.setConnectionKind`.
+- Added: dark mode. Use the moon / sun button in the toolbar. It follows the system setting until you choose.
 
 ## 2026-11-10
 

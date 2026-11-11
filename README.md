@@ -22,6 +22,7 @@ Draw shapes, connect them, attach notes, and let the layout follow the logic of 
 - **Import / export** — save and load diagrams as JSON. Export to editable PowerPoint (`.pptx`). Export the whole diagram as a PNG picture, ready to paste into slides, chat, or documents.
 - **Multiple files** — import several JSON files at once. Each opens in its own tab. Switch between them and your changes stay in each one. A dot on a tab shows unexported changes.
 - **File names** — the tab shows the file name, and exports propose the same name. You can change it before saving.
+- **Dark mode** — the moon / sun button in the toolbar switches between light and dark. The app follows your system setting until you choose, then remembers your choice. Exports keep light colors.
 - **Reset** — one button empties the canvas and returns the app to its starting state.
 - **Developer API** — every action is available from `window.DiagramAPI`.
 
