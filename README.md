@@ -11,6 +11,7 @@ Draw shapes, connect them, attach notes, and let the layout follow the logic of 
 - **Shapes** — rectangles, circles, and diamonds. Click empty canvas to drop a rectangle.
 - **Resizable shapes** — select a shape and drag a handle, or type an exact width and height. Circles become ellipses.
 - **Connections** — link shapes from any side (`start` / `end` ports). All four port combinations route cleanly.
+- **Connection types** — click Connect and pick one: an arrow at the target (the default), a crow's foot at the target (one to many), or crow's feet at both ends (many to many). Change the type of a connection later in the side panel.
 - **Two line styles** — orthogonal elbow lines or straight point-to-point lines, switchable for the whole diagram.
 - **Lines and freehand** — draw straight lines (with an optional arrow) or sketch freehand. Pick a color and thickness. Select a line to move it, drag its end handles, add a note, or delete it. Thin lines stay easy to click at any zoom level.
 - **Select many** — Shift-click (or `Ctrl`/`Cmd`-click) items, or Shift-drag a box on empty canvas, to select shapes, connections, and lines together. The side panel shows how many are selected. Delete them in one step.
@@ -103,7 +104,7 @@ The note fields on lines are optional. A file from an earlier version still open
 
 ## PowerPoint export
 
-Shapes become native PowerPoint shapes. Connections become PowerPoint lines with arrowheads, in the current line style. Straight lines and freehand drawings become PowerPoint lines (a freehand drawing is a chain of short straight lines) in the same color and a scaled thickness. The diagram is scaled to fit one slide. Notes are not included.
+Shapes become native PowerPoint shapes. Connections become PowerPoint lines in the current line style, with an arrowhead or crow's feet to match their type. Straight lines and freehand drawings become PowerPoint lines (a freehand drawing is a chain of short straight lines) in the same color and a scaled thickness. The diagram is scaled to fit one slide. Notes are not included.
 
 ## PNG export (picture)
 
@@ -134,7 +135,8 @@ DiagramAPI.exportJSON('my-discussion');   // downloads my-discussion.json
 | `addShape(type, opts?)` | Add a shape (`'rectangle'`, `'circle'`, `'diamond'`). Returns its id. |
 | `removeShape(id)` | Remove a shape and its connections. |
 | `resizeShape(id, w?, h?)` | Set a shape's size. Minimum 40 × 30. |
-| `addConnection(from, to, label?, note?, fromPort?, toPort?)` | Add a connection. Ports: `'start'` or `'end'`. |
+| `addConnection(from, to, label?, note?, fromPort?, toPort?, kind?)` | Add a connection. Ports: `'start'` or `'end'`. Kind: `'arrow'` (default), `'one-many'`, or `'many-many'`. |
+| `setConnectionKind(id, kind)` | Change the type of a connection. |
 | `removeConnection(id)` | Remove a connection. |
 | `addLine(x1, y1, x2, y2, opts?)` | Add a straight line. `opts`: `stroke`, `width`, `arrow`, `note`. Returns its id. |
 | `addFreehand(points, opts?)` | Add a freehand line from `[{x, y}, ...]`. |

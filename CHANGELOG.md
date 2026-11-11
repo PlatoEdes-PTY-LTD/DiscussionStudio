@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-12
+
+- Added: connection types. Click Connect and pick Arrow (default), One to many (crow's foot at the target), or Many to many (crow's feet at both ends).
+- Added: a Type switch in the connection panel to change the type of an existing connection.
+- Added: crow's feet in the PNG and PowerPoint exports.
+- Added: `DiagramAPI.addConnection` takes a `kind` argument. New: `DiagramAPI.setConnectionKind`.
+
 ## 2026-11-10
 
 - Added: export the canvas as a PNG image. Use the new toolbar button and confirm the file name.

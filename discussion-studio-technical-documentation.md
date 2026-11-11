@@ -31,7 +31,7 @@ Use these terms in the same way in all code, comments, and messages to the user.
 | Line | A free straight line with two end points. It is not tied to a shape. It can have an arrow. |
 | Freehand drawing | A free line that the user draws with the mouse. It has many points. |
 | Tool | A mode of the canvas: `select`, `connect`, `line`, or `draw`. |
-| Connection | A line with an arrow between two shapes. |
+| Connection | A line between two shapes. Its type sets the ends: an arrow at the target, a crow's foot at the target (one to many), or crow's feet at both ends (many to many). |
 | Port | A connection point on the side of a shape. `start` is the left side. `end` is the right side. |
 | Note | A text card attached to one shape, one connection, or one line. A dotted line ties it to its owner. |
 | Label | The short text that shows inside a shape or on a connection. |
@@ -152,6 +152,7 @@ All data is in three reactive arrays: `shapes`, `connections`, and `lines`. Note
 | `id` | string | `conn_1`, `conn_2`, and so on. |
 | `from`, `to` | string | The ids of the two shapes. |
 | `fromPort`, `toPort` | string | `start` or `end`. Default: `fromPort` is `end`, `toPort` is `start`. |
+| `kind` | string | `arrow`, `one-many`, or `many-many`. Default: `arrow`. A connection without `kind` (an older file) is an arrow. |
 | `label` | string | Text on the line. |
 | `note`, `noteOpen`, `noteOffsetX`, `noteOffsetY` | | Same meaning as for a shape. |
 
@@ -215,7 +216,7 @@ The application does not save data to browser storage. See Section 13.
 
 ### 6.1 Toolbar actions
 
-The toolbar is in the top bar. It has these actions: add rectangle, add circle, add diamond, Connect (connect mode), Auto-arrange, the connection style toggle (elbow or point), panel visibility, Developer API help, export JSON, export PowerPoint, export PNG, import JSON, and reset all data.
+The toolbar is in the top bar. It has these actions: add rectangle, add circle, add diamond, Connect (opens a menu of connection types: Arrow, One to many, Many to many; choosing one starts connect mode, and clicking Connect while connecting stops it), Auto-arrange, the connection style toggle (elbow or point), panel visibility, Developer API help, export JSON, export PowerPoint, export PNG, import JSON, and reset all data.
 
 The toolbar has two icon buttons for the drawing tools: Line and Draw. See Section 7A.
 

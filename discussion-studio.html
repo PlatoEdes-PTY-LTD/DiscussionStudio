@@ -4,7 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Discussion Studio — Visual Flow</title>
-<meta name="description" content="Discussion Studio — a tool for aiding discussions with a visual flow of thoughts and information." />
+<meta name="description" content="Map a discussion in your browser: shapes, connections and notes, exported to PowerPoint, PNG or JSON. Free, works offline, no sign-up.">
+<meta name="keywords" content="Discussion Studio, discussion mapping, visual thinking, diagram tool, online diagram maker, flowchart maker, mind map, concept map, argument map, brainstorming tool, meeting whiteboard, offline diagram editor, export diagram to PowerPoint, free diagram software, no sign-up">
+<link rel="canonical" href="https://platoedes-pty-ltd.github.io/DiscussionStudio/discussion-studio.html">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231F7A6C'/%3E%3Cpath d='M8 8h16a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-9l-5 4v-4H8a3 3 0 0 1-3-3v-8a3 3 0 0 1 3-3z' fill='%23FFFFFF'/%3E%3Cpath d='M11.5 16.5L16 12l5 5' fill='none' stroke='%231F7A6C' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='11.5' cy='16.5' r='2.1' fill='%231F7A6C'/%3E%3Ccircle cx='16' cy='12' r='2.1' fill='%231F7A6C'/%3E%3Ccircle cx='21' cy='17' r='2.1' fill='%231F7A6C'/%3E%3C/svg%3E">
 <link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAADMElEQVR4nMSXW0hUQRjH/3POelekJCR8UEJLJbSMRM3oxegihogSvpS9JIY+BWmJUoKkFhUJCV6wFykvYBmKoS+ppJXp+qKFi4gm4aXCe+56ZppzzEXXox521/W3HPabme/M/zsz35k5o4MFfrlZUSKjN8BICMBCCSE+sAHG2C+ADHJrUBKElxOFpT0b28m6EXA/zZWueD7gjre5qIg9gAcjccXHYzOmPJSXm8wB+GVnhetEWsuLx+AIGAZWKbk+UVw6IMhlUaSpDhOXIQhf0+Smf+6tGMaETj4UAhwIA6gkkQiBUXLN0eIysqYo0AwdN05gnyAgwTr+H4z9goAHQIi3Zf0hTy/cvZiIs0Ehim0L0wvz6BwewsPWN4ptga9O7ab8+GQkhEXAHsgPkHQyEk6iDlm11VvaVQM4E3gUu1Hf14OyD22KnXHuPFIionb0365P1ew/6O6JnTBJEopa32JkZkq5St43yavcjvds16dVrx/jv2Wj0VxeWPmLVUphDVYF8LS9BYumFXi7uSvXksmIJ+3NsAadVsfBnxP4MmqA/scYGvWfcTM2DrmXEpW2/Hf1KOtoU0Zhvc6uAXSPDCO16rm5HH88YpNQQUKK8l/e1Y66r93w8fDUlJgymqagoW/TFs6H3W2LT97lJLg5OWN2eUlzYmoOINniSRLCTm3xkRPTy8XVXKZcXEtiapqC6CNBaMnMUXLgdEAgQg/7bfFx5gvNnQtXNq0NTuLu3zWqAfxZWsQBd49NdbKomvBG5Dnfbt7lPtVQnYIuw3fYm07DN9V61REoaG7gc0gRGxisZLQtyBtQx//NSA3ify9z91TljBaWmm2jtIq8pjrU9nbDVjQvROtMzc8ivaYS/eOjsAdyAJP88tXi3MdF02sqMD0/BzsxKfDx12vxfN37EVcrntlTXP4w1fO3gGkKIKfxlbIN2xemF6ggVnHLCAfDV84FSlmlONfx6bd3bOQqIYiDI2HIHi960aIsRGOGyUe8oh8Og+nHDFPKe722EtbXS8RlIYYPS7FygNwrWd4336NKiPNitKwp1xFLJ+V4Tmkabwq16/GcsCGJCNWWx/N/AAAA//9xgZE7AAAABklEQVQDAAFvQF2o9uJaAAAAAElFTkSuQmCC">
 <link rel="apple-touch-icon" href="data:image/png;base64,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">
@@ -116,6 +118,26 @@
   .edge-style-toggle button:hover{background:rgba(255,255,255,.16);color:#FFFFFF;}
   .edge-style-toggle button.active{background:var(--hl);color:#fff;}
 
+  .connect-wrap{position:relative;}
+  .tbtn .caret{margin-left:2px;opacity:.8;font-size:10px;}
+  .menu-backdrop{position:fixed;inset:0;z-index:20;}
+  .connect-menu{
+    position:absolute;top:calc(100% + 6px);left:0;z-index:21;min-width:275px;
+    background:var(--panel);color:var(--ink);border:1px solid var(--border);border-radius:10px;
+    box-shadow:0 12px 30px -10px rgba(20,33,61,.35);padding:6px;animation:pop .15s ease;
+  }
+  .connect-menu button{
+    display:flex;align-items:center;gap:12px;width:100%;padding:8px 10px;border:none;border-radius:7px;
+    background:transparent;color:var(--ink);text-align:left;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;
+  }
+  .connect-menu button:hover, .connect-menu button:focus-visible{background:#EAF1FC;outline:none;}
+  .connect-menu button.current{background:#FFF1E6;}
+  .connect-menu .kind-icon{flex-shrink:0;color:#1450AB;display:block;}
+  .connect-menu .kind-text{display:flex;flex-direction:column;line-height:1.3;}
+  .connect-menu .kind-name{font-size:13px;font-weight:600;}
+  .connect-menu .kind-desc{font-size:11.5px;color:var(--ink-soft);}
+  .port-toggle.kind-toggle button{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--ink-soft);}
+  .port-toggle.kind-toggle button svg{display:block;}
   .hint-chip{
     font-size:12px;color:#FFFFFF;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);
     padding:4px 9px;border-radius:20px;
@@ -450,6 +472,9 @@ const SHAPE_DEFAULTS = {
 const PALETTE = ['#FFFFFF', '#E4EEFD', '#FFF0E2', '#E0F6EB', '#FFF6D6', '#EFE6FB'];
 
 const ICONS = {
+  kindArrow: '<svg class="kind-icon" width="44" height="16" viewBox="0 0 44 16" fill="none"><line x1="3" y1="8" x2="33" y2="8" stroke="currentColor" stroke-width="1.8"/><path d="M31 3.5 L41 8 L31 12.5 z" fill="currentColor"/></svg>',
+  kindOneMany: '<svg class="kind-icon" width="44" height="16" viewBox="0 0 44 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="3" y1="8" x2="41" y2="8"/><path d="M29 8 L41 2 M29 8 L41 14"/></svg>',
+  kindManyMany: '<svg class="kind-icon" width="44" height="16" viewBox="0 0 44 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="3" y1="8" x2="41" y2="8"/><path d="M15 8 L3 2 M15 8 L3 14 M29 8 L41 2 M29 8 L41 14"/></svg>',
   rect: '<svg width="18" height="18" viewBox="0 0 22 22" fill="none"><rect x="3" y="5" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.8"/></svg>',
   circle: '<svg width="18" height="18" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.8"/></svg>',
   diamond: '<svg width="18" height="18" viewBox="0 0 22 22" fill="none"><path d="M11 3 L19 11 L11 19 L3 11 Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
@@ -482,8 +507,19 @@ const TEMPLATE = `
     <div class="divider"></div>
 
     <div class="toolgroup">
-      <button class="tbtn" :class="{active: mode==='connect'}" @click="toggleConnectMode" v-html='icons.connect + "&nbsp;Connect"'></button>
-      <span class="hint-chip" v-if="mode==='connect' && !connectFrom">Click a shape to start a link</span>
+      <div class="connect-wrap">
+        <button class="tbtn" :class="{active: mode==='connect' || connectMenuOpen}" @click="onConnectButton"
+                :title="mode==='connect' ? 'Stop connecting' : 'Choose a connection type'"
+                aria-haspopup="menu" :aria-expanded="connectMenuOpen ? 'true' : 'false'"><span style="display:flex" v-html="icons.connect"></span>Connect<span class="caret" aria-hidden="true">▾</span></button>
+        <div v-if="connectMenuOpen" class="menu-backdrop" @mousedown="connectMenuOpen = false"></div>
+        <div v-if="connectMenuOpen" class="connect-menu" role="menu">
+          <button v-for="k in connKinds" :key="k.id" role="menuitem" :class="{current: connKind===k.id}" @click="startConnect(k.id)">
+            <span v-html="icons[k.icon]"></span>
+            <span class="kind-text"><span class="kind-name">{{ k.name }}</span><span class="kind-desc">{{ k.desc }}</span></span>
+          </button>
+        </div>
+      </div>
+      <span class="hint-chip" v-if="mode==='connect' && !connectFrom">Click a shape to start {{ connKindHint }}</span>
       <span class="hint-chip" v-if="mode==='connect' && connectFrom">Now click the target shape</span>
     </div>
 
@@ -545,6 +581,20 @@ const TEMPLATE = `
           <marker id="arrow-selected" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
             <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--warn)" />
           </marker>
+          <!-- crow's foot: apex on the line, toes on the shape's edge; reversed automatically at the start -->
+          <marker id="crow" viewBox="0 0 14 14" refX="14" refY="7" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse" overflow="visible">
+            <path d="M 0 7 L 14 0 M 0 7 L 14 14" fill="none" stroke="#1450AB" stroke-width="2" stroke-linecap="round" />
+          </marker>
+          <marker id="crow-selected" viewBox="0 0 14 14" refX="14" refY="7" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse" overflow="visible">
+            <path d="M 0 7 L 14 0 M 0 7 L 14 14" fill="none" stroke="var(--hl)" stroke-width="2.5" stroke-linecap="round" />
+          </marker>
+          <!-- elbow mode: same foot set 9px back so the round port button on the shape's side doesn't hide it -->
+          <marker id="crow-port" viewBox="0 0 23 14" refX="23" refY="7" markerWidth="23" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse" overflow="visible">
+            <path d="M 0 7 L 14 0 M 0 7 L 14 14" fill="none" stroke="#1450AB" stroke-width="2" stroke-linecap="round" />
+          </marker>
+          <marker id="crow-port-selected" viewBox="0 0 23 14" refX="23" refY="7" markerWidth="23" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse" overflow="visible">
+            <path d="M 0 7 L 14 0 M 0 7 L 14 14" fill="none" stroke="var(--hl)" stroke-width="2.5" stroke-linecap="round" />
+          </marker>
         </defs>
 
         <g :transform="viewportTransform">
@@ -553,7 +603,7 @@ const TEMPLATE = `
           <g v-for="conn in connections" :key="conn.id" class="conn-group" :class="{selected: conn.id===selectedConnId, multi: isMulti('c', conn.id)}"
              @mousedown.stop="onConnMouseDown(conn, $event)" @click.stop @dblclick.stop="openTextDialog(conn)">
             <path class="conn-hit" :d="connPath(conn)" />
-            <path class="conn-path" :d="connPath(conn)" :marker-end="conn.id===selectedConnId ? 'url(#arrow-selected)' : 'url(#arrow)'" />
+            <path class="conn-path" :d="connPath(conn)" :marker-start="connMarkerStart(conn)" :marker-end="connMarkerEnd(conn)" />
 
             <text v-if="conn.label" class="conn-label" :x="connMid(conn).x" :y="connMid(conn).y - 8">{{ conn.label }}</text>
 
@@ -762,6 +812,13 @@ const TEMPLATE = `
           <label>Label</label>
           <input type="text" v-model="selectedConn.label" placeholder="Optional label" />
         </div>
+        <div class="field">
+          <label>Type</label>
+          <div class="port-toggle kind-toggle">
+            <button v-for="k in connKinds" :key="k.id" :class="{active: connKindOf(selectedConn)===k.id}"
+                    :title="k.desc" @click="selectedConn.kind = k.id"><span v-html="icons[k.icon]"></span>{{ k.short }}</button>
+          </div>
+        </div>
         <div class="row2">
           <div class="field">
             <label>From port</label>
@@ -826,9 +883,13 @@ const TEMPLATE = `
   label: 'Deploy', x: 40, y: 40
 })
 // returns the new shape id</code>
-        <code>DiagramAPI.addConnection(fromId, toId, 'label?', 'note?', fromPort, toPort)
+        <code>DiagramAPI.addConnection(fromId, toId, 'label?', 'note?', fromPort, toPort, kind)
 // fromPort/toPort: 'start' (left) | 'end' (right)
-// defaults: fromPort='end', toPort='start'</code>
+// defaults: fromPort='end', toPort='start'
+// kind: 'arrow' (default) | 'one-many' | 'many-many'
+//   one-many: crow's foot at the target
+//   many-many: crow's foot at both ends
+DiagramAPI.setConnectionKind(id, kind)</code>
         <code>DiagramAPI.removeShape(id)
 DiagramAPI.removeConnection(id)
 DiagramAPI.resizeShape(id, w?, h?)
@@ -953,6 +1014,46 @@ const app = createApp({
     const edgeStyle = ref('elbow'); // 'elbow' | 'point' — global rendering mode for all connections
     const connectFrom = ref(null);
     const connectFromPort = ref(null);
+    // connection types: an arrow at the target (default), a crow's foot at the target
+    // (one-to-many), or crow's feet at both ends (many-to-many). Stored as conn.kind;
+    // a connection without a kind (older files) is an arrow.
+    const CONN_KINDS = [
+      { id: 'arrow', name: 'Arrow', short: 'Arrow', icon: 'kindArrow', desc: 'Default. Arrow at the target end', hint: 'a link' },
+      { id: 'one-many', name: 'One to many', short: '1 : N', icon: 'kindOneMany', desc: "Crow's foot at the target end", hint: 'a one-to-many link' },
+      { id: 'many-many', name: 'Many to many', short: 'N : N', icon: 'kindManyMany', desc: "Crow's feet at both ends", hint: 'a many-to-many link' },
+    ];
+    const connKinds = CONN_KINDS;
+    const connKind = ref('arrow');       // type used for the next connection
+    const connectMenuOpen = ref(false);
+    const connKindHint = computed(() => (CONN_KINDS.find(k => k.id === connKind.value) || CONN_KINDS[0]).hint);
+    function connKindOf(c) { return c && (c.kind === 'one-many' || c.kind === 'many-many') ? c.kind : 'arrow'; }
+    function crowMarker(c) {
+      return 'url(#crow' + (edgeStyle.value === 'elbow' ? '-port' : '') + (c.id === selectedConnId.value ? '-selected' : '') + ')';
+    }
+    function connMarkerEnd(c) {
+      if (connKindOf(c) !== 'arrow') return crowMarker(c);
+      return c.id === selectedConnId.value ? 'url(#arrow-selected)' : 'url(#arrow)';
+    }
+    function connMarkerStart(c) { return connKindOf(c) === 'many-many' ? crowMarker(c) : null; }
+    // The two toe lines of a crow's foot whose toes touch `tip`, coming from the direction of `from`.
+    const CROW_LEN = 14, CROW_SPREAD = 7;
+    function crowFootSegments(tip, from, len, spread) {
+      len = len || CROW_LEN; spread = spread || CROW_SPREAD;
+      const d = Math.hypot(tip.x - from.x, tip.y - from.y);
+      if (!d) return [];
+      const ux = (tip.x - from.x) / d, uy = (tip.y - from.y) / d;
+      const L = Math.min(len, d);
+      const apex = { x: tip.x - ux * L, y: tip.y - uy * L };
+      return [[apex, { x: tip.x - uy * spread, y: tip.y + ux * spread }],
+              [apex, { x: tip.x + uy * spread, y: tip.y - ux * spread }]];
+    }
+    // first point along `pts` (starting at index i, stepping by `step`) that is not on top of pts[i]
+    function distinctNeighbor(pts, i, step) {
+      for (let j = i + step; j >= 0 && j < pts.length; j += step) {
+        if (Math.hypot(pts[j].x - pts[i].x, pts[j].y - pts[i].y) > 0.5) return pts[j];
+      }
+      return pts[i + step] || pts[i];
+    }
     const selectedShapeId = ref(null);
     const selectedConnId = ref(null);
     const selectedLineId = ref(null);
@@ -1028,7 +1129,7 @@ const app = createApp({
       if (selectedShapeId.value === id) selectedShapeId.value = null;
     }
 
-    function addConnection(fromId, toId, label, note, fromPort, toPort) {
+    function addConnection(fromId, toId, label, note, fromPort, toPort, kind) {
       if (fromId === toId) return null;
       if (!shapes.some(s => s.id === fromId) || !shapes.some(s => s.id === toId)) return null;
       const fp = fromPort || 'end';
@@ -1039,6 +1140,7 @@ const app = createApp({
         id, from: fromId, to: toId, label: label || '', note: note || '',
         noteOpen: false, noteOffsetX: null, noteOffsetY: null,
         fromPort: fp, toPort: tp,
+        kind: (kind === 'one-many' || kind === 'many-many') ? kind : 'arrow',
       });
       selectConnection(id);
       return id;
@@ -1457,7 +1559,7 @@ const app = createApp({
           connectFrom.value = shape.id;
           connectFromPort.value = null;
         } else {
-          addConnection(connectFrom.value, shape.id, undefined, undefined, connectFromPort.value, null);
+          addConnection(connectFrom.value, shape.id, undefined, undefined, connectFromPort.value, null, connKind.value);
           connectFrom.value = null;
           connectFromPort.value = null;
           mode.value = 'select';
@@ -1484,7 +1586,7 @@ const app = createApp({
           connectFromPort.value = null;
           mode.value = 'select';
         } else {
-          addConnection(connectFrom.value, shape.id, undefined, undefined, connectFromPort.value, port);
+          addConnection(connectFrom.value, shape.id, undefined, undefined, connectFromPort.value, port, connKind.value);
           connectFrom.value = null;
           connectFromPort.value = null;
           mode.value = 'select';
@@ -2204,8 +2306,17 @@ const app = createApp({
           const prev = cleaned[cleaned.length - 1];
           if (Math.abs(pts[i].x - prev.x) > 0.005 || Math.abs(pts[i].y - prev.y) > 0.005) cleaned.push(pts[i]);
         }
+        const kind = connKindOf(c);
+        const connStyle = { color: '1450AB', width: 1.25, arrow: kind === 'arrow' };
         for (let i = 0; i < cleaned.length - 1; i++) {
-          pptxAddLineSegment(slide, pptx, cleaned[i], cleaned[i + 1], i === cleaned.length - 2);
+          pptxAddLineSegment(slide, pptx, cleaned[i], cleaned[i + 1], i === cleaned.length - 2, connStyle);
+        }
+        // crow's feet: two short toe lines at the target (and at the source for many-to-many)
+        if (kind !== 'arrow' && cleaned.length >= 2) {
+          const ends = [[cleaned[cleaned.length - 1], cleaned[cleaned.length - 2]]];
+          if (kind === 'many-many') ends.push([cleaned[0], cleaned[1]]);
+          ends.forEach(([tip, from]) => crowFootSegments(tip, from, CROW_LEN * scale, CROW_SPREAD * scale)
+            .forEach(([a, b]) => pptxAddLineSegment(slide, pptx, a, b, false, connStyle)));
         }
         if (c.label) {
           const mid = toSlide(connMid(c).x, connMid(c).y);
@@ -2332,13 +2443,21 @@ const app = createApp({
         const last = pts[pts.length - 1];
         let prev = pts[pts.length - 2];
         for (let j = pts.length - 2; j >= 0; j--) { prev = pts[j]; if (Math.hypot(last.x - prev.x, last.y - prev.y) > 0.5) break; }
-        const len = Math.hypot(last.x - prev.x, last.y - prev.y);
-        const size = Math.min(8 * 1.8, len);
-        const ux = len ? (last.x - prev.x) / len : 0, uy = len ? (last.y - prev.y) / len : 0;
-        const body = pts.slice(0, -1).concat([{ x: last.x - ux * size * 0.8, y: last.y - uy * size * 0.8 }]);
+        const kind = connKindOf(c);
         ctx.strokeStyle = col; ctx.lineWidth = 1.8;
-        pngPolyline(ctx, body);
-        pngArrowHead(ctx, last, prev, size, col);
+        if (kind === 'arrow') {
+          const len = Math.hypot(last.x - prev.x, last.y - prev.y);
+          const size = Math.min(8 * 1.8, len);
+          const ux = len ? (last.x - prev.x) / len : 0, uy = len ? (last.y - prev.y) / len : 0;
+          const body = pts.slice(0, -1).concat([{ x: last.x - ux * size * 0.8, y: last.y - uy * size * 0.8 }]);
+          pngPolyline(ctx, body);
+          pngArrowHead(ctx, last, prev, size, col);
+        } else {
+          pngPolyline(ctx, pts);
+          const feet = crowFootSegments(last, prev);
+          if (kind === 'many-many') feet.push.apply(feet, crowFootSegments(pts[0], distinctNeighbor(pts, 0, 1)));
+          feet.forEach(([a, b]) => pngPolyline(ctx, [a, b]));
+        }
         if (c.label) {
           const m = connMid(c);
           ctx.font = '500 11px ' + PNG_FONT;
@@ -2492,6 +2611,10 @@ const app = createApp({
         if (e.key === 'Escape') closeTextDialog();
         return;
       }
+      if (connectMenuOpen.value) {
+        if (e.key === 'Escape') connectMenuOpen.value = false;
+        return;
+      }
       if ((e.key === 'Delete' || e.key === 'Backspace') && tag !== 'INPUT' && tag !== 'TEXTAREA') {
         e.preventDefault();
         deleteSelected();
@@ -2507,7 +2630,21 @@ const app = createApp({
     }
 
     function toggleConnectMode() {
+      connectMenuOpen.value = false;
       mode.value = mode.value === 'connect' ? 'select' : 'connect';
+      connectFrom.value = null;
+      connectFromPort.value = null;
+    }
+
+    // Connect button: while connecting it stops; otherwise it lists the connection types.
+    function onConnectButton() {
+      if (mode.value === 'connect') { toggleConnectMode(); return; }
+      connectMenuOpen.value = !connectMenuOpen.value;
+    }
+    function startConnect(kind) {
+      connKind.value = (kind === 'one-many' || kind === 'many-many') ? kind : 'arrow';
+      connectMenuOpen.value = false;
+      mode.value = 'connect';
       connectFrom.value = null;
       connectFromPort.value = null;
     }
@@ -2535,6 +2672,7 @@ const app = createApp({
         listDocuments, switchDocument: switchDoc, newDocument: newDoc, openDocument,
         closeDocument: closeDoc,
         addShape, removeShape, addConnection, removeConnection,
+        setConnectionKind: (id, kind) => { const c = connections.find(x => x.id === id); if (c) c.kind = connKindOf({ kind }); return !!c; },
         autoArrange, clearAll, resetAll, exportJSON, exportPPTX, exportPNG, loadState, getState,
         selectShape, selectConnection, clearSelection, selectMany, deleteSelected,
         setEdgeStyle: (style) => { if (style === 'elbow' || style === 'point') edgeStyle.value = style; },
@@ -2552,6 +2690,7 @@ const app = createApp({
       onShapeMouseDown, onPortClick, portPoint, onSvgMouseDownCapture, onSvgMouseDown, onCanvasClick, onMouseMove, onMouseUp, onWheel, zoomBy, resetView,
       connPath, connMid, diamondPoints, boundaryPoint, autoArrange, clearAll, resetAll, confirmClearAll, confirmClearAllYes, exportJSON, exportPPTX, exportPNG, importJSON,
       triggerImport, deleteSelected, toggleConnectMode, getState, loadState, Math,
+      connKinds, connKind, connKindOf, connKindHint, connectMenuOpen, onConnectButton, startConnect, connMarkerStart, connMarkerEnd,
       resizeHandles, onResizeHandleDown, setShapeSize,
       lines, selectedLineId, selectedLine, lineTarget, lineStyle, lineColors, lineWidths, drawingLine,
       multi, multiCount, marquee, isMulti, deleteMulti, onConnMouseDown,
