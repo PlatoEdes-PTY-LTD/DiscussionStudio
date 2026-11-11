@@ -3,7 +3,7 @@
 Document type: Technical documentation for maintenance and development
 Writing standard: ASD-STE100 (Simplified Technical English)
 Audience: A future Claude session that must change or repair the application
-Document date: 2026-11-06
+Document date: 2026-11-10
 Application file: `discussion-studio.html`
 
 ---
@@ -215,7 +215,7 @@ The application does not save data to browser storage. See Section 13.
 
 ### 6.1 Toolbar actions
 
-The toolbar is in the top bar. It has these actions: add rectangle, add circle, add diamond, Connect (connect mode), Auto-arrange, the connection style toggle (elbow or point), panel visibility, Developer API help, export JSON, export PowerPoint, import JSON, and reset all data.
+The toolbar is in the top bar. It has these actions: add rectangle, add circle, add diamond, Connect (connect mode), Auto-arrange, the connection style toggle (elbow or point), panel visibility, Developer API help, export JSON, export PowerPoint, export PNG, import JSON, and reset all data.
 
 The toolbar has two icon buttons for the drawing tools: Line and Draw. See Section 7A.
 
@@ -253,7 +253,7 @@ The application has four modal dialogs. They use the CSS classes `modal-overlay`
 | Reset | `showClearConfirm` | Confirms the reset of the active file. |
 | Close file | `closeConfirmDoc` | Confirms the close of a changed file. |
 | Label edit | `textDialogTarget` | Edits one label. `Enter` saves. `Escape` cancels. |
-| Export | `exportDialog` | Sets the export file name. `Enter` exports. `Escape` cancels. |
+| Export | `exportDialog` | Sets the export file name. The kind is `json`, `pptx`, or `png`. `Enter` exports. `Escape` cancels. |
 
 **CAUTION:** Do not use `confirm()`, `alert()` for decisions, or `prompt()` for new features. The user's viewer can block native dialogs without an error. The reset button did not work for this reason in an earlier version. The existing `alert()` calls (empty export, bad import) are known weak points. Replace them with modal dialogs if you change that code.
 
@@ -431,12 +431,14 @@ The export buttons do not download at once. They open the export dialog.
 1. The dialog shows an input with a proposed name.
 2. When a file was imported, the proposed name is the imported name without its extension. Example: `My Plan v2.json` gives `My Plan v2`.
 3. When no file was imported, the proposed name is `diagram`.
-4. The extension (`.json` or `.pptx`) shows next to the input. The application adds it. If the user types the extension, the application removes the duplicate.
+4. The extension (`.json`, `.pptx`, or `.png`) shows next to the input. The application adds it. If the user types the extension, the application removes the duplicate.
 5. The function `cleanExportName` removes these characters: `\ / : * ? " < > |` and control characters. An empty name becomes `diagram`.
 
 After a JSON export, the active file gets the exported name. The tab shows the new name. The file is no longer changed. A PowerPoint export does not change the file.
 
-PowerPoint export needs at least one shape. If the canvas is empty, the application shows an alert and does not open the dialog.
+A PNG export does not change the file.
+
+PowerPoint export and PNG export need at least one shape or line. If the canvas is empty, the application shows an alert and does not open the dialog.
 
 ### 9.4 PowerPoint export
 
@@ -452,6 +454,21 @@ The function `exportPPTX(name)` uses PptxGenJS.
 
 1. Embed `pptxgen.bundle.js`. Do not embed `pptxgen.min.js`. The minified file does not include JSZip. It causes `ReferenceError: JSZip is not defined`.
 2. Use `pptx.ShapeType` (the instance). Do not use `PptxGenJS.ShapeType` (the constructor). The constructor does not have this property. This causes `Cannot read properties of undefined (reading 'rect')`.
+
+### 9.5 PNG export
+
+The function `exportPNG(name)` makes one PNG image of the whole diagram.
+
+- It draws on a `<canvas>` from the data model. It does not use the SVG.
+- It uses `connRoute`, `connRoutePointToPoint`, `connMid`, and `arrowGeom`. The image matches the canvas.
+- It draws connections with arrowheads and labels, then shapes with centered wrapped labels, then lines and freehand drawings.
+- It draws each open note (`noteOpen`) last, with its dotted tether line. It uses `noteAnchor`, `notePos`, `NOTE_W`, and `NOTE_H`. The card shows the title and the note text. The text wraps and is clipped to the card. The bounding box includes the open notes.
+- It does not draw closed notes, ports, handles, or selection marks.
+- The constants are `PNG_PAD` (40 units of padding), `PNG_SCALE` (2), and `PNG_MAX_SIDE` (8000 pixels). The scale goes down when a side would be larger than the maximum.
+- The background is `#EAEFEC`. The font is IBM Plex Sans, then Arial.
+- The function downloads the file with `canvas.toBlob`.
+
+**CAUTION:** Do not make the image from the live SVG. The SVG has `foreignObject` labels, CSS variables, and web fonts. The browser can taint or blank the canvas.
 
 ---
 
@@ -541,6 +558,7 @@ When the canvas is already empty, the toolbar button does nothing.
 | `loadState(data)` | Replaces the data of the active file. Does not change the file name. |
 | `exportJSON(name?)` | Downloads JSON at once. No dialog. |
 | `exportPPTX(name?)` | Downloads PowerPoint at once. Returns a promise. No dialog. |
+| `exportPNG(name?)` | Downloads PNG at once. No dialog. |
 | `resetAll()` / `clearAll()` | Full reset of the active file. No confirmation. |
 | `listDocuments()` | Returns `[{ id, name, active, changed }]`. |
 | `openDocument(data, name?)` | Opens data as a file and makes it active. Returns the id. |
@@ -601,6 +619,8 @@ Do all of these tests. Do not trust the code by inspection alone.
 
 **Test 5. PowerPoint.** Download the file. Unzip it. Check the XML for shape labels and arrowheads. For a visual check, render it with LibreOffice Impress.
 
+**Test 5A. PNG.** Clear the canvas and click the PNG button. An alert must show. Add shapes, connections, a line, and a freehand drawing. Open one note on a shape and one on a connection. Click the PNG button, type a name, and download. Check `suggestedFilename()`, the image size, and the corner pixel (`#EAEFEC`). Open the image and look at it. The open notes must show. Closed notes must not show. Do this for both edge styles.
+
 **Test 6. Icon.** Open the ICO file with Pillow. Make sure that all sizes are present.
 
 ### 12.4 Deliver
@@ -620,6 +640,8 @@ Do all of these tests. Do not trust the code by inspection alone.
 | Native dialogs | They can fail in sandboxed viewers. Use modal dialogs. See Section 6.3. |
 | Fonts | The page links Google Fonts. Without network, the browser uses fallback fonts. |
 | Notes in PowerPoint | Not exported. |
+| Notes in PNG | Only open notes are exported. Long note text is clipped to the card. |
+| PNG fonts | IBM Plex Sans when the font is available. Otherwise Arial. |
 | Parallel connections | Identical connections are refused. A second connection with other ports is allowed. |
 | Shape types | Only `rectangle`, `circle`, and `diamond`. |
 | Shape size | Minimum 40 × 30. There is no maximum. Labels wrap inside the shape, and a long label can overflow a small shape. |
@@ -658,3 +680,5 @@ Do all of these tests. Do not trust the code by inspection alone.
 | 19 | Fixed lines and drawings that could not be selected at low zoom. The click area of `line-hit` is now constant in screen pixels (`vector-effect:non-scaling-stroke`). |
 | 20 | Added notes for lines and freehand drawings: note icon, note card, panel field, `note` option in the API. |
 | 21 | Added multi-selection and delete: `Shift`-click, `Shift`-drag selection box, delete button in the panel, `DiagramAPI.selectMany` and `deleteSelected`. |
+| 22 | Added PNG export: toolbar button, export dialog kind `png`, `exportPNG`, `DiagramAPI.exportPNG`. |
+| 23 | The PNG export includes open notes with their tether lines. |

@@ -18,7 +18,7 @@ Draw shapes, connect them, attach notes, and let the layout follow the logic of 
 - **Notes** — pin draggable note cards to any shape, connection, or line. A dotted line ties each note to its owner.
 - **Auto-arrange** — lays shapes out in layers from left to right by dependency.
 - **Pan and zoom** — drag the canvas, scroll to zoom.
-- **Import / export** — save and load diagrams as JSON. Export to editable PowerPoint (`.pptx`).
+- **Import / export** — save and load diagrams as JSON. Export to editable PowerPoint (`.pptx`). Export the canvas as a PNG image.
 - **Multiple files** — import several JSON files at once. Each opens in its own tab. Switch between them and your changes stay in each one. A dot on a tab shows unexported changes.
 - **File names** — the tab shows the file name, and exports propose the same name. You can change it before saving.
 - **Reset** — one button empties the canvas and returns the app to its starting state.
@@ -48,7 +48,7 @@ That is all. The libraries are embedded, so the app works offline. (The page lin
 | Delete | Select an item and press `Delete`, or use the panel button. With many items selected, `Delete` removes all of them. |
 | Cancel | Press `Escape`. This also clears the selection. |
 | Pan / zoom | Drag empty canvas / mouse wheel, or use the zoom controls. |
-| Export | Use the download (JSON) or PowerPoint button, then confirm the file name. |
+| Export | Use the download (JSON), PowerPoint, or image (PNG) button, then confirm the file name. |
 | Import | Use the upload button and choose one or more JSON files. |
 | Switch files | Click a tab. Your changes and your view stay with each file. |
 | New / close a file | Use the `+` tab button / the `×` on a tab. Closing a changed file asks first. |
@@ -93,6 +93,10 @@ The note fields on lines are optional. A file from an earlier version still open
 
 Shapes become native PowerPoint shapes. Connections become PowerPoint lines with arrowheads, in the current line style. Straight lines and freehand drawings become PowerPoint lines (a freehand drawing is a chain of short straight lines) in the same color and a scaled thickness. The diagram is scaled to fit one slide. Notes are not included.
 
+## PNG export
+
+The canvas becomes one PNG image. The image shows shapes, connections, lines, and freehand drawings. It uses the current line style. Open notes are included, with their dotted lines. Closed notes are not. The image has twice the canvas resolution. The maximum side is 8000 pixels.
+
 ## Developer API
 
 Open the browser console and use `window.DiagramAPI`:
@@ -117,7 +121,7 @@ DiagramAPI.exportJSON('my-discussion');   // downloads my-discussion.json
 | `removeLine(id)` / `selectLine(id)` | Remove or select a line. |
 | `autoArrange()` | Layered left-to-right layout. |
 | `getState()` / `loadState(data)` | Read or replace the whole diagram. |
-| `exportJSON(name?)` / `exportPPTX(name?)` | Download a file. No dialog is shown. |
+| `exportJSON(name?)` / `exportPPTX(name?)` / `exportPNG(name?)` | Download a file. No dialog is shown. |
 | `resetAll()` | Empty the active file and reset the view. No confirmation. |
 | `listDocuments()` | List open files: `[{ id, name, active, changed }]`. |
 | `openDocument(data, name?)` / `newDocument()` | Open data, or an empty file, in a new tab. |
