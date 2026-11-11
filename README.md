@@ -1,10 +1,10 @@
-# Discussion Studio
+# <a href="https://platoedes-pty-ltd.github.io/DiscussionStudio/index.html"><img src="discussion-studio-icon.ico" alt="Discussion Studio icon" width="32" height="32" align="absmiddle"></a> Discussion Studio
 
 A tool for aiding discussions with a visual flow of thoughts and information.
 
 Draw shapes, connect them, attach notes, and let the layout follow the logic of the conversation. Everything runs in one HTML file. There is nothing to install, no server, and no account.
 
-![Discussion Studio](docs/screenshot.png)
+**[Visit the Discussion Studio website →](https://platoedes-pty-ltd.github.io/DiscussionStudio/index.html)**
 
 ## Features
 
