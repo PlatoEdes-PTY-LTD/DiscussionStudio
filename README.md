@@ -13,12 +13,12 @@ Draw shapes, connect them, attach notes, and let the layout follow the logic of 
 - **Connections** — link shapes from any side (`start` / `end` ports). All four port combinations route cleanly.
 - **Two line styles** — orthogonal elbow lines or straight point-to-point lines, switchable for the whole diagram.
 - **Lines and freehand** — draw straight lines (with an optional arrow) or sketch freehand. Pick a color and thickness. Select a line to move it, drag its end handles, add a note, or delete it. Thin lines stay easy to click at any zoom level.
-- **Select many** — Shift-click items, or Shift-drag a box on empty canvas, to select shapes, connections, and lines together. Delete them in one step.
+- **Select many** — Shift-click (or `Ctrl`/`Cmd`-click) items, or Shift-drag a box on empty canvas, to select shapes, connections, and lines together. The side panel shows how many are selected. Delete them in one step.
 - **Labels** — double-click a shape or connection to rename it.
 - **Notes** — pin draggable note cards to any shape, connection, or line. A dotted line ties each note to its owner.
 - **Auto-arrange** — lays shapes out in layers from left to right by dependency.
 - **Pan and zoom** — drag the canvas, scroll to zoom.
-- **Import / export** — save and load diagrams as JSON. Export to editable PowerPoint (`.pptx`). Export the canvas as a PNG image.
+- **Import / export** — save and load diagrams as JSON. Export to editable PowerPoint (`.pptx`). Export the whole diagram as a PNG picture, ready to paste into slides, chat, or documents.
 - **Multiple files** — import several JSON files at once. Each opens in its own tab. Switch between them and your changes stay in each one. A dot on a tab shows unexported changes.
 - **File names** — the tab shows the file name, and exports propose the same name. You can change it before saving.
 - **Reset** — one button empties the canvas and returns the app to its starting state.
@@ -44,11 +44,12 @@ That is all. The libraries are embedded, so the app works offline. (The page lin
 | Finish drawing | Press `Escape`, or click the tool again. The tool stays on until then. Press `Escape` before you select a line. |
 | Edit a label | Double-click a shape or connection. |
 | Add a note | Click the note icon on a shape or connection. For a line, select it first, then click its note icon. Drag the card where you want it. |
-| Select many | `Shift`-click items to add or remove them. Or `Shift`-drag a box on empty canvas. |
+| Select many | `Shift`-click (or `Ctrl`/`Cmd`-click) items to add or remove them. Or `Shift`-drag a box on empty canvas to add everything it touches. |
 | Delete | Select an item and press `Delete`, or use the panel button. With many items selected, `Delete` removes all of them. |
 | Cancel | Press `Escape`. This also clears the selection. |
 | Pan / zoom | Drag empty canvas / mouse wheel, or use the zoom controls. |
-| Export | Use the download (JSON), PowerPoint, or image (PNG) button, then confirm the file name. |
+| Export | Use the download (JSON), PowerPoint, or picture (PNG) button, then confirm the file name. |
+| Export as a picture | Click the picture button in the toolbar, then confirm the file name. The whole diagram is saved, not only the visible part. |
 | Import | Use the upload button and choose one or more JSON files. |
 | Switch files | Click a tab. Your changes and your view stay with each file. |
 | New / close a file | Use the `+` tab button / the `×` on a tab. Closing a changed file asks first. |
@@ -89,13 +90,32 @@ Your diagrams are not stored in the browser. Export JSON to keep your work. Clos
 
 The note fields on lines are optional. A file from an earlier version still opens.
 
+## Selecting many items
+
+- `Shift`-click, `Ctrl`-click, or `Cmd`-click a shape, connection, or line to add it to the selection. Do it again to remove it.
+- `Shift`-drag a box on empty canvas. The box adds every item it touches to the current selection:
+  - a shape, if the box overlaps it;
+  - a line or freehand drawing, if the box touches any part of it;
+  - a connection, if the box covers its middle, or if both of its shapes are selected.
+- The side panel shows how many items are selected, with a **Delete N selected** button. `Delete` or `Backspace` does the same.
+- Click empty canvas or press `Escape` to clear the selection.
+- A plain click on an item selects that item only.
+
 ## PowerPoint export
 
 Shapes become native PowerPoint shapes. Connections become PowerPoint lines with arrowheads, in the current line style. Straight lines and freehand drawings become PowerPoint lines (a freehand drawing is a chain of short straight lines) in the same color and a scaled thickness. The diagram is scaled to fit one slide. Notes are not included.
 
-## PNG export
+## PNG export (picture)
 
-The canvas becomes one PNG image. The image shows shapes, connections, lines, and freehand drawings. It uses the current line style. Open notes are included, with their dotted lines. Closed notes are not. The image has twice the canvas resolution. The maximum side is 8000 pixels.
+Click the picture button in the toolbar and confirm the file name. The browser downloads one `.png` file.
+
+- The picture shows the whole diagram, not only the part on screen. Pan and zoom do not change it.
+- It shows shapes, labels, connections, lines, and freehand drawings. It uses the current line style.
+- Open notes are included, with their dotted lines. Closed notes are not. Open a note before you export if you want it in the picture.
+- The picture is cropped to the diagram, with a small margin, on the canvas background color.
+- It has twice the canvas resolution, so it stays sharp on slides and high-resolution screens. The longest side is at most 8000 pixels. A very large diagram is scaled down to fit.
+- The whole diagram is exported. A selection does not limit it.
+- An empty canvas cannot be exported. Add at least one shape or line first.
 
 ## Developer API
 
