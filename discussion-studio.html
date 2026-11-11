@@ -10,16 +10,23 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#1C2127;
-    --ink-soft:#565F68;
-    --paper:#EAEFEC;
+    --ink:#14213D;
+    --ink-soft:#4F5D75;
+    --paper:#F5F8FD;
     --panel:#FFFFFF;
-    --border:#D7DEDA;
-    --accent:#1F7A6C;
-    --accent-soft:#DCEEE9;
-    --warn:#C1502E;
-    --warn-soft:#F6E1D8;
-    --grid-dot:#C7D0CB;
+    --border:#DCE4F0;
+    /* blue: selection and focus, orange: active tool and main action, green: success */
+    --accent:#1D6CE0;
+    --accent-dark:#1450AB;
+    --accent-soft:#E4EEFD;
+    --hl:#F57C1F;
+    --hl-dark:#C75A06;
+    --hl-soft:#FFF0E2;
+    --green:#18A36B;
+    --green-soft:#E0F6EB;
+    --warn:#D93A2B;
+    --warn-soft:#FCE4E1;
+    --grid-dot:#D3DCEA;
   }
   *{box-sizing:border-box;}
   html,body{height:100%;margin:0;}
@@ -35,7 +42,7 @@
   /* ---------- topbar ---------- */
   .topbar{
     display:flex;align-items:center;gap:10px;flex-wrap:wrap;row-gap:8px;
-    background:var(--ink);color:#F3F5F3;
+    background:linear-gradient(90deg, #1450AB, #1D6CE0);color:#FFFFFF;
     padding:10px 16px;
     flex-shrink:0;
     border-bottom:1px solid #0000;
@@ -45,24 +52,24 @@
     font-family:'Space Grotesk', sans-serif;
     font-weight:600;font-size:16px;letter-spacing:0.2px;
     white-space:nowrap;padding-right:14px;
-    border-right:1px solid #3A4149;
+    border-right:1px solid rgba(255,255,255,.28);
     display:flex;align-items:center;gap:9px;
   }
   .brand-logo{flex-shrink:0;display:block;}
   .tabbar{
     display:flex;align-items:flex-end;gap:2px;flex-shrink:0;overflow-x:auto;
-    background:#DCE3DF;border-bottom:1px solid var(--border);padding:6px 12px 0;
+    background:#EAF1FC;border-bottom:1px solid var(--border);padding:6px 12px 0;
   }
   .tab{
     display:flex;align-items:center;gap:7px;max-width:230px;flex-shrink:0;
     padding:6px 6px 6px 12px;font-size:12.5px;color:var(--ink-soft);
-    background:#CBD4CF;border:1px solid var(--border);border-bottom:none;
+    background:#D9E5F8;border:1px solid var(--border);border-bottom:none;
     border-radius:7px 7px 0 0;cursor:pointer;white-space:nowrap;user-select:none;
   }
-  .tab:hover{background:#D3DBD7;}
-  .tab.active{background:var(--paper);color:var(--ink);font-weight:500;margin-bottom:-1px;padding-bottom:7px;}
+  .tab:hover{background:#E1EBFA;}
+  .tab.active{background:var(--paper);color:var(--accent-dark);font-weight:600;box-shadow:inset 0 3px 0 var(--hl);margin-bottom:-1px;padding-bottom:7px;}
   .tab-name{overflow:hidden;text-overflow:ellipsis;}
-  .tab-dirty{width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0;}
+  .tab-dirty{width:7px;height:7px;border-radius:50%;background:var(--hl);flex-shrink:0;}
   .tab-close{
     border:none;background:none;color:inherit;font-size:15px;line-height:1;
     width:18px;height:18px;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0;
@@ -75,37 +82,37 @@
   .export-row .text-dialog-input{margin:0;flex:1;min-width:0;}
   .toolgroup{display:flex;align-items:center;gap:4px;}
   .topbar > *{flex-shrink:0;}
-  .divider{width:1px;height:22px;background:#3A4149;margin:0 4px;}
+  .divider{width:1px;height:22px;background:rgba(255,255,255,.28);margin:0 4px;}
   .spacer{flex:1;}
 
   .tbtn{
     display:flex;align-items:center;gap:6px;
     background:transparent;border:1px solid transparent;
-    color:#E7EAE8;
+    color:#FFFFFF;
     padding:7px 10px;border-radius:8px;
     font-family:'IBM Plex Sans',sans-serif;font-size:13px;font-weight:500;
     cursor:pointer;transition:background .15s ease, border-color .15s ease;
     white-space:nowrap;
   }
   .tbtn svg{flex-shrink:0;}
-  .tbtn:hover{background:#2A3038;}
-  .tbtn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .tbtn:hover{background:rgba(255,255,255,.16);}
+  .tbtn.active{background:var(--hl);border-color:var(--hl);color:#fff;box-shadow:0 4px 12px -4px rgba(199,90,6,.6);}
   .tbtn.danger:hover{background:var(--warn);border-color:var(--warn);}
   .tbtn:disabled{opacity:.35;cursor:not-allowed;}
   .tbtn:disabled:hover{background:transparent;}
   .icon-only{padding:7px 8px;}
 
-  .edge-style-toggle{display:flex;border:1px solid #3A4149;border-radius:8px;overflow:hidden;}
+  .edge-style-toggle{display:flex;border:1px solid rgba(255,255,255,.32);border-radius:8px;overflow:hidden;}
   .edge-style-toggle button{
     display:flex;align-items:center;justify-content:center;
-    padding:6px 9px;border:none;background:transparent;color:#9AA3A9;cursor:pointer;
+    padding:6px 9px;border:none;background:transparent;color:#CFE0FB;cursor:pointer;
   }
-  .edge-style-toggle button+button{border-left:1px solid #3A4149;}
-  .edge-style-toggle button:hover{background:#2A3038;color:#E7EAE8;}
-  .edge-style-toggle button.active{background:var(--accent);color:#fff;}
+  .edge-style-toggle button+button{border-left:1px solid rgba(255,255,255,.32);}
+  .edge-style-toggle button:hover{background:rgba(255,255,255,.16);color:#FFFFFF;}
+  .edge-style-toggle button.active{background:var(--hl);color:#fff;}
 
   .hint-chip{
-    font-size:12px;color:#C9E8E0;background:#233A35;
+    font-size:12px;color:#FFFFFF;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);
     padding:4px 9px;border-radius:20px;
     animation:pop .15s ease;white-space:nowrap;
   }
@@ -127,7 +134,7 @@
   svg.board:active{cursor:grabbing;}
 
   .shape-group{cursor:move;}
-  .shape-group.connect-source > *{filter:drop-shadow(0 0 0 2px var(--accent));}
+  .shape-group.connect-source > *{filter:drop-shadow(0 0 0 2px var(--green));}
   .shape-label{
     width:100%;height:100%;display:flex;align-items:center;justify-content:center;
     text-align:center;padding:6px 10px;
@@ -135,17 +142,17 @@
     line-height:1.25;pointer-events:none;user-select:none;
     font-family:'IBM Plex Sans',sans-serif;
   }
-  .conn-path{fill:none;stroke:#5B6570;stroke-width:2;}
+  .conn-path{fill:none;stroke:#1450AB;stroke-width:2;}
   .conn-hit{fill:none;stroke:transparent;stroke-width:16;cursor:pointer;}
-  .conn-group.selected .conn-path{stroke:var(--warn);stroke-width:2.5;}
-  .conn-group.multi .conn-path{stroke:var(--warn);stroke-width:2.5;}
+  .conn-group.selected .conn-path{stroke:var(--hl);stroke-width:2.5;}
+  .conn-group.multi .conn-path{stroke:var(--hl);stroke-width:2.5;}
   .shape-group.multi > rect, .shape-group.multi > ellipse, .shape-group.multi > polygon{stroke:var(--accent);stroke-width:3;stroke-dasharray:6 3;}
   .marquee{fill:var(--accent);fill-opacity:.08;stroke:var(--accent);stroke-width:1;stroke-dasharray:4 3;pointer-events:none;}
   .conn-label{
     font-size:11px;fill:var(--ink-soft);font-family:'IBM Plex Sans',sans-serif;
     text-anchor:middle;paint-order:stroke;stroke:var(--paper);stroke-width:4px;
   }
-  .ghost-line{stroke:var(--accent);stroke-width:2;stroke-dasharray:6 5;pointer-events:none;}
+  .ghost-line{stroke:var(--green);stroke-width:2;stroke-dasharray:6 5;pointer-events:none;}
   .add-label-hint{cursor:pointer;}
   .add-label-hint circle{fill:var(--panel);stroke:var(--accent);stroke-width:1.5;}
   .add-label-hint text{fill:var(--accent);font-size:13px;font-weight:600;text-anchor:middle;font-family:'IBM Plex Sans',sans-serif;pointer-events:none;}
@@ -156,17 +163,17 @@
   .note-icon line{stroke:var(--ink-soft);stroke-width:1.3;stroke-linecap:round;}
   .note-icon:hover circle{stroke:var(--accent);}
   .note-icon:hover line{stroke:var(--accent);}
-  .note-icon.has-note circle{fill:var(--accent);stroke:var(--accent);}
+  .note-icon.has-note circle{fill:var(--hl);stroke:var(--hl);}
   .note-icon.has-note line{stroke:#fff;}
   .note-icon.active circle{stroke:var(--ink);stroke-width:2;}
-  .note-icon.has-note.active circle{fill:var(--accent);stroke:var(--ink);}
+  .note-icon.has-note.active circle{fill:var(--hl);stroke:var(--ink);}
 
   .connect-icon{cursor:crosshair;}
   .connect-icon circle{fill:var(--panel);stroke:var(--ink-soft);stroke-width:1.3;}
   .connect-icon line, .connect-icon polyline{stroke:var(--ink-soft);stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;fill:none;}
   .connect-icon:hover circle{stroke:var(--accent);}
   .connect-icon:hover line, .connect-icon:hover polyline{stroke:var(--accent);}
-  .connect-icon.active circle{fill:var(--accent);stroke:var(--accent);}
+  .connect-icon.active circle{fill:var(--green);stroke:var(--green);}
   .connect-icon.active line, .connect-icon.active polyline{stroke:#fff;}
 
   .note-tether{stroke:var(--ink-soft);stroke-width:1.3;stroke-dasharray:4 4;fill:none;pointer-events:none;}
@@ -174,7 +181,7 @@
   .note-box{
     width:100%;height:100%;box-sizing:border-box;display:flex;flex-direction:column;
     background:var(--panel);border:1px solid var(--border);border-radius:10px;
-    box-shadow:0 6px 18px rgba(20,30,25,.16);padding:8px 9px;
+    border-top:3px solid var(--hl);box-shadow:0 8px 22px rgba(20,80,171,.16);padding:8px 9px;
   }
   .note-box-header{
     display:flex;align-items:center;justify-content:space-between;
@@ -199,13 +206,13 @@
     position:absolute;bottom:14px;left:14px;
     display:flex;align-items:center;gap:2px;
     background:var(--panel);border:1px solid var(--border);
-    border-radius:10px;padding:4px;box-shadow:0 2px 8px rgba(20,30,25,.08);
+    border-radius:10px;padding:4px;box-shadow:0 4px 12px rgba(20,80,171,.12);
   }
   .zoom-hud button{
     width:28px;height:28px;border:none;background:transparent;border-radius:6px;
     cursor:pointer;color:var(--ink);font-size:15px;display:flex;align-items:center;justify-content:center;
   }
-  .zoom-hud button:hover{background:var(--paper);}
+  .zoom-hud button:hover{background:var(--accent-soft);color:var(--accent-dark);}
   .zoom-pct{font-size:12px;color:var(--ink-soft);width:42px;text-align:center;font-variant-numeric:tabular-nums;}
 
   .canvas-hint{
@@ -213,19 +220,19 @@
     font-size:12px;color:var(--ink-soft);
     background:var(--panel);border:1px solid var(--border);
     padding:6px 12px;border-radius:20px;
-    box-shadow:0 2px 8px rgba(20,30,25,.06);
+    box-shadow:0 4px 12px rgba(20,80,171,.10);
     max-width:420px;
   }
 
   /* ---------- properties panel ---------- */
   .panel{
     width:268px;flex-shrink:0;background:var(--panel);
-    border-left:1px solid var(--border);
+    border-left:1px solid var(--border);border-top:3px solid var(--green);
     padding:18px 16px;overflow-y:auto;
   }
   .panel h3{
     margin:0 0 14px;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;
-    text-transform:none;color:var(--ink);
+    text-transform:none;color:var(--accent-dark);
   }
   .empty-panel{color:var(--ink-soft);font-size:13px;line-height:1.6;}
   .field{margin-bottom:14px;}
@@ -261,7 +268,7 @@
   }
   .port-toggle button+button{border-left:1px solid var(--border);}
   .port-toggle button.active{background:var(--accent);color:#fff;}
-  .port-toggle button:hover:not(.active){background:var(--paper);}
+  .port-toggle button:hover:not(.active){background:var(--accent-soft);}
   .delete-btn{
     width:100%;margin-top:6px;padding:9px;border-radius:8px;border:1px solid var(--warn-soft);
     background:var(--warn-soft);color:var(--warn);font-weight:600;font-size:13px;cursor:pointer;
@@ -271,18 +278,18 @@
 
   .api-doc{font-size:12.5px;color:var(--ink-soft);line-height:1.6;}
   .api-doc code{
-    display:block;background:#F2F4F2;border:1px solid var(--border);border-radius:7px;
+    display:block;background:var(--paper);border:1px solid var(--border);border-radius:7px;
     padding:9px 10px;margin:5px 0 12px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;
     color:var(--ink);white-space:pre-wrap;word-break:break-word;
   }
 
   .modal-overlay{
-    position:fixed;inset:0;background:rgba(20,25,22,.45);
+    position:fixed;inset:0;background:rgba(20,33,61,.45);
     display:flex;align-items:center;justify-content:center;z-index:50;
   }
   .modal-box{
     width:340px;max-width:90vw;background:var(--panel);border-radius:12px;
-    padding:22px 22px 18px;box-shadow:0 12px 32px rgba(10,15,12,.28);
+    padding:22px 22px 18px;border-top:4px solid var(--accent);box-shadow:0 16px 40px rgba(20,33,61,.3);
   }
   .modal-box h3{
     margin:0 0 8px;font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;color:var(--ink);
@@ -300,11 +307,11 @@
     font-family:'IBM Plex Sans',sans-serif;
   }
   .tbtn-secondary{background:var(--paper);color:var(--ink);border-color:var(--border);}
-  .tbtn-secondary:hover{background:var(--border);}
+  .tbtn-secondary:hover{background:var(--accent-soft);}
   .tbtn-danger{background:var(--warn);color:#fff;}
-  .tbtn-danger:hover{background:#A5442A;}
-  .tbtn-primary{background:var(--accent);color:#fff;}
-  .tbtn-primary:hover{background:#175F53;}
+  .tbtn-danger:hover{background:#B02C1F;}
+  .tbtn-primary{background:var(--hl);color:#fff;}
+  .tbtn-primary:hover{background:var(--hl-dark);}
 </style>
 </head>
 <body>
@@ -435,7 +442,7 @@ const SHAPE_DEFAULTS = {
   diamond: { w: 140, h: 100 },
 };
 
-const PALETTE = ['#FFFFFF', '#DCEEE9', '#F6E1D8', '#E4EAF6', '#FBF0D2', '#EAE1F6'];
+const PALETTE = ['#FFFFFF', '#E4EEFD', '#FFF0E2', '#E0F6EB', '#FFF6D6', '#EFE6FB'];
 
 const ICONS = {
   rect: '<svg width="18" height="18" viewBox="0 0 22 22" fill="none"><rect x="3" y="5" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.8"/></svg>',
@@ -528,7 +535,7 @@ const TEMPLATE = `
             <circle cx="2" cy="2" r="1.4" fill="var(--grid-dot)" />
           </pattern>
           <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#5B6570" />
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#1450AB" />
           </marker>
           <marker id="arrow-selected" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
             <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--warn)" />
@@ -571,13 +578,13 @@ const TEMPLATE = `
              :transform="'translate(' + shape.x + ' ' + shape.y + ')'"
              @mousedown="onShapeMouseDown(shape, $event)" @click.stop @dblclick.stop="openTextDialog(shape)">
             <rect v-if="shape.type==='rectangle'" :width="shape.w" :height="shape.h" rx="10" ry="10"
-                  :fill="shape.fill" :stroke="shape.id===selectedShapeId ? '#1F7A6C' : shape.stroke"
+                  :fill="shape.fill" :stroke="shape.id===selectedShapeId ? '#1D6CE0' : shape.stroke"
                   :stroke-width="shape.id===selectedShapeId ? 2.5 : 1.6" />
             <ellipse v-else-if="shape.type==='circle'" :cx="shape.w/2" :cy="shape.h/2" :rx="shape.w/2" :ry="shape.h/2"
-                  :fill="shape.fill" :stroke="shape.id===selectedShapeId ? '#1F7A6C' : shape.stroke"
+                  :fill="shape.fill" :stroke="shape.id===selectedShapeId ? '#1D6CE0' : shape.stroke"
                   :stroke-width="shape.id===selectedShapeId ? 2.5 : 1.6" />
             <polygon v-else-if="shape.type==='diamond'" :points="diamondPoints(shape)"
-                  :fill="shape.fill" :stroke="shape.id===selectedShapeId ? '#1F7A6C' : shape.stroke"
+                  :fill="shape.fill" :stroke="shape.id===selectedShapeId ? '#1D6CE0' : shape.stroke"
                   :stroke-width="shape.id===selectedShapeId ? 2.5 : 1.6" stroke-linejoin="round" />
             <foreignObject :width="shape.w" :height="shape.h">
               <div class="shape-label" xmlns="http://www.w3.org/1999/xhtml">{{ shape.label }}</div>
@@ -944,8 +951,8 @@ const app = createApp({
     const selectedShapeId = ref(null);
     const selectedConnId = ref(null);
     const selectedLineId = ref(null);
-    const lineStyle = reactive({ stroke: '#1C2127', width: 3, arrow: false });  // style of the next line
-    const lineColors = ['#1C2127', '#1F7A6C', '#C1502E', '#3B5BA9', '#B7791F', '#7A4FB0'];
+    const lineStyle = reactive({ stroke: '#14213D', width: 3, arrow: false });  // style of the next line
+    const lineColors = ['#14213D', '#1D6CE0', '#F57C1F', '#18A36B', '#D93A2B', '#7A4FB0'];
     const lineWidths = [{ t: 'Thin', v: 1.5 }, { t: 'Medium', v: 3 }, { t: 'Thick', v: 6 }];
     const drawing = reactive({ active: false, kind: 'line', points: [] });
     const resizing = reactive({ active: false, id: null, ax: 0, ay: 0, startX: 0, startY: 0, x: 0, y: 0, w: 0, h: 0 });
@@ -999,7 +1006,7 @@ const app = createApp({
         w: opts.w || d.w, h: opts.h || d.h,
         label,
         fill: opts.fill || '#FFFFFF',
-        stroke: opts.stroke || '#1C2127',
+        stroke: opts.stroke || '#14213D',
         note: opts.note || '',
         noteOpen: false, noteOffsetX: null, noteOffsetY: null,
       });
@@ -1888,7 +1895,7 @@ const app = createApp({
           id: l.id || ('line_' + Math.random().toString(36).slice(2, 8)),
           kind: l.kind === 'free' ? 'free' : 'line',
           points: l.points.map(q => ({ x: +q.x, y: +q.y })),
-          stroke: l.stroke || '#1C2127',
+          stroke: l.stroke || '#14213D',
           width: +l.width > 0 ? +l.width : 3,
           arrow: l.kind === 'free' ? false : !!l.arrow,
           note: typeof l.note === 'string' ? l.note : '',
@@ -2114,7 +2121,7 @@ const app = createApp({
       slide.addShape(pptx.ShapeType.line, {
         x, y, w, h, flipV,
         line: {
-          color: (style && style.color) || '5B6570',
+          color: (style && style.color) || '1450AB',
           width: (style && style.width) || 1.25,
           // connections (no style) always end in an arrow; lines only when they have one
           endArrowType: (isLast && (!style || style.arrow)) ? 'triangle' : 'none',
@@ -2176,9 +2183,9 @@ const app = createApp({
           shape: pptx.ShapeType[PPTX_SHAPE_TYPE[s.type]] || pptx.ShapeType.rect,
           x: pos.x, y: pos.y, w: s.w * scale, h: s.h * scale,
           fill: { color: (s.fill || '#FFFFFF').replace('#', '') },
-          line: { color: (s.stroke || '#1C2127').replace('#', ''), width: 1.25 },
+          line: { color: (s.stroke || '#14213D').replace('#', ''), width: 1.25 },
           rectRadius: s.type === 'rectangle' ? 0.08 : undefined,
-          align: 'center', valign: 'middle', fontFace: 'Arial', fontSize: 12, color: '1C2127',
+          align: 'center', valign: 'middle', fontFace: 'Arial', fontSize: 12, color: '14213D',
           wrap: true,
         });
       });
@@ -2199,8 +2206,8 @@ const app = createApp({
           const mid = toSlide(connMid(c).x, connMid(c).y);
           slide.addText(c.label, {
             x: mid.x - 0.75, y: mid.y - 0.16, w: 1.5, h: 0.32,
-            align: 'center', valign: 'middle', fontFace: 'Arial', fontSize: 9, color: '565F68',
-            fill: { color: 'EAEFEC' },
+            align: 'center', valign: 'middle', fontFace: 'Arial', fontSize: 9, color: '4F5D75',
+            fill: { color: 'F5F8FD' },
           });
         }
       });
@@ -2212,7 +2219,7 @@ const app = createApp({
           const prev = cleaned[cleaned.length - 1];
           if (Math.abs(pts[i].x - prev.x) > 0.005 || Math.abs(pts[i].y - prev.y) > 0.005) cleaned.push(pts[i]);
         }
-        const style = { color: (l.stroke || '#1C2127').replace('#', ''), width: Math.max(0.75, (l.width || 3) * scale * 72), arrow: !!l.arrow };
+        const style = { color: (l.stroke || '#14213D').replace('#', ''), width: Math.max(0.75, (l.width || 3) * scale * 72), arrow: !!l.arrow };
         for (let i = 0; i < cleaned.length - 1; i++) {
           pptxAddLineSegment(slide, pptx, cleaned[i], cleaned[i + 1], i === cleaned.length - 2, style);
         }
@@ -2307,7 +2314,7 @@ const app = createApp({
       canvas.height = Math.max(1, Math.round(worldH * k));
       const ctx = canvas.getContext('2d');
       if (!ctx) { alert('The PNG export failed: the browser has no canvas support.'); return; }
-      ctx.fillStyle = '#EAEFEC';
+      ctx.fillStyle = '#F5F8FD';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.setTransform(k, 0, 0, k, (PNG_PAD - minX) * k, (PNG_PAD - minY) * k);
       ctx.lineJoin = 'round'; ctx.lineCap = 'round';
@@ -2316,7 +2323,7 @@ const app = createApp({
       connections.forEach((c, i) => {
         const pts = routes[i];
         if (!pts || pts.length < 2) return;
-        const col = '#5B6570';
+        const col = '#1450AB';
         const last = pts[pts.length - 1];
         let prev = pts[pts.length - 2];
         for (let j = pts.length - 2; j >= 0; j--) { prev = pts[j]; if (Math.hypot(last.x - prev.x, last.y - prev.y) > 0.5) break; }
@@ -2331,9 +2338,9 @@ const app = createApp({
           const m = connMid(c);
           ctx.font = '500 11px ' + PNG_FONT;
           ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-          ctx.lineWidth = 4; ctx.strokeStyle = '#EAEFEC';
+          ctx.lineWidth = 4; ctx.strokeStyle = '#F5F8FD';
           ctx.strokeText(c.label, m.x, m.y - 8);
-          ctx.fillStyle = '#565F68';
+          ctx.fillStyle = '#4F5D75';
           ctx.fillText(c.label, m.x, m.y - 8);
         }
       });
@@ -2341,7 +2348,7 @@ const app = createApp({
       // shapes: fill, outline, centered wrapped label
       shapes.forEach(s => {
         ctx.fillStyle = s.fill || '#FFFFFF';
-        ctx.strokeStyle = s.stroke || '#1C2127';
+        ctx.strokeStyle = s.stroke || '#14213D';
         ctx.lineWidth = 1.6;
         ctx.beginPath();
         if (s.type === 'circle') {
@@ -2359,7 +2366,7 @@ const app = createApp({
         ctx.fill(); ctx.stroke();
         if (s.label) {
           ctx.font = '500 13px ' + PNG_FONT;
-          ctx.fillStyle = '#1C2127'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillStyle = '#14213D'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
           const inner = s.type === 'diamond' ? s.w * 0.5 : (s.type === 'circle' ? s.w * 0.7 : s.w) - 20;
           const rows = pngWrapLines(ctx, s.label, Math.max(20, inner));
           const lh = 13 * 1.25, top = s.y + s.h / 2 - (rows.length - 1) * lh / 2;
@@ -2371,7 +2378,7 @@ const app = createApp({
       lines.forEach(l => {
         const p = l.points;
         if (!p || p.length < 2) return;
-        const col = l.stroke || '#1C2127';
+        const col = l.stroke || '#14213D';
         ctx.strokeStyle = col; ctx.lineWidth = l.width || 3;
         ctx.beginPath();
         ctx.moveTo(p[0].x, p[0].y);
@@ -2397,7 +2404,7 @@ const app = createApp({
       openNotes.forEach(n => {
         const x = n.pos.x, y = n.pos.y;
         ctx.save();
-        ctx.strokeStyle = '#565F68'; ctx.lineWidth = 1.3; ctx.setLineDash([4, 4]); ctx.lineCap = 'butt';
+        ctx.strokeStyle = '#4F5D75'; ctx.lineWidth = 1.3; ctx.setLineDash([4, 4]); ctx.lineCap = 'butt';
         ctx.beginPath(); ctx.moveTo(n.anchor.x, n.anchor.y); ctx.lineTo(x, y + NOTE_H / 2); ctx.stroke();
         ctx.restore();
         ctx.save();
@@ -2405,22 +2412,22 @@ const app = createApp({
         ctx.fillStyle = '#FFFFFF';
         pngRoundRect(ctx, x, y, NOTE_W, NOTE_H, 10); ctx.fill();
         ctx.restore();
-        ctx.strokeStyle = '#C9D1CC'; ctx.lineWidth = 1;
+        ctx.strokeStyle = '#DCE4F0'; ctx.lineWidth = 1;
         pngRoundRect(ctx, x, y, NOTE_W, NOTE_H, 10); ctx.stroke();
         ctx.save();
         pngRoundRect(ctx, x, y, NOTE_W, NOTE_H, 10); ctx.clip();
         ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-        ctx.font = '600 11.5px ' + PNG_FONT; ctx.fillStyle = '#565F68';
+        ctx.font = '600 11.5px ' + PNG_FONT; ctx.fillStyle = '#4F5D75';
         let title = n.title;
         while (title.length > 1 && ctx.measureText(title).width > NOTE_W - 20) title = title.slice(0, -2) + '\u2026';
         ctx.fillText(title, x + 9, y + 21);
         const bx = x + 9, by = y + 32, bw = NOTE_W - 18, bh = NOTE_H - 41;
         ctx.fillStyle = '#FCFDFC'; pngRoundRect(ctx, bx, by, bw, bh, 7); ctx.fill();
-        ctx.strokeStyle = '#C9D1CC'; pngRoundRect(ctx, bx, by, bw, bh, 7); ctx.stroke();
+        ctx.strokeStyle = '#DCE4F0'; pngRoundRect(ctx, bx, by, bw, bh, 7); ctx.stroke();
         ctx.beginPath(); ctx.rect(bx + 2, by + 2, bw - 4, bh - 4); ctx.clip();
         ctx.font = '400 12.5px ' + PNG_FONT;
         const text = String(n.o.note || '');
-        ctx.fillStyle = text ? '#1C2127' : '#8A939B';
+        ctx.fillStyle = text ? '#14213D' : '#8A939B';
         pngWrapLines(ctx, text || 'Add a note\u2026', bw - 16).forEach((row, i) => ctx.fillText(row, bx + 8, by + 18 + i * 16));
         ctx.restore();
       });
