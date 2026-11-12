@@ -193,11 +193,6 @@
   .connect-menu .kind-desc{font-size:11.5px;color:var(--ink-soft);}
   .port-toggle.kind-toggle button{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--ink-soft);}
   .port-toggle.kind-toggle button svg{display:block;}
-  .hint-chip{
-    font-size:12px;color:#FFFFFF;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);
-    padding:4px 9px;border-radius:20px;
-    animation:pop .15s ease;white-space:nowrap;
-  }
   @keyframes pop{from{opacity:0;transform:scale(.9);}to{opacity:1;transform:scale(1);}}
 
   /* ---------- workspace ---------- */
@@ -208,7 +203,6 @@
   button{touch-action:manipulation;}
   .touch-hit{fill:transparent !important;stroke:none !important;display:none;}
   .resize-handle, .line-handle{transform-box:fill-box;transform-origin:center;}
-  .canvas-hint.connect-hint{display:none;}   /* wide screens show the chip in the toolbar */
   @media (pointer: coarse){
     .field input[type=text], .field input[type=number], .panel-note, .text-dialog-input, .note-box textarea{font-size:16px;}
     .touch-hit{display:inline;}                      /* bigger invisible target round each small icon */
@@ -225,8 +219,7 @@
     .tbtn{padding:8px 9px;}
     .tbtn .caret{margin-left:0;}
     .brand{padding-right:8px;}
-    .topbar .hint-chip{display:none;}
-    .canvas-hint.multi-hint, .canvas-hint.connect-hint{display:block;left:12px;right:12px;bottom:70px;max-width:none;text-align:center;}
+    .canvas-hint.multi-hint{display:block;left:12px;right:12px;bottom:70px;max-width:none;text-align:center;}
     .panel{position:absolute;top:0;right:0;bottom:0;z-index:8;width:min(300px, 88vw) !important;box-shadow:-12px 0 30px -12px rgba(0,0,0,.35);}
     .app-tagline{display:none;}
     .canvas-hint{display:none;}
@@ -607,8 +600,6 @@ const TEMPLATE = `
           </button>
         </div>
       </div>
-      <span class="hint-chip" v-if="mode==='connect' && !connectFrom">{{ isTouch ? 'Tap' : 'Click' }} a shape to start {{ connKindHint }}</span>
-      <span class="hint-chip" v-if="mode==='connect' && connectFrom">Now {{ isTouch ? 'tap' : 'click' }} the target shape</span>
     </div>
 
     <div class="divider"></div>
@@ -855,7 +846,7 @@ const TEMPLATE = `
         <button @click="resetView" title="Reset view" style="font-size:11px;">Reset</button>
       </div>
 
-      <div class="canvas-hint connect-hint" v-if="mode==='connect'">{{ connectFrom ? 'Now ' + (isTouch ? 'tap' : 'click') + ' the target shape' : (isTouch ? 'Tap' : 'Click') + ' a shape to start ' + connKindHint }} · {{ isTouch ? 'tap' : 'click' }} Connect again to cancel</div>
+      <template v-if="mode==='connect'"></template><!-- no hint while creating a connection -->
       <div class="canvas-hint multi-hint" v-else-if="multiMode && mode==='select'">Select many: tap items to add or remove them · drag on empty canvas to draw a box · tap the button again to finish</div>
       <div class="canvas-hint" v-else-if="mode==='line'">Drag to draw a line · hold Shift for 45° angles · press Escape or click Line again to finish</div>
       <div class="canvas-hint" v-else-if="mode==='draw'">Drag to draw freehand · press Escape or click Draw again to finish</div>
@@ -1122,7 +1113,6 @@ const app = createApp({
     const connKinds = CONN_KINDS;
     const connKind = ref('arrow');       // type used for the next connection
     const connectMenuOpen = ref(false);
-    const connKindHint = computed(() => (CONN_KINDS.find(k => k.id === connKind.value) || CONN_KINDS[0]).hint);
     function connKindOf(c) { return c && (c.kind === 'one-many' || c.kind === 'many-many') ? c.kind : 'arrow'; }
     function crowMarker(c) {
       return 'url(#crow' + (edgeStyle.value === 'elbow' ? '-port' : '') + (c.id === selectedConnId.value ? '-selected' : '') + ')';
@@ -2903,7 +2893,7 @@ const app = createApp({
       connPath, connMid, diamondPoints, boundaryPoint, autoArrange, clearAll, resetAll, confirmClearAll, confirmClearAllYes, exportJSON, exportPPTX, exportPNG, importJSON,
       triggerImport, deleteSelected, toggleConnectMode, getState, loadState, Math,
       theme, toggleTheme, lineInk, isTouch, hasTouch, multiMode, toggleMultiMode,
-      connKinds, connKind, connKindOf, connKindHint, connectMenuOpen, onConnectButton, startConnect, connMarkerStart, connMarkerEnd,
+      connKinds, connKind, connKindOf, connectMenuOpen, onConnectButton, startConnect, connMarkerStart, connMarkerEnd,
       resizeHandles, onResizeHandleDown, setShapeSize,
       lines, selectedLineId, selectedLine, lineTarget, lineStyle, lineColors, lineWidths, drawingLine,
       multi, multiCount, marquee, isMulti, deleteMulti, onConnMouseDown,

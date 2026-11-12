@@ -9,7 +9,8 @@
 - Added: touch support. One finger drags shapes, lines and the canvas; two fingers pinch to zoom and pan; double-tap edits a label. Small handles get larger touch targets. On narrow screens the side panel opens over the canvas.
 - Added: a Select many button on touch devices. Tap items to add or remove them, or drag a box on empty canvas.
 - Changed: on narrow screens the toolbar shows icons only. Every button has a tooltip.
-- Fixed: on phones the header could slide off the top of the screen (for example after adding a connection) and not come back. The app now fills the visible screen, the page cannot scroll or zoom, text fields no longer trigger the iPhone's automatic zoom, and the connect hint shows on the canvas so the header keeps its height.
+- Fixed: on phones the header could slide off the top of the screen (for example after adding a connection) and not come back. The app now fills the visible screen, the page cannot scroll or zoom, text fields no longer trigger the iPhone's automatic zoom.
+- Changed: no hints are shown while creating a connection.
 - Added: dark mode. Use the moon / sun button in the toolbar. It follows the system setting until you choose.
 
 ## 2026-11-10
