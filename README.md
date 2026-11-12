@@ -14,43 +14,33 @@ A conversation can move faster than a document or a traditional diagramming work
 
 ## Features
 
-- **Build a visual map:** Add rectangles, circles, and diamonds; label them; resize and arrange them.
-- **Show relationships:** Connect shapes with arrow, one-to-many, or many-to-many connections. Choose elbow or straight routing.
-- **Draw freely:** Add straight lines and freehand marks with adjustable color and thickness.
-- **Add context:** Attach draggable notes to shapes, connections, and lines.
-- **Organize a busy canvas:** Select multiple items together, delete them as a group, or auto-arrange shapes into layers.
-- **Work across diagrams:** Open multiple JSON files in tabs and switch between them.
-- **Move around the canvas:** Pan and zoom, and use light or dark mode.
-- **Export and continue later:** Save an editable PowerPoint, a PNG of the whole diagram, or JSON to reopen and edit later.
-- **Automate tasks:** Use the browser-based `window.DiagramAPI` to create, inspect, and export diagrams.
+- **Shapes** — rectangles, circles, and diamonds. Click empty canvas to drop a rectangle.
+- **Resizable shapes** — select a shape and drag a handle, or type an exact width and height. Circles become ellipses.
+- **Connections** — link shapes from any side (`start` / `end` ports). All four port combinations route cleanly.
+- **Connection types** — click Connect and pick one: an arrow at the target (the default), a crow's foot at the target (one to many), or crow's feet at both ends (many to many). Change the type of a connection later in the side panel.
+- **Two line styles** — orthogonal elbow lines or straight point-to-point lines, switchable for the whole diagram.
+- **Lines and freehand** — draw straight lines (with an optional arrow) or sketch freehand. Pick a color and thickness. Select a line to move it, drag its end handles, add a note, or delete it. Thin lines stay easy to click at any zoom level.
+- **Select many** — Shift-click (or `Ctrl`/`Cmd`-click) items, or Shift-drag a box on empty canvas, to select shapes, connections, and lines together. The side panel shows how many are selected. Delete them in one step.
+- **Labels** — double-click a shape or connection to rename it.
+- **Notes** — pin draggable note cards to any shape, connection, or line. A dotted line ties each note to its owner.
+- **Auto-arrange** — lays shapes out in layers from left to right by dependency.
+- **Pan and zoom** — drag the canvas, scroll to zoom.
+- **Import / export** — save and load diagrams as JSON. Export to editable PowerPoint (`.pptx`). Export the whole diagram as a PNG picture, ready to paste into slides, chat, or documents.
+- **Multiple files** — import several JSON files at once. Each opens in its own tab. Switch between them and your changes stay in each one. A dot on a tab shows unexported changes.
+- **File names** — the tab shows the file name, and exports propose the same name. You can change it before saving.
+- **Touch screens** — works on phones and tablets: drag with one finger, pinch with two to zoom, double-tap to rename. The **Select many** button (on touch devices) lets you tap items or drag a box to select several at once. On a narrow screen the toolbar shows icons only and the side panel opens over the canvas from the panel button.
+- **Dark mode** — the moon / sun button in the toolbar switches between light and dark. The app follows your system setting until you choose, then remembers your choice. Exports keep light colors.
+- **Reset** — one button empties the canvas and returns the app to its starting state.
+- **Developer API** — every action is available from `window.DiagramAPI`.
 
-## Get started
+## Quick start
 
-### Use the hosted app
+1. Download `discussion-studio.html`.
+2. Open it in a modern browser (Chrome, Edge, Firefox, or Safari).
 
-Open **[Discussion Studio](https://platoedes-pty-ltd.github.io/DiscussionStudio/)** in a modern browser.
+That is all. The libraries are embedded, so the app works offline. (The page links Google Fonts for typography. Without a network, the browser uses a fallback font.)
 
-### Run it offline
-
-1. Download [`discussion-studio.html`](discussion-studio.html) from this repository.
-2. Open the downloaded file in a modern browser (Chrome, Edge, Firefox, or Safari).
-
-The app and its required libraries are bundled in that HTML file, so no build step or local server is needed. The page can request Google Fonts for typography; when offline, it uses system fallback fonts instead.
-
-## Create and export a diagram
-
-1. Click a shape button in the toolbar, or click an empty part of the canvas to add a rectangle.
-2. Drag shapes to position them; use the handles or properties panel to resize and style them.
-3. Connect shapes by choosing a connection type and selecting the connection points on each shape.
-4. Add labels, notes, lines, or freehand marks as needed.
-5. Export from the toolbar:
-   - **JSON** keeps diagram data so you can import and edit it later.
-   - **PowerPoint (`.pptx`)** creates editable shapes and lines on a slide. Notes are not included.
-   - **PNG (`.png`)** exports the whole diagram, including open notes. The current viewport and selection do not limit the image.
-
-> **Keep your work:** Diagrams are held in memory while the page is open. They are not saved to browser storage. Export JSON before closing or reloading the page; otherwise, unsaved diagrams are lost.
-
-## Useful controls
+## Using the app
 
 | Action | How |
 |---|---|
