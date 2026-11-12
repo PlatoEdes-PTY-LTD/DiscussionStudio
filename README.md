@@ -22,6 +22,7 @@ Draw shapes, connect them, attach notes, and let the layout follow the logic of 
 - **Import / export** — save and load diagrams as JSON. Export to editable PowerPoint (`.pptx`). Export the whole diagram as a PNG picture, ready to paste into slides, chat, or documents.
 - **Multiple files** — import several JSON files at once. Each opens in its own tab. Switch between them and your changes stay in each one. A dot on a tab shows unexported changes.
 - **File names** — the tab shows the file name, and exports propose the same name. You can change it before saving.
+- **Touch screens** — works on phones and tablets: drag with one finger, pinch with two to zoom, double-tap to rename. The **Select many** button (on touch devices) lets you tap items or drag a box to select several at once. On a narrow screen the toolbar shows icons only and the side panel opens over the canvas from the panel button.
 - **Dark mode** — the moon / sun button in the toolbar switches between light and dark. The app follows your system setting until you choose, then remembers your choice. Exports keep light colors.
 - **Reset** — one button empties the canvas and returns the app to its starting state.
 - **Developer API** — every action is available from `window.DiagramAPI`.

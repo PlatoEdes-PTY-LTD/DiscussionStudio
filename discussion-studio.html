@@ -197,7 +197,34 @@
   @keyframes pop{from{opacity:0;transform:scale(.9);}to{opacity:1;transform:scale(1);}}
 
   /* ---------- workspace ---------- */
-  .workspace{flex:1;display:flex;min-height:0;}
+  .workspace{flex:1;display:flex;min-height:0;position:relative;}
+  /* touch: the canvas handles its own drags and pinches, so the browser must not scroll or zoom it */
+  svg.board{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+  body{-webkit-tap-highlight-color:transparent;}
+  button{touch-action:manipulation;}
+  .touch-hit{fill:transparent !important;stroke:none !important;display:none;}
+  .resize-handle, .line-handle{transform-box:fill-box;transform-origin:center;}
+  @media (pointer: coarse){
+    .touch-hit{display:inline;}                      /* bigger invisible target round each small icon */
+    .resize-handle{transform:scale(1.9);}
+    .line-handle{transform:scale(1.7);}
+    .conn-hit{stroke-width:26;}
+    .line-hit{stroke-width:24;}
+    .zoom-hud button{min-width:40px;min-height:40px;}
+    .tbtn.icon-only{padding:9px 10px;}
+  }
+  /* narrow screens: the panel slides over the canvas instead of squeezing it */
+  @media (max-width: 760px){
+    .tlabel{display:none;}                         /* icon-only toolbar */
+    .tbtn{padding:8px 9px;}
+    .tbtn .caret{margin-left:0;}
+    .brand{padding-right:8px;}
+    .canvas-hint.multi-hint{display:block;left:12px;right:12px;bottom:70px;max-width:none;text-align:center;}
+    .panel{position:absolute;top:0;right:0;bottom:0;z-index:8;width:min(300px, 88vw) !important;box-shadow:-12px 0 30px -12px rgba(0,0,0,.35);}
+    .app-tagline{display:none;}
+    .canvas-hint{display:none;}
+    .topbar{padding:8px 10px;gap:6px;}
+  }
   .canvas-wrap{flex:1;position:relative;min-width:0;}
   svg.board{width:100%;height:100%;display:block;cursor:grab;}
   svg.board.mode-connect, svg.board.mode-draw{cursor:crosshair;}
@@ -523,6 +550,7 @@ const SHAPE_DEFAULTS = {
 const PALETTE = ['#FFFFFF', '#E4EEFD', '#FFF0E2', '#E0F6EB', '#FFF6D6', '#EFE6FB'];
 
 const ICONS = {
+  selectMany: '<svg width="18" height="18" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="3" width="11" height="11" rx="1.5" stroke-dasharray="2.6 2.4"/><path d="M11.5 11.5l7 2.6-3 1.1-1.1 3z" stroke-linejoin="round" fill="currentColor"/></svg>',
   moon: '<svg width="18" height="18" viewBox="0 0 22 22" fill="none"><path d="M18 13.2A7.5 7.5 0 0 1 8.8 4a7.5 7.5 0 1 0 9.2 9.2z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>',
   sun: '<svg width="18" height="18" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="3.8"/><path d="M11 2.5v2M11 17.5v2M2.5 11h2M17.5 11h2M5 5l1.4 1.4M15.6 15.6 17 17M5 17l1.4-1.4M15.6 6.4 17 5"/></svg>',
   kindArrow: '<svg class="kind-icon" width="44" height="16" viewBox="0 0 44 16" fill="none"><line x1="3" y1="8" x2="33" y2="8" stroke="currentColor" stroke-width="1.8"/><path d="M31 3.5 L41 8 L31 12.5 z" fill="currentColor"/></svg>',
@@ -552,9 +580,9 @@ const TEMPLATE = `
     <a class="brand" href="https://platoedes-pty-ltd.github.io/DiscussionStudio/index.html" aria-label="Discussion Studio home"><svg class="brand-logo" width="26" height="26" xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='#1F7A6C'/><path d='M8 8h16a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-9l-5 4v-4H8a3 3 0 0 1-3-3v-8a3 3 0 0 1 3-3z' fill='#FFFFFF'/><path d='M11.5 16.5L16 12l5 5' fill='none' stroke='#1F7A6C' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/><circle cx='11.5' cy='16.5' r='2.1' fill='#1F7A6C'/><circle cx='16' cy='12' r='2.1' fill='#1F7A6C'/><circle cx='21' cy='17' r='2.1' fill='#1F7A6C'/></svg><span>Discussion Studio</span><span class="app-tagline">Visual Flow</span></a>
 
     <div class="toolgroup">
-      <button class="tbtn" @click="addShape('rectangle')" title="Add rectangle" v-html='icons.rect + "&nbsp;Rectangle"'></button>
-      <button class="tbtn" @click="addShape('circle')" title="Add circle" v-html='icons.circle + "&nbsp;Circle"'></button>
-      <button class="tbtn" @click="addShape('diamond')" title="Add diamond" v-html='icons.diamond + "&nbsp;Diamond"'></button>
+      <button class="tbtn" @click="addShape('rectangle')" title="Add rectangle" v-html='icons.rect + "<span class=tlabel>&nbsp;Rectangle</span>"'></button>
+      <button class="tbtn" @click="addShape('circle')" title="Add circle" v-html='icons.circle + "<span class=tlabel>&nbsp;Circle</span>"'></button>
+      <button class="tbtn" @click="addShape('diamond')" title="Add diamond" v-html='icons.diamond + "<span class=tlabel>&nbsp;Diamond</span>"'></button>
     </div>
 
     <div class="divider"></div>
@@ -563,8 +591,8 @@ const TEMPLATE = `
       <div class="connect-wrap">
         <button class="tbtn" :class="{active: mode==='connect' || connectMenuOpen}" @click="onConnectButton"
                 :title="mode==='connect' ? 'Stop connecting' : 'Choose a connection type'"
-                aria-haspopup="menu" :aria-expanded="connectMenuOpen ? 'true' : 'false'"><span style="display:flex" v-html="icons.connect"></span>Connect<span class="caret" aria-hidden="true">▾</span></button>
-        <div v-if="connectMenuOpen" class="menu-backdrop" @mousedown="connectMenuOpen = false"></div>
+                aria-haspopup="menu" :aria-expanded="connectMenuOpen ? 'true' : 'false'"><span style="display:flex" v-html="icons.connect"></span><span class="tlabel">Connect</span><span class="caret" aria-hidden="true">▾</span></button>
+        <div v-if="connectMenuOpen" class="menu-backdrop" @pointerdown="connectMenuOpen = false"></div>
         <div v-if="connectMenuOpen" class="connect-menu" role="menu">
           <button v-for="k in connKinds" :key="k.id" role="menuitem" :class="{current: connKind===k.id}" @click="startConnect(k.id)">
             <span v-html="icons[k.icon]"></span>
@@ -572,8 +600,8 @@ const TEMPLATE = `
           </button>
         </div>
       </div>
-      <span class="hint-chip" v-if="mode==='connect' && !connectFrom">Click a shape to start {{ connKindHint }}</span>
-      <span class="hint-chip" v-if="mode==='connect' && connectFrom">Now click the target shape</span>
+      <span class="hint-chip" v-if="mode==='connect' && !connectFrom">{{ isTouch ? 'Tap' : 'Click' }} a shape to start {{ connKindHint }}</span>
+      <span class="hint-chip" v-if="mode==='connect' && connectFrom">Now {{ isTouch ? 'tap' : 'click' }} the target shape</span>
     </div>
 
     <div class="divider"></div>
@@ -581,11 +609,14 @@ const TEMPLATE = `
     <div class="toolgroup">
       <button class="tbtn icon-only" :class="{active: mode==='line'}" @click="toggleTool('line')" title="Line — drag to draw a straight line (hold Shift for 45° angles)" v-html='icons.line'></button>
       <button class="tbtn icon-only" :class="{active: mode==='draw'}" @click="toggleTool('draw')" title="Draw — drag to draw freehand" v-html='icons.pencil'></button>
+      <button class="tbtn icon-only" v-if="hasTouch" :class="{active: multiMode}" @click="toggleMultiMode"
+              :aria-pressed="multiMode ? 'true' : 'false'"
+              title="Select many — tap items to add or remove them, drag on empty canvas to draw a box" v-html="icons.selectMany"></button>
     </div>
 
     <div class="divider"></div>
 
-    <button class="tbtn" @click="autoArrange" v-html='icons.arrange + "&nbsp;Auto-arrange"'></button>
+    <button class="tbtn" @click="autoArrange" title="Auto-arrange: lay shapes out by dependency" v-html='icons.arrange + "<span class=tlabel>&nbsp;Auto-arrange</span>"'></button>
 
     <div class="divider"></div>
 
@@ -624,7 +655,7 @@ const TEMPLATE = `
   <div class="workspace">
     <main class="canvas-wrap">
       <svg class="board" ref="svgEl" :class="{'mode-connect': mode==='connect', 'mode-draw': mode==='line' || mode==='draw'}"
-           @mousedown.capture="onSvgMouseDownCapture" @mousedown="onSvgMouseDown" @mousemove="onMouseMove" @mouseup="onMouseUp" @mouseleave="onMouseUp"
+           @pointerdown.capture="onSvgMouseDownCapture" @pointerdown="onSvgMouseDown" @pointermove="onMouseMove" @pointerup="onMouseUp" @pointercancel="onMouseUp" @pointerleave="onMouseUp"
            @click="onCanvasClick" @wheel="onWheel">
         <defs>
           <pattern id="dotgrid" width="24" height="24" patternUnits="userSpaceOnUse">
@@ -656,22 +687,22 @@ const TEMPLATE = `
           <rect class="canvas-bg" x="-4000" y="-4000" width="9000" height="9000" fill="url(#dotgrid)" />
 
           <g v-for="conn in connections" :key="conn.id" class="conn-group" :class="{selected: conn.id===selectedConnId, multi: isMulti('c', conn.id)}"
-             @mousedown.stop="onConnMouseDown(conn, $event)" @click.stop @dblclick.stop="openTextDialog(conn)">
+             @pointerdown.stop="onConnMouseDown(conn, $event)" @click.stop @dblclick.stop="openTextDialog(conn)">
             <path class="conn-hit" :d="connPath(conn)" />
             <path class="conn-path" :d="connPath(conn)" :marker-start="connMarkerStart(conn)" :marker-end="connMarkerEnd(conn)" />
 
             <text v-if="conn.label" class="conn-label" :x="connMid(conn).x" :y="connMid(conn).y - 8">{{ conn.label }}</text>
 
             <g v-if="conn.id===selectedConnId && !conn.label" class="add-label-hint"
-               @mousedown.stop @click.stop="openTextDialog(conn)">
+               @pointerdown.stop @click.stop="openTextDialog(conn)">
               <circle :cx="connMid(conn).x" :cy="connMid(conn).y" r="10" />
               <text :x="connMid(conn).x" :y="connMid(conn).y + 4">+</text>
             </g>
 
             <g class="note-icon" :class="{'has-note': conn.note && conn.note.trim(), active: conn.noteOpen}"
                :transform="'translate(' + connMid(conn).x + ' ' + (connMid(conn).y + 17) + ')'"
-               @mousedown.stop @click.stop="toggleNote(conn)">
-              <circle r="8.5" />
+               @pointerdown.stop @click.stop="toggleNote(conn)">
+              <circle class="touch-hit" r="18" /><circle r="8.5" />
               <line x1="-4" y1="-2.2" x2="4" y2="-2.2" />
               <line x1="-4" y1="0" x2="4" y2="0" />
               <line x1="-4" y1="2.2" x2="1.5" y2="2.2" />
@@ -686,7 +717,7 @@ const TEMPLATE = `
           <g v-for="shape in shapes" :key="shape.id" class="shape-group"
              :class="{selected: shape.id===selectedShapeId, multi: isMulti('s', shape.id), 'connect-source': shape.id===connectFrom}"
              :transform="'translate(' + shape.x + ' ' + shape.y + ')'"
-             @mousedown="onShapeMouseDown(shape, $event)" @click.stop @dblclick.stop="openTextDialog(shape)">
+             @pointerdown="onShapeMouseDown(shape, $event)" @click.stop @dblclick.stop="openTextDialog(shape)">
             <rect v-if="shape.type==='rectangle'" :width="shape.w" :height="shape.h" rx="10" ry="10"
                   :fill="shape.fill" :stroke="shape.id===selectedShapeId ? '#1D6CE0' : shape.stroke"
                   :stroke-width="shape.id===selectedShapeId ? 2.5 : 1.6" />
@@ -704,13 +735,13 @@ const TEMPLATE = `
               <rect v-for="hd in resizeHandles" :key="hd.k" class="resize-handle"
                     :x="shape.w * hd.fx - 5" :y="shape.h * hd.fy - 5" width="10" height="10" rx="2"
                     :style="{cursor: hd.cursor}"
-                    @mousedown.stop="onResizeHandleDown(shape, hd, $event)" @click.stop @dblclick.stop />
+                    @pointerdown.stop="onResizeHandleDown(shape, hd, $event)" @click.stop @dblclick.stop />
             </template>
 
             <g class="note-icon" :class="{'has-note': shape.note && shape.note.trim(), active: shape.noteOpen}"
                :transform="'translate(' + shape.w + ' 0)'"
-               @mousedown.stop @click.stop="toggleNote(shape)">
-              <circle r="8.5" />
+               @pointerdown.stop @click.stop="toggleNote(shape)">
+              <circle class="touch-hit" r="18" /><circle r="8.5" />
               <line x1="-4" y1="-2.2" x2="4" y2="-2.2" />
               <line x1="-4" y1="0" x2="4" y2="0" />
               <line x1="-4" y1="2.2" x2="1.5" y2="2.2" />
@@ -719,8 +750,8 @@ const TEMPLATE = `
             <g class="connect-icon port-start" title="Start (left)"
                :class="{active: shape.id===connectFrom && connectFromPort==='start'}"
                :transform="'translate(0 ' + (shape.h/2) + ')'"
-               @mousedown.stop @click.stop="onPortClick(shape, 'start')">
-              <circle r="8.5" />
+               @pointerdown.stop @click.stop="onPortClick(shape, 'start')">
+              <circle class="touch-hit" r="18" /><circle r="8.5" />
               <line x1="4" y1="0" x2="-3.5" y2="0" />
               <polyline points="-0.5,-3 -3.5,0 -0.5,3" />
             </g>
@@ -728,8 +759,8 @@ const TEMPLATE = `
             <g class="connect-icon port-end" title="End (right)"
                :class="{active: shape.id===connectFrom && connectFromPort==='end'}"
                :transform="'translate(' + shape.w + ' ' + (shape.h/2) + ')'"
-               @mousedown.stop @click.stop="onPortClick(shape, 'end')">
-              <circle r="8.5" />
+               @pointerdown.stop @click.stop="onPortClick(shape, 'end')">
+              <circle class="touch-hit" r="18" /><circle r="8.5" />
               <line x1="-4" y1="0" x2="3.5" y2="0" />
               <polyline points="0.5,-3 3.5,0 0.5,3" />
             </g>
@@ -738,21 +769,21 @@ const TEMPLATE = `
           <!-- free lines and freehand drawings -->
           <g v-for="l in lines" :key="l.id" class="line-group" :class="{selected: l.id===selectedLineId, multi: isMulti('l', l.id)}">
             <path v-if="l.id===selectedLineId || isMulti('l', l.id)" class="line-halo" :d="linePath(l)" :stroke-width="l.width + 8" />
-            <path class="line-hit" :d="linePath(l)" @mousedown.stop="onLineMouseDown(l, $event)" @click.stop />
+            <path class="line-hit" :d="linePath(l)" @pointerdown.stop="onLineMouseDown(l, $event)" @click.stop />
             <path class="line-path" :d="linePath(l)" :stroke="lineInk(l.stroke)" :stroke-width="l.width" />
             <polygon v-if="arrowHead(l)" :points="arrowHead(l)" :fill="lineInk(l.stroke)" stroke-linejoin="round" :stroke="lineInk(l.stroke)" stroke-width="1" pointer-events="none" />
             <g v-if="l.id===selectedLineId || (l.note && l.note.trim()) || l.noteOpen" class="note-icon"
                :class="{'has-note': l.note && l.note.trim(), active: l.noteOpen}"
                :transform="'translate(' + noteAnchor(l).x + ' ' + noteAnchor(l).y + ')'"
-               @mousedown.stop @click.stop="toggleNote(l)">
-              <circle r="8.5" />
+               @pointerdown.stop @click.stop="toggleNote(l)">
+              <circle class="touch-hit" r="18" /><circle r="8.5" />
               <line x1="-4" y1="-2.2" x2="4" y2="-2.2" />
               <line x1="-4" y1="0" x2="4" y2="0" />
               <line x1="-4" y1="2.2" x2="1.5" y2="2.2" />
             </g>
             <template v-if="l.id===selectedLineId && l.kind==='line'">
               <circle v-for="(pt, i) in l.points" :key="i" class="line-handle" :cx="pt.x" :cy="pt.y" r="6"
-                      @mousedown.stop="onLineHandleDown(l, i, $event)" @click.stop />
+                      @pointerdown.stop="onLineHandleDown(l, i, $event)" @click.stop />
             </template>
           </g>
           <g v-if="drawingLine">
@@ -766,12 +797,12 @@ const TEMPLATE = `
                   :x2="notePos(shape).x" :y2="notePos(shape).y + NOTE_H/2" />
             <foreignObject class="note-popup" :x="notePos(shape).x" :y="notePos(shape).y" :width="NOTE_W" :height="NOTE_H">
               <div class="note-box" xmlns="http://www.w3.org/1999/xhtml" @click.stop>
-                <div class="note-box-header" @mousedown.stop="onNoteBoxMouseDown(shape, $event)">
+                <div class="note-box-header" @pointerdown.stop="onNoteBoxMouseDown(shape, $event)">
                   <span>Note — {{ shape.label }}</span>
-                  <button type="button" @mousedown.stop @click.stop="toggleNote(shape)">×</button>
+                  <button type="button" @pointerdown.stop @click.stop="toggleNote(shape)">×</button>
                 </div>
                 <textarea v-model="shape.note" placeholder="Add a note…"
-                          @mousedown.stop @keydown="onNoteKeydown" @vue:mounted="onNoteTextareaMounted"></textarea>
+                          @pointerdown.stop @keydown="onNoteKeydown" @vue:mounted="onNoteTextareaMounted"></textarea>
               </div>
             </foreignObject>
           </g>
@@ -781,12 +812,12 @@ const TEMPLATE = `
                   :x2="notePos(conn).x" :y2="notePos(conn).y + NOTE_H/2" />
             <foreignObject class="note-popup" :x="notePos(conn).x" :y="notePos(conn).y" :width="NOTE_W" :height="NOTE_H">
               <div class="note-box" xmlns="http://www.w3.org/1999/xhtml" @click.stop>
-                <div class="note-box-header" @mousedown.stop="onNoteBoxMouseDown(conn, $event)">
+                <div class="note-box-header" @pointerdown.stop="onNoteBoxMouseDown(conn, $event)">
                   <span>Note — connection</span>
-                  <button type="button" @mousedown.stop @click.stop="toggleNote(conn)">×</button>
+                  <button type="button" @pointerdown.stop @click.stop="toggleNote(conn)">×</button>
                 </div>
                 <textarea v-model="conn.note" placeholder="Add a note…"
-                          @mousedown.stop @keydown="onNoteKeydown" @vue:mounted="onNoteTextareaMounted"></textarea>
+                          @pointerdown.stop @keydown="onNoteKeydown" @vue:mounted="onNoteTextareaMounted"></textarea>
               </div>
             </foreignObject>
           </g>
@@ -796,12 +827,12 @@ const TEMPLATE = `
                   :x2="notePos(l).x" :y2="notePos(l).y + NOTE_H/2" />
             <foreignObject class="note-popup" :x="notePos(l).x" :y="notePos(l).y" :width="NOTE_W" :height="NOTE_H">
               <div class="note-box" xmlns="http://www.w3.org/1999/xhtml" @click.stop>
-                <div class="note-box-header" @mousedown.stop="onNoteBoxMouseDown(l, $event)">
+                <div class="note-box-header" @pointerdown.stop="onNoteBoxMouseDown(l, $event)">
                   <span>Note — {{ l.kind === 'free' ? 'drawing' : 'line' }}</span>
-                  <button type="button" @mousedown.stop @click.stop="toggleNote(l)">×</button>
+                  <button type="button" @pointerdown.stop @click.stop="toggleNote(l)">×</button>
                 </div>
                 <textarea v-model="l.note" placeholder="Add a note…"
-                          @mousedown.stop @keydown="onNoteKeydown" @vue:mounted="onNoteTextareaMounted"></textarea>
+                          @pointerdown.stop @keydown="onNoteKeydown" @vue:mounted="onNoteTextareaMounted"></textarea>
               </div>
             </foreignObject>
           </g>
@@ -817,8 +848,10 @@ const TEMPLATE = `
         <button @click="resetView" title="Reset view" style="font-size:11px;">Reset</button>
       </div>
 
-      <div class="canvas-hint" v-if="mode==='line'">Drag to draw a line · hold Shift for 45° angles · press Escape or click Line again to finish</div>
+      <div class="canvas-hint multi-hint" v-if="multiMode && mode==='select'">Select many: tap items to add or remove them · drag on empty canvas to draw a box · tap the button again to finish</div>
+      <div class="canvas-hint" v-else-if="mode==='line'">Drag to draw a line · hold Shift for 45° angles · press Escape or click Line again to finish</div>
       <div class="canvas-hint" v-else-if="mode==='draw'">Drag to draw freehand · press Escape or click Draw again to finish</div>
+      <div class="canvas-hint" v-else-if="isTouch">Double-tap a shape or connector to edit its label · tap a port to connect · tap empty canvas to add a rectangle · pinch to zoom</div>
       <div class="canvas-hint" v-else>Double-click a shape or connector to edit its label · click a port to connect · click empty canvas to add a rectangle</div>
     </main>
 
@@ -826,7 +859,8 @@ const TEMPLATE = `
       <template v-if="multiCount > 0">
         <h3>{{ multiCount }} selected</h3>
         <div class="meta-row">{{ multi.shapes.length }} shapes · {{ multi.conns.length }} connections · {{ multi.lines.length }} lines</div>
-        <p class="empty-panel">Shift-click an item to add it or remove it. Shift-drag on empty canvas to select with a box. Press Escape to clear the selection.</p>
+        <p class="empty-panel" v-if="multiMode">Tap an item to add it or remove it. Drag on empty canvas to select with a box. Tap the Select many button again to finish.</p>
+        <p class="empty-panel" v-else>Shift-click an item to add it or remove it. Shift-drag on empty canvas to select with a box. Press Escape to clear the selection.</p>
         <button class="delete-btn" @click="deleteMulti()">Delete {{ multiCount }} selected</button>
       </template>
 
@@ -1003,7 +1037,7 @@ DiagramAPI.closeDocument(id)
     </aside>
   </div>
 
-  <div v-if="showClearConfirm" class="modal-overlay" @mousedown.self="showClearConfirm = false">
+  <div v-if="showClearConfirm" class="modal-overlay" @pointerdown.self="showClearConfirm = false">
     <div class="modal-box">
       <h3>Reset all data?</h3>
       <p>This empties the current tab completely — every shape, connection and note — and resets the view. Other open files are not affected. This cannot be undone.</p>
@@ -1014,7 +1048,7 @@ DiagramAPI.closeDocument(id)
     </div>
   </div>
 
-  <div v-if="closeConfirmDoc" class="modal-overlay" @mousedown.self="closeConfirmDoc = null">
+  <div v-if="closeConfirmDoc" class="modal-overlay" @pointerdown.self="closeConfirmDoc = null">
     <div class="modal-box">
       <h3>Close this file?</h3>
       <p><b>{{ closeConfirmName }}</b> has changes that are not exported. Closing it discards them.</p>
@@ -1025,7 +1059,7 @@ DiagramAPI.closeDocument(id)
     </div>
   </div>
 
-  <div v-if="exportDialog" class="modal-overlay" @mousedown.self="closeExportDialog">
+  <div v-if="exportDialog" class="modal-overlay" @pointerdown.self="closeExportDialog">
     <div class="modal-box">
       <h3>{{ exportDialog.kind === 'pptx' ? 'Export as PowerPoint' : (exportDialog.kind === 'png' ? 'Export as PNG image' : 'Export as JSON') }}</h3>
       <p v-if="importedFileName" style="margin-bottom:12px;">Current file: <b>{{ importedFileName }}</b>. Change the name below if you want.</p>
@@ -1041,7 +1075,7 @@ DiagramAPI.closeDocument(id)
     </div>
   </div>
 
-  <div v-if="textDialogTarget" class="modal-overlay" @mousedown.self="closeTextDialog">
+  <div v-if="textDialogTarget" class="modal-overlay" @pointerdown.self="closeTextDialog">
     <div class="modal-box">
       <h3>{{ textDialogTarget.type ? 'Edit shape label' : 'Edit connection label' }}</h3>
       <input type="text" class="text-dialog-input" v-model="textDialogValue"
@@ -1145,7 +1179,10 @@ const app = createApp({
     const closeConfirmDoc = ref(null);  // id of the file waiting for close confirmation
     const importedFileName = ref('');   // full name of the last imported file, e.g. "plan.json"
     const exportDialog = ref(null);     // { kind: 'json' | 'pptx', name } while the export dialog is open
-    const panelVisible = ref(true);
+    const mq = (q) => !!(window.matchMedia && window.matchMedia(q).matches);
+    const isTouch = mq('(pointer: coarse)');
+    const hasTouch = isTouch || mq('(any-pointer: coarse)');   // also laptops with a touchscreen
+    const panelVisible = ref(!mq('(max-width: 760px)'));   // on a phone the panel opens on demand
     const hasObjects = computed(() => shapes.length > 0 || connections.length > 0 || lines.length > 0);
     const palette = PALETTE;
 
@@ -1251,7 +1288,16 @@ const app = createApp({
       const i = arr.indexOf(id);
       if (i === -1) arr.push(id); else arr.splice(i, 1);
     }
-    function isAddKey(evt) { return !!(evt && (evt.shiftKey || evt.ctrlKey || evt.metaKey)); }
+    // "Select many" mode (for touch screens, which have no Shift key) acts like holding Shift.
+    const multiMode = ref(false);
+    function isAddKey(evt) { return multiMode.value || !!(evt && (evt.shiftKey || evt.ctrlKey || evt.metaKey)); }
+    function toggleMultiMode() {
+      multiMode.value = !multiMode.value;
+      if (multiMode.value) {
+        mode.value = 'select'; connectFrom.value = null; connectFromPort.value = null; connectMenuOpen.value = false;
+        seedMulti();                       // keep what is selected now
+      }
+    }
     function deleteMulti() {
       const sh = multi.shapes.slice(), cn = multi.conns.slice(), ln = multi.lines.slice();
       clearMulti();
@@ -1301,6 +1347,19 @@ const app = createApp({
     function onConnMouseDown(conn, evt) {
       if (isAddKey(evt) && mode.value === 'select') { toggleMulti('c', conn.id); return; }
       selectConnection(conn.id);
+      if (isDoubleTap('c' + conn.id, evt)) openTextDialog(conn);
+    }
+
+    // Double tap on a finger or pen = double-click. Some touch browsers never send dblclick.
+    const lastTap = { key: null, t: 0, x: 0, y: 0 };
+    function isDoubleTap(key, evt) {
+      if (!evt || !evt.pointerType || evt.pointerType === 'mouse') return false;
+      const now = Date.now();
+      const hit = lastTap.key === key && now - lastTap.t < 400 &&
+        Math.hypot(evt.clientX - lastTap.x, evt.clientY - lastTap.y) < 30;
+      if (hit) lastTap.key = null;
+      else Object.assign(lastTap, { key, t: now, x: evt.clientX, y: evt.clientY });
+      return hit;
     }
 
     // ---- text dialog: double-click a shape or connector to edit its label in a popup ----
@@ -1503,6 +1562,7 @@ const app = createApp({
     // A line is { id, kind: 'line' | 'free', points: [{x, y}, ...], stroke, width, arrow }.
     // 'line' has exactly two points (start and end). 'free' has many points, already simplified.
     function toggleTool(tool) {
+      multiMode.value = false;
       drawing.active = false;
       connectFrom.value = null; connectFromPort.value = null;
       mode.value = mode.value === tool ? 'select' : tool;
@@ -1642,6 +1702,7 @@ const app = createApp({
         return;
       }
       if (isAddKey(evt)) { toggleMulti('s', shape.id); return; }
+      if (isDoubleTap('s' + shape.id, evt)) { selectShape(shape.id); openTextDialog(shape); return; }
       selectShape(shape.id);
       const pt = clientToWorld(evt.clientX, evt.clientY);
       dragging.active = true;
@@ -1684,7 +1745,44 @@ const app = createApp({
     const CLICK_MOVE_THRESHOLD = 4;
     let pointerIsDown = false;
 
+    // Touch: two fingers pinch to zoom and drag to pan. A second finger cancels what the
+    // first one started (a drag, a stroke, a pan), so the gesture never moves a shape.
+    const touchPts = new Map();
+    const pinch = { active: false, d0: 1, scale0: 1, wx: 0, wy: 0 };
+    function pinchGeom() {
+      const [a, b] = Array.from(touchPts.values());
+      return { d: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)), mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 };
+    }
+    function startPinch() {
+      drawing.active = false; drawing.points = [];
+      marquee.active = false; resizing.active = false;
+      lineDrag.active = false; lineHandleDrag.active = false;
+      dragging.active = false; dragging.id = null;
+      noteDrag.active = false; noteDrag.obj = null;
+      panning.active = false;
+      clickState.moved = true;            // the lifted fingers must not count as a tap
+      const g = pinchGeom(), rect = svgEl.value.getBoundingClientRect();
+      Object.assign(pinch, { active: true, d0: g.d, scale0: viewport.scale,
+        wx: (g.mx - rect.left - viewport.x) / viewport.scale, wy: (g.my - rect.top - viewport.y) / viewport.scale });
+    }
+    function movePinch() {
+      const g = pinchGeom(), rect = svgEl.value.getBoundingClientRect();
+      const s = Math.min(2.5, Math.max(0.3, pinch.scale0 * g.d / pinch.d0));
+      viewport.scale = s;
+      viewport.x = g.mx - rect.left - pinch.wx * s;
+      viewport.y = g.my - rect.top - pinch.wy * s;
+    }
+
     function onSvgMouseDownCapture(evt) {
+      if (evt.pointerType === 'touch') {
+        if (evt.isPrimary) { touchPts.clear(); pinch.active = false; }   // a new gesture: forget stale fingers
+        touchPts.set(evt.pointerId, { x: evt.clientX, y: evt.clientY });
+        if (touchPts.size >= 2) {
+          evt.stopPropagation();
+          if (touchPts.size === 2) startPinch();
+          return;
+        }
+      }
       clickState.downX = evt.clientX;
       clickState.downY = evt.clientY;
       clickState.moved = false;
@@ -1736,6 +1834,10 @@ const app = createApp({
     }
 
     function onMouseMove(evt) {
+      if (evt.pointerType === 'touch' && touchPts.has(evt.pointerId)) {
+        touchPts.set(evt.pointerId, { x: evt.clientX, y: evt.clientY });
+        if (pinch.active) { if (touchPts.size >= 2) movePinch(); return; }
+      }
       const pt = clientToWorld(evt.clientX, evt.clientY);
       mousePos.x = pt.x;
       mousePos.y = pt.y;
@@ -1786,7 +1888,15 @@ const app = createApp({
       }
     }
 
-    function onMouseUp() {
+    function onMouseUp(evt) {
+      if (evt && evt.pointerType === 'touch') {
+        touchPts.delete(evt.pointerId);
+        if (pinch.active) {
+          if (touchPts.size < 2) pinch.active = false;
+          if (touchPts.size === 0) pointerIsDown = false;
+          return;
+        }
+      }
       if (marquee.active) finishMarquee();
       commitDrawing();
       resizing.active = false;
@@ -2695,6 +2805,7 @@ const app = createApp({
         deleteSelected();
       }
       if (e.key === 'Escape') {
+        multiMode.value = false;
         drawing.active = false;
         connectFrom.value = null;
         connectFromPort.value = null;
@@ -2717,6 +2828,7 @@ const app = createApp({
       connectMenuOpen.value = !connectMenuOpen.value;
     }
     function startConnect(kind) {
+      multiMode.value = false;
       connKind.value = (kind === 'one-many' || kind === 'many-many') ? kind : 'arrow';
       connectMenuOpen.value = false;
       mode.value = 'connect';
@@ -2769,7 +2881,7 @@ const app = createApp({
       onShapeMouseDown, onPortClick, portPoint, onSvgMouseDownCapture, onSvgMouseDown, onCanvasClick, onMouseMove, onMouseUp, onWheel, zoomBy, resetView,
       connPath, connMid, diamondPoints, boundaryPoint, autoArrange, clearAll, resetAll, confirmClearAll, confirmClearAllYes, exportJSON, exportPPTX, exportPNG, importJSON,
       triggerImport, deleteSelected, toggleConnectMode, getState, loadState, Math,
-      theme, toggleTheme, lineInk,
+      theme, toggleTheme, lineInk, isTouch, hasTouch, multiMode, toggleMultiMode,
       connKinds, connKind, connKindOf, connKindHint, connectMenuOpen, onConnectButton, startConnect, connMarkerStart, connMarkerEnd,
       resizeHandles, onResizeHandleDown, setShapeSize,
       lines, selectedLineId, selectedLine, lineTarget, lineStyle, lineColors, lineWidths, drawingLine,
