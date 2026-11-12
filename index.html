@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#ffffff">
   <title>Discussion Studio — Free Visual Discussion & Diagram Tool</title>
   <meta name="description" content="Map a conversation as it happens. Free browser-based diagram tool: draw shapes, connect ideas, add notes, export to PowerPoint, PNG or JSON. No sign-up.">
-  <meta name="keywords" content="Discussion Studio, discussion mapping, visual thinking, diagram tool, online diagram maker, flowchart maker, mind map, concept map, argument map, brainstorming tool, meeting whiteboard, offline diagram editor, export diagram to PowerPoint, free diagram software, no sign-up">
+  <meta name="keywords" content="Discussion Studio, discussion mapping, visual thinking, diagram tool, online diagram maker, flowchart maker, mind map, concept map, argument map, brainstorming tool, meeting whiteboard, offline diagram editor, export diagram to PowerPoint, free diagram software, no sign-up, touch screen diagram app, tablet whiteboard">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://platoedes-pty-ltd.github.io/DiscussionStudio/index.html">
   <meta property="og:type" content="website">
@@ -251,6 +251,12 @@
     .trust-item svg { color: var(--accent); }
     .trust-item:nth-child(2) svg { color: var(--warm); }
     .trust-item:nth-child(3) svg { color: var(--green); }
+    .trust-item:nth-child(5) svg { color: var(--warm); }
+    .trust-row { flex-wrap: wrap; row-gap: 14px; }
+    @media (max-width: 1100px) and (min-width: 961px) {
+      .trust-row { gap: 14px 16px; }
+      .trust-item { font-size: 14px; gap: 7px; }
+    }
 
     /* ---- shared section scaffolding ---- */
     .section { padding: 84px 0 0; }
@@ -273,6 +279,9 @@
     .feature:nth-child(4) { animation-delay: .18s; }
     .feature:nth-child(5) { animation-delay: .24s; }
     .feature:nth-child(6) { animation-delay: .3s; }
+    .feature:nth-child(7) { animation-delay: .36s; }
+    .feature:nth-child(8) { animation-delay: .42s; }
+    .feature:nth-child(9) { animation-delay: .48s; }
     .feature-icon { width: 36px; height: 36px; display: grid; place-items: center; margin-bottom: 16px; border-radius: 7px; background: var(--accent-tint); color: var(--accent-dark); }
     .feature:nth-child(3n + 2) .feature-icon { background: var(--warm-tint); color: var(--warm-dark); }
     .feature:nth-child(3n + 3) .feature-icon { background: var(--green-tint); color: var(--green-dark); }
@@ -401,7 +410,7 @@
       .feature { min-height: 0; padding: 20px 14px 18px 0; }
       .feature:nth-child(3n + 2), .feature:nth-child(3n + 3) { padding-left: 14px; }
       .feature:nth-child(odd) { padding-left: 0; border-left: 0; }
-      .feature:nth-child(even) { border-left: 1px solid var(--line); }
+      .feature:nth-child(even) { padding-left: 14px; border-left: 1px solid var(--line); }
       .feature p { font-size: 15px; }
       .spot-copy { padding: 20px; }
       .tool-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -538,6 +547,7 @@
       <span class="trust-item"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="3" y="4" width="14" height="12" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 14 8 10l3 2.5 2.5-2.5 3 3" stroke="currentColor" stroke-width="1.4"/></svg>PNG, PowerPoint, and JSON</span>
       <span class="trust-item"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 3.5h7l3 3v10H5a1.5 1.5 0 0 1-1.5-1.5V5A1.5 1.5 0 0 1 5 3.5Z" stroke="currentColor" stroke-width="1.4"/><path d="M12 4v3h3" stroke="currentColor" stroke-width="1.4"/></svg>Works offline</span>
       <span class="trust-item"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 2.5 16 5v4.4c0 3.8-2.6 6.5-6 8.1-3.4-1.6-6-4.3-6-8.1V5l6-2.5Z" stroke="currentColor" stroke-width="1.4"/><path d="m7.5 9.8 1.6 1.6 3.5-3.7" stroke="currentColor" stroke-width="1.4"/></svg>Private by design</span>
+      <span class="trust-item"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="5" y="2.5" width="10" height="15" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M8.5 14.8h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="10" cy="9" r="2.2" stroke="currentColor" stroke-width="1.4"/></svg>Works on touch screens</span>
     </section>
 
     <section class="shell section" id="features" aria-labelledby="features-title">
@@ -569,6 +579,18 @@
         <article class="feature">
           <span class="feature-icon" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.5 6.5h15v10h-15z"/><path d="M2.5 6.5 4 3.5h5l1 3"/><path d="M12 3.5h4"/></svg></span>
           <h3>Many files, one window</h3><p>Open several diagrams at once, each in its own tab. A dot shows which ones have unexported changes.</p>
+        </article>
+        <article class="feature">
+          <span class="feature-icon" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 6h16M12 6l6-3.5M12 6l6 3.5"/><path d="M2 14h16M8 14 2 10.5M8 14l-6 3.5M12 14l6-3.5M12 14l6 3.5"/></svg></span>
+          <h3>Connection types</h3><p>Click Connect and pick one: an arrow, a crow’s foot for one to many, or crow’s feet at both ends for many to many. Change it later in the side panel.</p>
+        </article>
+        <article class="feature">
+          <span class="feature-icon" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="2.5" width="10" height="15" rx="2"/><path d="M8.5 14.8h3" stroke-linecap="round"/><circle cx="10" cy="9" r="2.2"/></svg></span>
+          <h3>Made for touch</h3><p>Use it on a phone or tablet. Drag with one finger, pinch to zoom, double-tap to rename, and tap <strong>Select many</strong> to pick several items.</p>
+        </article>
+        <article class="feature">
+          <span class="feature-icon" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M16.5 12A7 7 0 0 1 8 3.5a7 7 0 1 0 8.5 8.5Z"/></svg></span>
+          <h3>Dark mode</h3><p>Switch between light and dark from the toolbar. It follows your system setting until you choose. Exports stay light, ready for slides.</p>
         </article>
       </div>
     </section>
@@ -668,8 +690,8 @@
       <div class="tool-grid">
         <article class="tool-item"><span class="tool-number">01</span><h3>Resize with care</h3><p>Drag a square handle, and hold <kbd>Shift</kbd> on a corner to keep proportions. Circles become ellipses.</p></article>
         <article class="tool-item"><span class="tool-number">02</span><h3>Snap your angles</h3><p>Hold <kbd>Shift</kbd> while drawing a line to lock it to 0°, 45°, or 90°.</p></article>
-        <article class="tool-item"><span class="tool-number">03</span><h3>Rename in place</h3><p>Double-click a shape or connection to edit its label.</p></article>
-        <article class="tool-item"><span class="tool-number">04</span><h3>Pan and zoom</h3><p>Drag empty canvas to move around, scroll to zoom, or use the zoom controls.</p></article>
+        <article class="tool-item"><span class="tool-number">03</span><h3>Rename in place</h3><p>Double-click a shape or connection to edit its label. On a touch screen, double-tap it.</p></article>
+        <article class="tool-item"><span class="tool-number">04</span><h3>Pan and zoom</h3><p>Drag empty canvas to move around. Scroll or pinch with two fingers to zoom, or use the zoom controls.</p></article>
         <article class="tool-item"><span class="tool-number">05</span><h3>File names that follow</h3><p>Each tab shows its file name, and every export proposes the same name. Change it before you save.</p></article>
         <article class="tool-item"><span class="tool-number">06</span><h3>Start fresh</h3><p>Reset empties the current file and its view, after you confirm. Other open files stay as they are.</p></article>
         <article class="tool-item"><span class="tool-number">07</span><h3>Import many at once</h3><p>Choose several JSON files together. Each one opens in its own tab.</p></article>
@@ -701,10 +723,13 @@
           <tbody>
             <tr><td>Add a shape</td><td>Use the toolbar buttons, or click empty canvas for a rectangle.</td></tr>
             <tr><td>Connect two shapes</td><td>Click a port icon on one shape, then a port icon on another.</td></tr>
+            <tr><td>Choose a connection type</td><td>Click <strong>Connect</strong> and pick Arrow, One to many, or Many to many. To change a connection later, select it and use <strong>Type</strong> in the side panel.</td></tr>
             <tr><td>Draw a line or freehand</td><td>Pick the <strong>Line</strong> or <strong>Draw</strong> tool, then drag. Press <kbd>Escape</kbd> when you’re done.</td></tr>
             <tr><td>Add a note</td><td>Click the note icon on a shape or connection. For a line, select it first.</td></tr>
-            <tr><td>Select many</td><td><kbd>Shift</kbd>, <kbd>Ctrl</kbd>, or <kbd>Cmd</kbd>-click items, or <kbd>Shift</kbd>-drag a box on empty canvas.</td></tr>
+            <tr><td>Select many</td><td><kbd>Shift</kbd>, <kbd>Ctrl</kbd>, or <kbd>Cmd</kbd>-click items, or <kbd>Shift</kbd>-drag a box on empty canvas. On a touch screen, turn on <strong>Select many</strong> in the toolbar, then tap items or drag a box.</td></tr>
+            <tr><td>Use a phone or tablet</td><td>Drag shapes, lines, and the canvas with one finger. Pinch with two fingers to zoom. Double-tap to rename. On a small screen, open the side panel from the panel button.</td></tr>
             <tr><td>Delete</td><td>Press <kbd>Delete</kbd>. With many items selected, it removes all of them.</td></tr>
+            <tr><td>Switch to dark mode</td><td>Click the moon button in the toolbar. Click the sun to go back to light.</td></tr>
             <tr><td>Export as a picture</td><td>Click the picture button in the toolbar, then confirm the file name.</td></tr>
           </tbody>
         </table>
@@ -715,7 +740,7 @@
       <div class="shell privacy-inner">
         <div class="privacy-copy">
           <span class="privacy-icon" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 2.5 16 5v4.4c0 3.8-2.6 6.5-6 8.1-3.4-1.6-6-4.3-6-8.1V5l6-2.5Z"/><path d="m7.5 9.8 1.6 1.6 3.5-3.7"/></svg></span>
-          <div><h2>Your discussions stay yours.</h2><p>Nothing is sent to a server, and nothing is stored in the browser. Export JSON to keep your work. Reloading the page starts fresh.</p></div>
+          <div><h2>Your discussions stay yours.</h2><p>Nothing is sent to a server, and your diagrams are never stored in the browser. Only your light or dark mode choice is remembered. Export JSON to keep your work. Reloading the page starts fresh.</p></div>
         </div>
         <span class="privacy-pill">One file · Runs offline</span>
       </div>

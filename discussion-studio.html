@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>Discussion Studio — Visual Flow</title>
 <meta name="description" content="Map a discussion in your browser: shapes, connections and notes, exported to PowerPoint, PNG or JSON. Free, works offline, no sign-up.">
 <meta name="keywords" content="Discussion Studio, discussion mapping, visual thinking, diagram tool, online diagram maker, flowchart maker, mind map, concept map, argument map, brainstorming tool, meeting whiteboard, offline diagram editor, export diagram to PowerPoint, free diagram software, no sign-up">
@@ -84,14 +84,18 @@
     --scrim:rgba(0,0,0,.6);
     color-scheme:dark;
   }
-  html,body{height:100%;margin:0;}
+  html,body{height:100%;margin:0;overflow:hidden;overscroll-behavior:none;}
+  /* phones: pinch-zoom and double-tap zoom of the page are off everywhere (the canvas zooms itself),
+     but the panel and the tab bar can still scroll */
+  html{touch-action:pan-x pan-y;}
+  body{position:fixed;inset:0;}
   body{
     font-family:'IBM Plex Sans', system-ui, sans-serif;
     color:var(--ink);
     background:var(--paper);
     overflow:hidden;
   }
-  #app{height:100vh;width:100vw;}
+  #app{position:fixed;inset:0;}   /* not 100vh: on phones that is taller than the visible screen */
   .app-shell{display:flex;flex-direction:column;height:100%;}
 
   /* ---------- topbar ---------- */
@@ -204,7 +208,9 @@
   button{touch-action:manipulation;}
   .touch-hit{fill:transparent !important;stroke:none !important;display:none;}
   .resize-handle, .line-handle{transform-box:fill-box;transform-origin:center;}
+  .canvas-hint.connect-hint{display:none;}   /* wide screens show the chip in the toolbar */
   @media (pointer: coarse){
+    .field input[type=text], .field input[type=number], .panel-note, .text-dialog-input, .note-box textarea{font-size:16px;}
     .touch-hit{display:inline;}                      /* bigger invisible target round each small icon */
     .resize-handle{transform:scale(1.9);}
     .line-handle{transform:scale(1.7);}
@@ -219,7 +225,8 @@
     .tbtn{padding:8px 9px;}
     .tbtn .caret{margin-left:0;}
     .brand{padding-right:8px;}
-    .canvas-hint.multi-hint{display:block;left:12px;right:12px;bottom:70px;max-width:none;text-align:center;}
+    .topbar .hint-chip{display:none;}
+    .canvas-hint.multi-hint, .canvas-hint.connect-hint{display:block;left:12px;right:12px;bottom:70px;max-width:none;text-align:center;}
     .panel{position:absolute;top:0;right:0;bottom:0;z-index:8;width:min(300px, 88vw) !important;box-shadow:-12px 0 30px -12px rgba(0,0,0,.35);}
     .app-tagline{display:none;}
     .canvas-hint{display:none;}
@@ -848,7 +855,8 @@ const TEMPLATE = `
         <button @click="resetView" title="Reset view" style="font-size:11px;">Reset</button>
       </div>
 
-      <div class="canvas-hint multi-hint" v-if="multiMode && mode==='select'">Select many: tap items to add or remove them · drag on empty canvas to draw a box · tap the button again to finish</div>
+      <div class="canvas-hint connect-hint" v-if="mode==='connect'">{{ connectFrom ? 'Now ' + (isTouch ? 'tap' : 'click') + ' the target shape' : (isTouch ? 'Tap' : 'Click') + ' a shape to start ' + connKindHint }} · {{ isTouch ? 'tap' : 'click' }} Connect again to cancel</div>
+      <div class="canvas-hint multi-hint" v-else-if="multiMode && mode==='select'">Select many: tap items to add or remove them · drag on empty canvas to draw a box · tap the button again to finish</div>
       <div class="canvas-hint" v-else-if="mode==='line'">Drag to draw a line · hold Shift for 45° angles · press Escape or click Line again to finish</div>
       <div class="canvas-hint" v-else-if="mode==='draw'">Drag to draw freehand · press Escape or click Draw again to finish</div>
       <div class="canvas-hint" v-else-if="isTouch">Double-tap a shape or connector to edit its label · tap a port to connect · tap empty canvas to add a rectangle · pinch to zoom</div>
@@ -2839,6 +2847,7 @@ const app = createApp({
     onMounted(() => {
       window.addEventListener('keydown', onKeydown);
       if (systemDark && systemDark.addEventListener) systemDark.addEventListener('change', onSystemTheme);
+      document.addEventListener('scroll', keepFrameInPlace, true);
 
       const a = addShape('rectangle', { x: 80, y: 80, label: 'Start' });
       const b = addShape('rectangle', { x: 320, y: 40, label: 'Fetch data' });
@@ -2866,7 +2875,19 @@ const app = createApp({
         setEdgeStyle: (style) => { if (style === 'elbow' || style === 'point') edgeStyle.value = style; },
       };
     });
+    // The page and the app frame never scroll; only the panel, tab bar and dialogs do. A focused
+    // element or the browser itself can still scroll them on a phone, which pushes the header off
+    // screen with no way back. This puts them back at once.
+    function keepFrameInPlace(e) {
+      const el = e.target === document ? document.scrollingElement : e.target;
+      if (!el) return;
+      const frame = el === document.scrollingElement || el === document.body || el.id === 'app' ||
+        (el.classList && (el.classList.contains('app-shell') || el.classList.contains('workspace') || el.classList.contains('canvas-wrap')));
+      if (frame && (el.scrollTop || el.scrollLeft)) { el.scrollTop = 0; el.scrollLeft = 0; }
+    }
+
     onBeforeUnmount(() => {
+      document.removeEventListener('scroll', keepFrameInPlace, true);
       window.removeEventListener('keydown', onKeydown);
       if (systemDark && systemDark.removeEventListener) systemDark.removeEventListener('change', onSystemTheme);
     });
