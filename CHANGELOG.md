@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-13
+
+- Added: resizable notes. Drag the corner grip at the bottom right of a note card. The size is saved with the diagram and used in the PNG export.
+
 ## 2026-11-12
 
 - Added: connection types. Click Connect and pick Arrow (default), One to many (crow's foot at the target), or Many to many (crow's feet at both ends).

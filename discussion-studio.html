@@ -287,7 +287,14 @@
     width:100%;height:100%;box-sizing:border-box;display:flex;flex-direction:column;
     background:var(--panel);border:1px solid var(--border);border-radius:10px;
     border-top:3px solid var(--hl);box-shadow:0 8px 22px rgba(20,80,171,.16);padding:8px 9px;
+    position:relative;
   }
+  .note-resize{
+    position:absolute;right:0;bottom:0;width:16px;height:16px;cursor:nwse-resize;touch-action:none;
+    background:linear-gradient(135deg,transparent 0 55%,var(--ink-soft) 55% 62%,transparent 62% 75%,var(--ink-soft) 75% 82%,transparent 82%);
+    border-bottom-right-radius:10px;opacity:.6;
+  }
+  .note-resize:hover{opacity:1;}
   .note-box-header{
     display:flex;align-items:center;justify-content:space-between;
     font-size:11.5px;font-weight:600;color:var(--ink-soft);margin-bottom:6px;
@@ -792,8 +799,8 @@ const TEMPLATE = `
           <!-- persistent note cards: one per shape/connection with noteOpen, tethered by a dotted line -->
           <g v-for="shape in shapes.filter(s => s.noteOpen)" :key="'note-shape-' + shape.id">
             <line class="note-tether" :x1="noteAnchor(shape).x" :y1="noteAnchor(shape).y"
-                  :x2="notePos(shape).x" :y2="notePos(shape).y + NOTE_H/2" />
-            <foreignObject class="note-popup" :x="notePos(shape).x" :y="notePos(shape).y" :width="NOTE_W" :height="NOTE_H">
+                  :x2="notePos(shape).x" :y2="notePos(shape).y + noteH(shape)/2" />
+            <foreignObject class="note-popup" :x="notePos(shape).x" :y="notePos(shape).y" :width="noteW(shape)" :height="noteH(shape)">
               <div class="note-box" xmlns="http://www.w3.org/1999/xhtml" @click.stop>
                 <div class="note-box-header" @pointerdown.stop="onNoteBoxMouseDown(shape, $event)">
                   <span>Note — {{ shape.label }}</span>
@@ -801,14 +808,15 @@ const TEMPLATE = `
                 </div>
                 <textarea v-model="shape.note" placeholder="Add a note…"
                           @pointerdown.stop @keydown="onNoteKeydown" @vue:mounted="onNoteTextareaMounted"></textarea>
+                <div class="note-resize" title="Drag to resize" @pointerdown.stop="onNoteResizeDown(shape, $event)"></div>
               </div>
             </foreignObject>
           </g>
 
           <g v-for="conn in connections.filter(c => c.noteOpen)" :key="'note-conn-' + conn.id">
             <line class="note-tether" :x1="noteAnchor(conn).x" :y1="noteAnchor(conn).y"
-                  :x2="notePos(conn).x" :y2="notePos(conn).y + NOTE_H/2" />
-            <foreignObject class="note-popup" :x="notePos(conn).x" :y="notePos(conn).y" :width="NOTE_W" :height="NOTE_H">
+                  :x2="notePos(conn).x" :y2="notePos(conn).y + noteH(conn)/2" />
+            <foreignObject class="note-popup" :x="notePos(conn).x" :y="notePos(conn).y" :width="noteW(conn)" :height="noteH(conn)">
               <div class="note-box" xmlns="http://www.w3.org/1999/xhtml" @click.stop>
                 <div class="note-box-header" @pointerdown.stop="onNoteBoxMouseDown(conn, $event)">
                   <span>Note — connection</span>
@@ -816,14 +824,15 @@ const TEMPLATE = `
                 </div>
                 <textarea v-model="conn.note" placeholder="Add a note…"
                           @pointerdown.stop @keydown="onNoteKeydown" @vue:mounted="onNoteTextareaMounted"></textarea>
+                <div class="note-resize" title="Drag to resize" @pointerdown.stop="onNoteResizeDown(conn, $event)"></div>
               </div>
             </foreignObject>
           </g>
 
           <g v-for="l in lines.filter(x => x.noteOpen)" :key="'note-line-' + l.id">
             <line class="note-tether" :x1="noteAnchor(l).x" :y1="noteAnchor(l).y"
-                  :x2="notePos(l).x" :y2="notePos(l).y + NOTE_H/2" />
-            <foreignObject class="note-popup" :x="notePos(l).x" :y="notePos(l).y" :width="NOTE_W" :height="NOTE_H">
+                  :x2="notePos(l).x" :y2="notePos(l).y + noteH(l)/2" />
+            <foreignObject class="note-popup" :x="notePos(l).x" :y="notePos(l).y" :width="noteW(l)" :height="noteH(l)">
               <div class="note-box" xmlns="http://www.w3.org/1999/xhtml" @click.stop>
                 <div class="note-box-header" @pointerdown.stop="onNoteBoxMouseDown(l, $event)">
                   <span>Note — {{ l.kind === 'free' ? 'drawing' : 'line' }}</span>
@@ -831,6 +840,7 @@ const TEMPLATE = `
                 </div>
                 <textarea v-model="l.note" placeholder="Add a note…"
                           @pointerdown.stop @keydown="onNoteKeydown" @vue:mounted="onNoteTextareaMounted"></textarea>
+                <div class="note-resize" title="Drag to resize" @pointerdown.stop="onNoteResizeDown(l, $event)"></div>
               </div>
             </foreignObject>
           </g>
@@ -1224,7 +1234,7 @@ const app = createApp({
         fill: opts.fill || '#FFFFFF',
         stroke: opts.stroke || '#14213D',
         note: opts.note || '',
-        noteOpen: false, noteOffsetX: null, noteOffsetY: null,
+        noteOpen: false, noteOffsetX: null, noteOffsetY: null, noteW: null, noteH: null,
       });
       selectShape(id);
       return id;
@@ -1248,7 +1258,7 @@ const app = createApp({
       const id = uid('conn');
       connections.push({
         id, from: fromId, to: toId, label: label || '', note: note || '',
-        noteOpen: false, noteOffsetX: null, noteOffsetY: null,
+        noteOpen: false, noteOffsetX: null, noteOffsetY: null, noteW: null, noteH: null,
         fromPort: fp, toPort: tp,
         kind: (kind === 'one-many' || kind === 'many-many') ? kind : 'arrow',
       });
@@ -1396,8 +1406,14 @@ const app = createApp({
     // Position is stored as an offset from the object's anchor point (not an absolute
     // canvas position), so a note automatically travels with its shape/connection when
     // that moves, while still being independently draggable.
-    const NOTE_W = 200, NOTE_H = 136;
-    const noteDrag = reactive({ active: false, obj: null, grabX: 0, grabY: 0 });
+    const NOTE_W = 200, NOTE_H = 136, NOTE_MIN_W = 140, NOTE_MIN_H = 90, NOTE_MAX = 2000;
+    // mode 'move' drags the card; 'resize' drags its bottom-right corner.
+    const noteDrag = reactive({ active: false, obj: null, mode: 'move', grabX: 0, grabY: 0 });
+
+    // Card size per note. Missing or invalid values (older files) fall back to the default size.
+    function noteSize(v, def, min) { v = +v; return isFinite(v) && v > 0 ? Math.min(NOTE_MAX, Math.max(min, v)) : def; }
+    function noteW(obj) { return noteSize(obj.noteW, NOTE_W, NOTE_MIN_W); }
+    function noteH(obj) { return noteSize(obj.noteH, NOTE_H, NOTE_MIN_H); }
 
     function noteAnchor(obj) {
       // shapes carry a `type` field ('rectangle'/'circle'/'diamond'); connections don't.
@@ -1443,8 +1459,21 @@ const app = createApp({
       const pt = clientToWorld(evt.clientX, evt.clientY);
       noteDrag.active = true;
       noteDrag.obj = obj;
+      noteDrag.mode = 'move';
       noteDrag.grabX = pt.x - pos.x;
       noteDrag.grabY = pt.y - pos.y;
+    }
+
+    function onNoteResizeDown(obj, evt) {
+      evt.preventDefault();
+      const pos = notePos(obj);
+      const pt = clientToWorld(evt.clientX, evt.clientY);
+      noteDrag.active = true;
+      noteDrag.obj = obj;
+      noteDrag.mode = 'resize';
+      // distance from the pointer to the card's corner, so the corner does not jump on grab
+      noteDrag.grabX = pos.x + noteW(obj) - pt.x;
+      noteDrag.grabY = pos.y + noteH(obj) - pt.y;
     }
 
     function onNoteKeydown(e) {
@@ -1653,7 +1682,7 @@ const app = createApp({
         stroke: opts.stroke || lineStyle.stroke,
         width: opts.width > 0 ? +opts.width : lineStyle.width,
         arrow: kind === 'free' ? false : (opts.arrow !== undefined ? !!opts.arrow : lineStyle.arrow),
-        note: opts.note ? String(opts.note) : '', noteOpen: false, noteOffsetX: null, noteOffsetY: null,
+        note: opts.note ? String(opts.note) : '', noteOpen: false, noteOffsetX: null, noteOffsetY: null, noteW: null, noteH: null,
       });
       return id;
     }
@@ -1874,6 +1903,10 @@ const app = createApp({
         if (!shape) return;
         shape.x = pt.x - dragging.offsetX;
         shape.y = pt.y - dragging.offsetY;
+      } else if (noteDrag.active && noteDrag.mode === 'resize') {
+        const pos = notePos(noteDrag.obj);
+        noteDrag.obj.noteW = Math.round(noteSize(pt.x + noteDrag.grabX - pos.x, NOTE_MIN_W, NOTE_MIN_W));
+        noteDrag.obj.noteH = Math.round(noteSize(pt.y + noteDrag.grabY - pos.y, NOTE_MIN_H, NOTE_MIN_H));
       } else if (noteDrag.active) {
         const anchor = noteAnchor(noteDrag.obj);
         const desiredX = pt.x - noteDrag.grabX;
@@ -2192,6 +2225,8 @@ const app = createApp({
           noteOpen: !!l.noteOpen,
           noteOffsetX: isFinite(l.noteOffsetX) && l.noteOffsetX !== null ? +l.noteOffsetX : null,
           noteOffsetY: isFinite(l.noteOffsetY) && l.noteOffsetY !== null ? +l.noteOffsetY : null,
+          noteW: +l.noteW > 0 ? +l.noteW : null,
+          noteH: +l.noteH > 0 ? +l.noteH : null,
         }));
     }
 
@@ -2603,7 +2638,7 @@ const app = createApp({
       openNotes.forEach(n => {
         n.anchor = noteAnchor(n.o); n.pos = notePos(n.o);
         grow(n.anchor.x, n.anchor.y, 1);
-        grow(n.pos.x, n.pos.y, 1); grow(n.pos.x + NOTE_W, n.pos.y + NOTE_H, 1);
+        grow(n.pos.x, n.pos.y, 1); n.w = noteW(n.o); n.h = noteH(n.o); grow(n.pos.x + n.w, n.pos.y + n.h, 1);
       });
       const worldW = Math.max(1, maxX - minX) + 2 * PNG_PAD;
       const worldH = Math.max(1, maxY - minY) + 2 * PNG_PAD;
@@ -2709,7 +2744,7 @@ const app = createApp({
 
       // open notes: dotted tether, then the card (header and text), drawn on top
       openNotes.forEach(n => {
-        const x = n.pos.x, y = n.pos.y;
+        const x = n.pos.x, y = n.pos.y, NOTE_W = n.w, NOTE_H = n.h;
         ctx.save();
         ctx.strokeStyle = '#4F5D75'; ctx.lineWidth = 1.3; ctx.setLineDash([4, 4]); ctx.lineCap = 'butt';
         ctx.beginPath(); ctx.moveTo(n.anchor.x, n.anchor.y); ctx.lineTo(x, y + NOTE_H / 2); ctx.stroke();
@@ -2901,7 +2936,7 @@ const app = createApp({
       docs, activeDocId, docDirty, switchDoc, newDoc, requestCloseDoc, closeConfirmDoc, closeConfirmName, closeDocConfirmYes,
       importedFileName, exportDialog, openExportDialog, closeExportDialog, confirmExport, onExportDialogKeydown, onExportDialogInputMounted,
       textDialogTarget, textDialogValue, openTextDialog, closeTextDialog, saveTextDialog, onTextDialogKeydown, onTextDialogInputMounted,
-      toggleNote, onNoteKeydown, onNoteTextareaMounted, onNoteBoxMouseDown, noteAnchor, notePos, NOTE_W, NOTE_H,
+      toggleNote, onNoteKeydown, onNoteTextareaMounted, onNoteBoxMouseDown, onNoteResizeDown, noteAnchor, notePos, noteW, noteH, NOTE_W, NOTE_H,
     };
   }
 });
