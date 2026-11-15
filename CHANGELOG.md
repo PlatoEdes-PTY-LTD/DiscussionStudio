@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-16
+
+- Changed: the JSON, PowerPoint and PNG exports open the system "Save as" dialog, so you can choose the folder and file name. This works in browsers that support it (Chrome, Edge). Other browsers keep the name dialog and download the file.
+
 ## 2026-11-13
 
 - Added: resizable notes. Drag the corner grip at the bottom right of a note card. The size is saved with the diagram and used in the PNG export.

@@ -427,7 +427,15 @@ A file is not valid when it is not JSON, or when its top level is not an object.
 
 ### 9.3 Export
 
-The export buttons do not download at once. They open the export dialog.
+The export buttons do not download at once.
+
+When the browser supports the File System Access API (`window.showSaveFilePicker`, for example Chrome and Edge), the buttons open the system "Save as" dialog. The user chooses the folder and the file name. The proposed name follows the rules below. Cancel saves nothing. The picker opens straight from the click, before the file is built, because the browser requires a user gesture.
+
+When the picker is not available (Firefox, Safari, a cross-origin frame), the buttons open the application's export dialog and the file is downloaded to the browser's download folder.
+
+`DiagramAPI.exportJSON`, `exportPPTX` and `exportPNG` always download. They take an optional second argument, a `FileSystemFileHandle`; when given, the file is written to it.
+
+The export dialog works as follows:
 
 1. The dialog shows an input with a proposed name.
 2. When a file was imported, the proposed name is the imported name without its extension. Example: `My Plan v2.json` gives `My Plan v2`.
@@ -435,7 +443,7 @@ The export buttons do not download at once. They open the export dialog.
 4. The extension (`.json`, `.pptx`, or `.png`) shows next to the input. The application adds it. If the user types the extension, the application removes the duplicate.
 5. The function `cleanExportName` removes these characters: `\ / : * ? " < > |` and control characters. An empty name becomes `diagram`.
 
-After a JSON export, the active file gets the exported name. The tab shows the new name. The file is no longer changed. A PowerPoint export does not change the file.
+After a JSON export, the active file gets the exported name (the name chosen in the save dialog, when one was used). The tab shows the new name. The file is no longer changed. A PowerPoint export does not change the file.
 
 A PNG export does not change the file.
 

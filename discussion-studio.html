@@ -2384,9 +2384,67 @@ const app = createApp({
       n = n.replace(new RegExp('\\.' + ext + '$', 'i'), '').trim();
       return n || 'diagram';
     }
-    function openExportDialog(kind) {
+    // ---- Save location ----
+    // Where the browser has the File System Access API (Chrome, Edge), the export buttons open
+    // the system "Save as" dialog, so the user picks both the folder and the name. Elsewhere
+    // (Firefox, Safari, a sandboxed frame) the app shows its own name dialog and downloads the
+    // file to the browser's download folder. The picker must open straight from the click
+    // (it needs a user gesture), so it is opened before the file is built.
+    const SAVE_TYPES = {
+      json: { description: 'Discussion Studio diagram (JSON)', accept: { 'application/json': ['.json'] } },
+      pptx: { description: 'PowerPoint presentation', accept: { 'application/vnd.openxmlformats-officedocument.presentationml.presentation': ['.pptx'] } },
+      png:  { description: 'PNG image', accept: { 'image/png': ['.png'] } },
+    };
+    const canPickSaveLocation = typeof window.showSaveFilePicker === 'function';
+    // Returns a file handle, null when the user cancels, or undefined when the picker
+    // can't be used here (then the caller falls back to a download).
+    async function pickSaveHandle(kind, name) {
+      if (!canPickSaveLocation) return undefined;
+      try {
+        return await window.showSaveFilePicker({
+          suggestedName: cleanExportName(name, kind) + '.' + kind,
+          types: [SAVE_TYPES[kind]],
+          excludeAcceptAllOption: true,
+          id: 'discussion-studio-export',
+        });
+      } catch (err) {
+        if (err && err.name === 'AbortError') return null;
+        return undefined;   // SecurityError (no gesture, cross-origin frame) and the like
+      }
+    }
+    // Writes the blob to the picked file, or downloads it. Returns the saved file name,
+    // or null when nothing was saved.
+    async function saveBlob(blob, fileName, handle) {
+      if (handle) {
+        try {
+          const w = await handle.createWritable();
+          await w.write(blob);
+          await w.close();
+          return handle.name;
+        } catch (err) {
+          alert('The file could not be saved: ' + ((err && err.message) || err));
+          return null;
+        }
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = fileName; a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      return fileName;
+    }
+
+    async function openExportDialog(kind) {
       if ((kind === 'pptx' || kind === 'png') && shapes.length === 0 && lines.length === 0) {
         alert('Add at least one shape or line before exporting to ' + (kind === 'png' ? 'PNG.' : 'PowerPoint.'));
+        return;
+      }
+      const handle = await pickSaveHandle(kind, defaultExportBase());
+      if (handle === null) return;   // the user cancelled the save dialog
+      if (handle) {
+        const name = handle.name;
+        if (kind === 'pptx') exportPPTX(name, handle);
+        else if (kind === 'png') exportPNG(name, handle);
+        else exportJSON(name, handle);
         return;
       }
       exportDialog.value = { kind, name: defaultExportBase() };
@@ -2409,15 +2467,14 @@ const app = createApp({
       nextTick(() => { vnode.el.focus(); vnode.el.select(); });
     }
 
-    function exportJSON(name) {
-      const fileName = cleanExportName(typeof name === 'string' ? name : defaultExportBase(), 'json') + '.json';
+    async function exportJSON(name, handle) {
+      let fileName = cleanExportName(typeof name === 'string' ? name : defaultExportBase(), 'json') + '.json';
+      const d = activeDoc.value;
       const data = getState();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = fileName; a.click();
-      URL.revokeObjectURL(url);
-      const d = activeDoc.value;   // the file now has this name and counts as saved
+      fileName = await saveBlob(blob, fileName, handle);
+      if (!fileName) return;
+      if (d !== activeDoc.value) return;   // the user switched tabs while the file was written   // the file now has this name and counts as saved
       if (d) {
         d.name = fileName; d.fileName = fileName;
         d.baseline = stateKey(data);
@@ -2454,7 +2511,7 @@ const app = createApp({
       });
     }
 
-    async function exportPPTX(name) {
+    async function exportPPTX(name, handle) {
       if (typeof window.PptxGenJS === 'undefined') {
         alert('The PowerPoint export library failed to load.');
         return;
@@ -2559,7 +2616,9 @@ const app = createApp({
         }
       });
 
-      await pptx.writeFile({ fileName: cleanExportName(typeof name === 'string' ? name : defaultExportBase(), 'pptx') + '.pptx' });
+      const fileName = cleanExportName(typeof name === 'string' ? name : defaultExportBase(), 'pptx') + '.pptx';
+      const blob = await pptx.write({ outputType: 'blob' });
+      await saveBlob(blob, fileName, handle);
     }
 
     // ---- PNG export ----
@@ -2612,7 +2671,7 @@ const app = createApp({
       ctx.lineTo(x, y + r); ctx.arcTo(x, y, x + r, y, r); ctx.closePath();
     }
 
-    function exportPNG(name) {
+    function exportPNG(name, handle) {
       if (shapes.length === 0 && lines.length === 0) {
         alert('Add at least one shape or line before exporting to PNG.');
         return;
@@ -2776,10 +2835,7 @@ const app = createApp({
 
       canvas.toBlob(blob => {
         if (!blob) { alert('The PNG export failed.'); return; }
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = fileName; a.click();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        saveBlob(blob, fileName, handle);
       }, 'image/png');
     }
 
