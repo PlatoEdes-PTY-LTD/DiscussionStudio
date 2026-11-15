@@ -1180,6 +1180,10 @@ const app = createApp({
     const drawing = reactive({ active: false, kind: 'line', points: [] });
     const resizing = reactive({ active: false, id: null, ax: 0, ay: 0, startX: 0, startY: 0, x: 0, y: 0, w: 0, h: 0 });
     const lineDrag = reactive({ active: false, id: null, lastX: 0, lastY: 0 });
+    // Group drag: pressing an item that is in the multi-selection moves every selected shape
+    // and line together (connections and notes follow their shapes). A press that does not
+    // move acts as a click on that item: see endGroupDrag.
+    const groupDrag = reactive({ active: false, kind: null, id: null, addKey: false, lastX: 0, lastY: 0 });
     const lineHandleDrag = reactive({ active: false, id: null, idx: 0 });
     const mousePos = reactive({ x: 0, y: 0 });
     const showApiDoc = ref(false);
@@ -1505,7 +1509,7 @@ const app = createApp({
       mode.value = 'select';
       connectFrom.value = null;
       connectFromPort.value = null;
-      dragging.active = false; dragging.id = null;
+      dragging.active = false; dragging.id = null; groupDrag.active = false;
       panning.active = false;
       noteDrag.active = false; noteDrag.obj = null;
       drawing.active = false; lineDrag.active = false; lineHandleDrag.active = false; resizing.active = false;
@@ -1696,6 +1700,7 @@ const app = createApp({
       if (selectedLine.value) selectedLine.value[key] = val;
     }
     function onLineMouseDown(l, evt) {
+      if (mode.value === 'select' && isMulti('l', l.id)) { startGroupDrag('l', l.id, evt); return; }
       if (isAddKey(evt) && mode.value === 'select') { toggleMulti('l', l.id); return; }
       selectLine(l.id);
       const pt = clientToWorld(evt.clientX, evt.clientY);
@@ -1704,6 +1709,27 @@ const app = createApp({
     function onLineHandleDown(l, idx) {
       selectLine(l.id);
       lineHandleDrag.active = true; lineHandleDrag.id = l.id; lineHandleDrag.idx = idx;
+    }
+
+    function startGroupDrag(kind, id, evt) {
+      const pt = clientToWorld(evt.clientX, evt.clientY);
+      Object.assign(groupDrag, { active: true, kind, id, addKey: isAddKey(evt), lastX: pt.x, lastY: pt.y });
+    }
+    function moveGroupDrag(pt) {
+      const dx = pt.x - groupDrag.lastX, dy = pt.y - groupDrag.lastY;
+      groupDrag.lastX = pt.x; groupDrag.lastY = pt.y;
+      if (!clickState.moved) return;     // below the drag threshold: still a click
+      shapes.forEach(sh => { if (multi.shapes.indexOf(sh.id) !== -1) { sh.x += dx; sh.y += dy; } });
+      lines.forEach(l => { if (multi.lines.indexOf(l.id) !== -1) l.points.forEach(q => { q.x += dx; q.y += dy; }); });
+    }
+    function endGroupDrag() {
+      if (!groupDrag.active) return;
+      groupDrag.active = false;
+      if (clickState.moved) return;
+      // A click on a selected item: Shift (or Select many) removes it, a plain click selects it alone.
+      if (groupDrag.addKey) toggleMulti(groupDrag.kind, groupDrag.id);
+      else if (groupDrag.kind === 's') selectShape(groupDrag.id);
+      else selectLine(groupDrag.id);
     }
 
     function clientToWorld(clientX, clientY) {
@@ -1728,6 +1754,7 @@ const app = createApp({
         }
         return;
       }
+      if (isMulti('s', shape.id)) { startGroupDrag('s', shape.id, evt); return; }
       if (isAddKey(evt)) { toggleMulti('s', shape.id); return; }
       if (isDoubleTap('s' + shape.id, evt)) { selectShape(shape.id); openTextDialog(shape); return; }
       selectShape(shape.id);
@@ -1784,7 +1811,7 @@ const app = createApp({
       drawing.active = false; drawing.points = [];
       marquee.active = false; resizing.active = false;
       lineDrag.active = false; lineHandleDrag.active = false;
-      dragging.active = false; dragging.id = null;
+      dragging.active = false; dragging.id = null; groupDrag.active = false;
       noteDrag.active = false; noteDrag.obj = null;
       panning.active = false;
       clickState.moved = true;            // the lifted fingers must not count as a tap
@@ -1876,6 +1903,8 @@ const app = createApp({
       }
       if (marquee.active) {
         marquee.x1 = pt.x; marquee.y1 = pt.y;
+      } else if (groupDrag.active) {
+        moveGroupDrag(pt);
       } else if (resizing.active) {
         applyResize(pt, evt.shiftKey);
       } else if (drawing.active) {
@@ -1929,6 +1958,7 @@ const app = createApp({
         }
       }
       if (marquee.active) finishMarquee();
+      endGroupDrag();
       commitDrawing();
       resizing.active = false;
       lineDrag.active = false; lineHandleDrag.active = false;
@@ -2286,7 +2316,7 @@ const app = createApp({
     function resetTransient() {
       mode.value = 'select';
       connectFrom.value = null; connectFromPort.value = null;
-      dragging.active = false; dragging.id = null;
+      dragging.active = false; dragging.id = null; groupDrag.active = false;
       panning.active = false;
       noteDrag.active = false; noteDrag.obj = null;
       drawing.active = false; lineDrag.active = false; lineHandleDrag.active = false; resizing.active = false;

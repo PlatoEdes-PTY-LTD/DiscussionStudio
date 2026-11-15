@@ -274,9 +274,10 @@ The panel is on the right. It shows the fields of the selected shape, connection
 |---|---|
 | `Shift`-click an item | Adds the item to the multi-selection. The item that was selected before becomes part of it. |
 | `Shift`-click an item that is in the multi-selection | Removes that item. |
+| Drag a shape or line that is in the multi-selection | Moves all selected shapes and lines together. Connections and notes follow. The selection stays. |
 | `Shift`-drag on empty canvas | Draws a selection box. When the user releases the button, the box adds the items that it touches. |
 | Click the Delete button in the panel, or press `Delete` or `Backspace` | Deletes all selected items. |
-| `Escape`, or a plain click on an item or on empty canvas | Clears the multi-selection. |
+| `Escape`, or a plain click (no drag) on an item or on empty canvas | Clears the multi-selection. A plain click on a selected item selects that item alone. |
 
 `Ctrl` and `Cmd` do the same as `Shift`. A selected item has a dashed outline (shape), an orange line (connection), or a halo (line).
 
@@ -286,14 +287,15 @@ Multi-selection works only in `select` mode. In a tool mode, `Shift` has no effe
 
 ### 6B.2 How it works
 
-1. `onShapeMouseDown`, `onConnMouseDown`, and `onLineMouseDown` call `toggleMulti` when the user holds `Shift`, `Ctrl`, or `Cmd`. They do not start a drag.
+1. `onShapeMouseDown`, `onConnMouseDown`, and `onLineMouseDown` call `toggleMulti` when the user holds `Shift`, `Ctrl`, or `Cmd` on an item that is not selected. They do not start a drag.
+1a. When the pressed shape or line is already in `multi`, `onShapeMouseDown` and `onLineMouseDown` call `startGroupDrag` instead. `moveGroupDrag` moves every shape and line in `multi` by the pointer delta, once the pointer has moved past the click threshold. `endGroupDrag` runs on pointer up: when the pointer did not move, it acts as a click (with an add key or in Select many mode it removes the item, otherwise it selects the item alone).
 2. `seedMulti` moves the single selection into `multi`. This is how the first click and the second click make one set.
 3. `onSvgMouseDown` starts the selection box when the user holds `Shift` on empty canvas. It sets `clickState.wasConnectCancel` so that the click that follows does not add a rectangle.
 4. `onMouseMove` updates `marquee`. `onMouseUp` calls `finishMarquee`. The function ignores a box that is smaller than 3 units.
 5. `selectShape`, `selectConnection`, `selectLine`, and `clearSelection` call `clearMulti`. A single selection and a multi-selection cannot exist together.
 6. `deleteMulti` removes the connections first, then the shapes, then the lines. `removeShape` also removes the connections of the shape. The other remove functions ignore an id that does not exist.
 
-A multi-selection does not move together. The user cannot drag it. Only delete is available.
+The user can drag a multi-selection by any selected shape or line. Selected connections cannot start a drag; they follow their shapes. Delete is the only other action on a multi-selection.
 
 ---
 

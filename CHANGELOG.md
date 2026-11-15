@@ -2,6 +2,7 @@
 
 ## 2026-11-16
 
+- Added: drag a multi-selection. Drag any selected shape or line to move all selected items together. Connections and notes follow.
 - Changed: the JSON, PowerPoint and PNG exports open the system "Save as" dialog, so you can choose the folder and file name. This works in browsers that support it (Chrome, Edge). Other browsers keep the name dialog and download the file.
 
 ## 2026-11-13
