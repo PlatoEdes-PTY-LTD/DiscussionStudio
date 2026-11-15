@@ -85,7 +85,7 @@ The application had these names in this order: Diagram Studio, Brain Dump Studio
 
 ### 4.1 General
 
-The application is one HTML file. It has no external script dependencies. It makes no network request for code.
+The application is one HTML file. It has no external script dependencies. It makes no network request for code. Live sharing (Section 10A) makes network requests to the PeerJS server and to other browsers only while a session is on.
 
 **CAUTION:** Do not add a CDN script tag. Earlier versions used a CDN. The CDN did not load in the user's sandboxed viewer. The application then showed a blank page.
 
@@ -96,8 +96,9 @@ The file has these parts in this order:
 1. `<head>`: title, description, viewport, favicon, Google Fonts link, and one `<style>` block with all CSS.
 2. Script block 1: Vue 3.5.42 (global build, embedded).
 3. Script block 2: PptxGenJS 4.0.1 (`pptxgen.bundle.js`, embedded). This block includes JSZip.
-4. Script block 3: the application code (about 97 KB).
-5. `<div id="app">` is the mount point.
+4. Script block 3: PeerJS 1.5.4 (`peerjs.min.js`, embedded). It defines `window.Peer`.
+5. Script block 4: the application code (about 97 KB).
+6. `<div id="app">` is the mount point.
 
 ### 4.3 Application code
 
@@ -548,6 +549,30 @@ The application does not have rows or columns. If the user asks to empty "rows a
 
 When the canvas is already empty, the toolbar button does nothing.
 
+## 10A. Live sharing
+
+### 10A.1 Use
+
+1. The host clicks **Share**, enters a name, and clicks **Start sharing**. The dialog shows the link `…/discussion-studio.html?room=<host peer id>`.
+2. A guest opens the link. The app shows the **Join a shared diagram** dialog. The guest enters a name and clicks **Join**.
+3. The guest receives the host's diagram in a tab named `Shared · <host tab name>`. If the guest's only tab is an unchanged `Untitled`, that tab is reused.
+4. The toolbar shows a dot with initials for each person and a **Live** button. A green dot marks the shared tab. Remote pointers show on the canvas with names.
+5. **Stop sharing** (host) or **Leave** (guest) ends it. Closing the shared tab also ends it. Each person keeps their copy.
+
+The name is saved in `localStorage` under `discussion-studio-name`.
+
+### 10A.2 How it works
+
+- **Transport.** PeerJS uses the public server `0.peerjs.com` to introduce browsers, then WebRTC data channels. The host's peer id is `dstudio-` plus 12 random characters. Guests connect only to the host (star topology).
+- **Shared tab.** `collab.docId` is the tab active when sharing started. Only that tab is sent. When it is not the active tab, incoming changes go into its saved snapshot (`doc.saved.state`).
+- **Operations.** Every 90 ms, `flushCollab()` compares each item's JSON with `syncBase` (the last sent or received JSON) and sends the differences as `{ k: 'shapes:shape_3', v: item }`. `v: null` means deleted. `edgeStyle` is one more key. Changes therefore merge per item: two people moving different shapes do not overwrite each other.
+- **Order.** The host applies operations in arrival order and relays each one to every guest, including the sender. A guest skips an incoming operation for an item that has its own change still pending (`pending` map, by sequence number). Its change reaches the host later and wins there. All copies end with the same content. `flushCollab()` also runs before any incoming message is applied and before a tab switch.
+- **Ids.** In a session, new ids get a three-character suffix per person (`shape_7_k2q`, `line_4_k2q`). Two people adding at once do not create the same id. `loadState` still reads the number before the suffix.
+- **In-place update.** An update changes the existing object instead of replacing it, because drags and note cards hold references to it.
+- **Validation.** Incoming operations are checked: known collection, `id` matches the key, finite shape geometry, string connection ends, lines through `cleanLines`. Names are trimmed to 40 characters. Labels render as text, not HTML.
+- **Messages.** Guest to host: `hello {name}`, `ops {ops, seq}`, `cursor {x, y}`, `bye`. Host to guest: `welcome {state, docName, peers}`, `peers`, `ops {ops, from, seq}`, `cursor {id, x, y}`, `bye`. The host sends `bye` on `pagehide`.
+- **Errors.** A toast reports the problem: session not found, no connection to the PeerJS server, or no reply from the host within 20 seconds (often a firewall).
+
 ---
 
 ## 11. Public API
@@ -647,7 +672,7 @@ Do all of these tests. Do not trust the code by inspection alone.
 
 | Item | Fact |
 |---|---|
-| Browser storage | `localStorage` is not used. Data exists only while the page is open. This includes all open files. The user must export JSON to keep data. |
+| Browser storage | Diagrams are not stored. `localStorage` keeps only the theme choice and the live-sharing name. Data exists only while the page is open. This includes all open files. The user must export JSON to keep data. |
 | Native dialogs | They can fail in sandboxed viewers. Use modal dialogs. See Section 6.3. |
 | Fonts | The page links Google Fonts. Without network, the browser uses fallback fonts. |
 | Notes in PowerPoint | Not exported. |
@@ -662,7 +687,8 @@ Do all of these tests. Do not trust the code by inspection alone.
 | Multi-selection | The user can delete a multi-selection. The user cannot move it or change its style as a group. |
 | Top bar width | The top bar fits at 1280 pixels. On a narrower window it wraps to a second row. The Line and Draw buttons have icons only. |
 | Undo | Not available. The reset warns that it cannot be undone. A delete of a multi-selection cannot be undone. |
-| Library size | Vue and PptxGenJS are about 630 KB of the 735 KB. |
+| Library size | Vue, PptxGenJS and PeerJS are about 720 KB of the file. |
+| Live sharing | Needs the host's tab to stay open. Needs the public PeerJS server and a direct WebRTC path (no TURN relay), so some locked-down networks cannot join. Anyone with the link can join; names are not verified. Items added at the same moment can stack in a different order on different screens. Links made from a `file://` page work only on that computer. |
 
 ---
 
@@ -693,3 +719,4 @@ Do all of these tests. Do not trust the code by inspection alone.
 | 21 | Added multi-selection and delete: `Shift`-click, `Shift`-drag selection box, delete button in the panel, `DiagramAPI.selectMany` and `deleteSelected`. |
 | 22 | Added PNG export: toolbar button, export dialog kind `png`, `exportPNG`, `DiagramAPI.exportPNG`. |
 | 23 | The PNG export includes open notes with their tether lines. |
+| 24 | Added live sharing with PeerJS: Share button, name dialogs, per-item sync through the host, presence dots, remote pointers. |

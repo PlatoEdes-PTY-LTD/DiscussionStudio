@@ -29,6 +29,7 @@ A conversation can move faster than a document or a traditional diagramming work
 - **Multiple files** — import several JSON files at once. Each opens in its own tab. Switch between them and your changes stay in each one. A dot on a tab shows unexported changes.
 - **File names** — the tab shows the file name, and exports propose the same name. You can change it before saving, and in Chrome or Edge choose the folder too.
 - **Touch screens** — works on phones and tablets: drag with one finger, pinch with two to zoom, double-tap to rename. The **Select many** button (on touch devices) lets you tap items or drag a box to select several at once. On a narrow screen the toolbar shows icons only and the side panel opens over the canvas from the panel button.
+- **Live sharing** — click **Share**, enter your name, and send the link. Each person who opens it enters a name and edits the same diagram with you in real time. Everyone sees who is in the session and each other's pointers. The session lasts while your tab stays open. See [Live sharing](#live-sharing).
 - **Dark mode** — the moon / sun button in the toolbar switches between light and dark. The app follows your system setting until you choose, then remembers your choice. Exports keep light colors.
 - **Reset** — one button empties the canvas and returns the app to its starting state.
 - **Developer API** — every action is available from `window.DiagramAPI`.
@@ -53,6 +54,7 @@ That is all. The libraries are embedded, so the app works offline. (The page lin
 | Delete selection | Select an item and press `Delete` or `Backspace`. |
 | Pan / zoom | Drag empty canvas to pan; use the mouse wheel or zoom controls to zoom. |
 | Import diagrams | Use the upload control to select one or more JSON files. |
+| Share live | Click **Share**, enter your name, click **Start sharing**, and copy the link. |
 
 ## Developer API
 
@@ -78,9 +80,25 @@ DiagramAPI.exportJSON('discussion-map');
 
 The API also supports reading and loading diagram state, managing shapes and connections, selecting and deleting items, opening documents, and exporting to PowerPoint or PNG. For the complete API reference and JSON format, see the [technical documentation](discussion-studio-technical-documentation.md) and the in-app API panel.
 
+## Live sharing
+
+1. Click **Share** in the toolbar, enter your name, and click **Start sharing**. You are the host.
+2. Click **Copy** and send the link to the people you want to invite.
+3. Each person who opens the link enters a name and clicks **Join**. The diagram opens in a new tab named **Shared · …**.
+4. Everyone can add, move, edit, and delete items. Changes appear for everyone within a fraction of a second. The toolbar shows who is in the session, and the canvas shows each person's pointer with their name.
+5. To end the session, click **Live** and then **Stop sharing**. A guest clicks **Leave**. Everyone keeps their copy in the tab and can export it.
+
+Things to know:
+
+- Only the tab that was active when you clicked Share is shared. Your other tabs stay private.
+- The session lasts while the host's tab is open. If the host closes it, guests keep a copy but stop receiving changes.
+- Anyone with the link can join. The name is a label, not a verified account.
+- Share from the website. A link made from a downloaded file (`file://`) only works on your own computer.
+- Browsers connect to each other directly (WebRTC). Some office or school networks block direct connections; joining then fails with a message.
+
 ## Privacy and offline use
 
-Your diagram data is processed in the browser and is not uploaded to a service. The app does not save diagrams in browser storage; export JSON to keep a copy. The app itself runs offline, with system fonts used when the optional online fonts are unavailable.
+Your diagram data is processed in the browser and is not uploaded to a storage service. The app does not save diagrams in browser storage; export JSON to keep a copy. It remembers only your live-sharing name. During live sharing, the diagram travels directly between the browsers in the session. The free PeerJS server only introduces the browsers to each other and does not receive the diagram. The app itself runs offline, with system fonts used when the optional online fonts are unavailable.
 
 ## Development
 
