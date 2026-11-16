@@ -3,6 +3,7 @@
 ## 2026-11-16
 
 - Added: live sharing. Click Share, enter your name, and send the link. Each person who opens it enters a name and edits the same diagram in real time. The toolbar shows who is here, and the canvas shows each person's pointer. The session lasts while the host's tab is open.
+- Changed: the home page presents live sharing: a new spotlight card, a trust-row item, two rows in the How it works table, and an updated privacy note. The Select many card now mentions dragging a selection.
 - Added: drag a multi-selection. Drag any selected shape or line to move all selected items together. Connections and notes follow.
 - Changed: the JSON, PowerPoint and PNG exports open the system "Save as" dialog, so you can choose the folder and file name. This works in browsers that support it (Chrome, Edge). Other browsers keep the name dialog and download the file.
 

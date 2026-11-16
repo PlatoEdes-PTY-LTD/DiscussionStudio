@@ -12,7 +12,7 @@ Application file: `discussion-studio.html`
 
 Discussion Studio is a tool that aids discussions. It shows a visual flow of thoughts and information.
 
-The user draws shapes on a canvas. The user connects the shapes with lines. The user attaches notes to shapes, connections, and lines.
+The user draws shapes on a canvas. The user connects the shapes with lines. The user attaches notes to shapes, connections, and lines. Several people can edit one diagram at the same time through a shared link (Section 10A).
 
 This document gives the facts that a future session needs. It tells you how the application is built. It tells you how to change it and how to test it.
 
@@ -55,7 +55,7 @@ All deliverables are in `/mnt/user-data/outputs/`.
 
 | File | Description |
 |---|---|
-| `discussion-studio.html` | The complete application. One file. About 700 KB. |
+| `discussion-studio.html` | The complete application. One file. About 900 KB. |
 | `discussion-studio-icon.svg` | The icon in vector format. |
 | `discussion-studio-icon-512.png` | The icon as a 512 pixel PNG image with a transparent background. |
 | `discussion-studio-icon.ico` | The icon as a multi-size ICO file (16, 24, 32, 48, 64, 128, 256 pixels). |
@@ -96,8 +96,8 @@ The file has these parts in this order:
 1. `<head>`: title, description, viewport, favicon, Google Fonts link, and one `<style>` block with all CSS.
 2. Script block 1: Vue 3.5.42 (global build, embedded).
 3. Script block 2: PptxGenJS 4.0.1 (`pptxgen.bundle.js`, embedded). This block includes JSZip.
-4. Script block 3: PeerJS 1.5.4 (`peerjs.min.js`, embedded). It defines `window.Peer`.
-5. Script block 4: the application code (about 97 KB).
+4. Script block 3: PeerJS 1.5.4 (`peerjs.min.js`, embedded, about 93 KB). It defines `window.Peer`.
+5. Script block 4: the application code (about 290 KB, including the template).
 6. `<div id="app">` is the mount point.
 
 ### 4.3 Application code
@@ -219,6 +219,8 @@ The application does not save data to browser storage. See Section 13.
 
 The toolbar is in the top bar. It has these actions: add rectangle, add circle, add diamond, Connect (opens a menu of connection types: Arrow, One to many, Many to many; choosing one starts connect mode, and clicking Connect while connecting stops it), Auto-arrange, the connection style toggle (elbow or point), panel visibility, Developer API help, export JSON, export PowerPoint, export PNG, import JSON, and reset all data.
 
+The **Share** button starts or shows a live session (Section 10A). While a session is on, its label is **Live**, and a row of colored dots with initials before it shows the people in the session. A click on the dots or on **Live** opens the session dialog.
+
 The toolbar has two icon buttons for the drawing tools: Line and Draw. See Section 7A.
 
 A control group on the canvas has zoom out, zoom in, and Reset view buttons. Reset view sets the viewport to its start state. It does not delete data.
@@ -248,7 +250,7 @@ A click on empty canvas must not add a shape in these cases: the user dragged, t
 
 ### 6.3 Dialogs
 
-The application has four modal dialogs. They use the CSS classes `modal-overlay` and `modal-box`.
+The application has six modal dialogs. They use the CSS classes `modal-overlay` and `modal-box`.
 
 | Dialog | Open state | Purpose |
 |---|---|---|
@@ -256,6 +258,8 @@ The application has four modal dialogs. They use the CSS classes `modal-overlay`
 | Close file | `closeConfirmDoc` | Confirms the close of a changed file. |
 | Label edit | `textDialogTarget` | Edits one label. `Enter` saves. `Escape` cancels. |
 | Export | `exportDialog` | Sets the export file name. The kind is `json`, `pptx`, or `png`. `Enter` exports. `Escape` cancels. |
+| Share name | `shareDialog` is `host` or `join` | Asks for the name others will see, before starting or joining a live session. `Enter` confirms. `Escape` cancels; for `join` it also removes `?room=` from the address. |
+| Live session | `shareDialog` is `info` | Shows the link with a Copy button and the list of people. Has **Stop sharing** (host) or **Leave** (guest). |
 
 **CAUTION:** Do not use `confirm()`, `alert()` for decisions, or `prompt()` for new features. The user's viewer can block native dialogs without an error. The reset button did not work for this reason in an earlier version. The existing `alert()` calls (empty export, bad import) are known weak points. Replace them with modal dialogs if you change that code.
 
