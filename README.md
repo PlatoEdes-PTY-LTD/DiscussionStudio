@@ -33,6 +33,7 @@ A conversation can move faster than a document or a traditional diagramming work
 - **Dark mode** — the moon / sun button in the toolbar switches between light and dark. The app follows your system setting until you choose, then remembers your choice. Exports keep light colors.
 - **Reset** — one button empties the canvas and returns the app to its starting state.
 - **Developer API** — every action is available from `window.DiagramAPI`.
+- **AI agents (WebMCP)** — an AI assistant in your browser can build the map with you: add shapes, connect them, choose elbow or straight connections, add notes, and draw handwritten circles, arrows and underlines. It must ask you before it deletes anything.
 
 ## Quick start
 
@@ -77,6 +78,18 @@ DiagramAPI.addConnection(idea, decision, 'leads to');
 DiagramAPI.autoArrange();
 DiagramAPI.exportJSON('discussion-map');
 ```
+
+Calls for AI agents and scripts:
+
+```js
+const link = DiagramAPI.connect(idea, decision, { label: 'leads to', kind: 'arrow' });
+DiagramAPI.setConnectionStyle('straight');          // or 'elbow'
+DiagramAPI.setNote(link, 'Agreed in the meeting', { open: true });
+DiagramAPI.addHandwrittenShape('circle', { x: 20, y: 20, w: 200, h: 120, stroke: '#D93A2B' });
+await DiagramAPI.deleteItems([idea], { reason: 'duplicate' });   // asks you first
+```
+
+When the browser provides WebMCP (`document.modelContext`, or `navigator.modelContext` in older drafts), the same actions are registered as tools for an AI assistant: `get_diagram`, `add_shape`, `connect_shapes`, `set_connection_style`, `set_note`, `add_handwritten_shape`, `auto_arrange`, and `delete_items`.
 
 The API also supports reading and loading diagram state, managing shapes and connections, selecting and deleting items, opening documents, and exporting to PowerPoint or PNG. For the complete API reference and JSON format, see the [technical documentation](discussion-studio-technical-documentation.md) and the in-app API panel.
 

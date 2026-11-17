@@ -1,0 +1,12 @@
+{
+  "name": "discussion-studio-tests",
+  "private": true,
+  "description": "Browser tests for the Discussion Studio agent API and WebMCP tools",
+  "scripts": {
+    "test": "node run.js"
+  },
+  "devDependencies": {
+    "@mcp-b/global": "6.2.0",
+    "playwright": "1.49.1"
+  }
+}

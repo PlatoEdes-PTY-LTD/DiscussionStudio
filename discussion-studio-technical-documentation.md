@@ -610,6 +610,56 @@ The name is saved in `localStorage` under `discussion-studio-name`.
 | `deleteSelected()` | Deletes the selected item, or the whole multi-selection. |
 | `setEdgeStyle('elbow' \| 'point')` | Sets the edge style. |
 
+### 11.1 Agent API
+
+These calls are also on `window.DiagramAPI`. They check their input. On bad input they throw an `Error` with a message that says what to change. They are meant for the console and for AI agents. `addShape` uses the same checks: an unknown shape type or a color that is not `#RRGGBB` throws.
+
+| Call | Result |
+|---|---|
+| `connect(fromId, toId, opts?)` | Adds a connection. Returns the id. `opts`: `label`, `kind`, `fromPort`, `toPort`, `note`, `noteOpen`. Throws for a missing shape, a self connection, a duplicate, or a bad port or kind. |
+| `setConnectionStyle('elbow' \| 'straight')` | Sets `edgeStyle` (`straight` is stored as `point`). Returns the style. It applies to all connections. |
+| `getConnectionStyle()` | Returns `elbow` or `straight`. |
+| `setNote(id, text?, { open? })` | Sets the note of a shape, connection, or line. `text` undefined keeps the text. `open` opens or closes the note card. Returns `{ id, note, open }`. |
+| `getNote(id)` | Returns `{ id, note, open }`. |
+| `addHandwrittenShape(kind, opts?)` | Adds a sketched outline as one freehand line. `kind`: `rectangle`, `circle`, `diamond`, `triangle`, `arrow`, `underline`. `opts`: `x, y, w, h` (bounding box), `stroke`, `width`, `roughness` (0–3, default 1), `seed` (same seed gives the same stroke), `direction` (arrow only: `right`, `left`, `up`, `down`), `note`, `noteOpen`. Returns the line id. |
+| `addFreehand(points, opts?)` | As before. It now throws when a point is not numeric. |
+| `deleteItems(ids, { reason? })` | Opens the **Allow delete?** dialog. Returns a promise of `{ deleted, alsoDeleted, missing, cancelled }`. `alsoDeleted` lists the connections that went with deleted shapes. |
+| `describe()` | Returns a compact summary: `connectionStyle`, `shapes`, `connections`, and `drawings` (bounding boxes, no points). |
+| `tools` | The WebMCP tool definitions (Section 11.2). |
+| `registerWebMCP()` | Registers the tools again. Returns `true` on success. |
+
+The old calls `removeShape`, `removeConnection`, `removeLine`, `deleteSelected`, and `resetAll` do not ask. Tests use them. The `Delete` key in the user interface does not ask either; the user is the one acting.
+
+**Handwritten shapes.** `sketchPoints` and `sketchArrow` make the points. A closed outline starts a little into its first edge and runs past its start, like a pen. Each edge bows a little and wobbles. A circle has a slowly changing radius and a small overlap. The random numbers come from `makeRng(seed)`. The result is a normal freehand line (`kind: 'free'`), so it exports, syncs, moves, and deletes like any drawing.
+
+**Delete permission.** `requestDelete` stores the open request in `deleteRequest`. The template shows it as a modal: the source (`An AI assistant` or `A script`), up to 8 items, the number of connections that will also go, and the reason. `Don't allow`, a click outside, and `Escape` decline. `Enter` does nothing, so a key press cannot approve by accident. A new request declines the one that is open. On approval the ids are looked up again, because the diagram can change while the dialog is open.
+
+### 11.2 WebMCP
+
+When a model context exists, the application registers its tools for an AI agent in the browser (WebMCP). `findModelContext` looks for `document.modelContext` (the current draft and the `@mcp-b/global` polyfill, version 6) and then `navigator.modelContext` (earlier drafts and some extensions). `registerWebMCP` calls `registerTool` for each tool and keeps the `{ unregister }` handles, so a second call does not add the tools twice. When there is no `registerTool`, it uses `provideContext({ tools })`. It tries at mount. If that fails, it tries again on `load` and 1.5 seconds later, because an extension or polyfill can add the model context late.
+
+The polyfill keeps only the annotations that it knows: `readOnlyHint`, `consequentialHint`, `untrustedContentHint`, and `debugging`. `get_diagram` has `untrustedContentHint` because labels and notes can come from other people in a live session. `delete_items` has `consequentialHint` (and `destructiveHint` for clients that use the MCP name).
+
+| Tool | Calls | Notes |
+|---|---|---|
+| `get_diagram` | `describe()` | `readOnlyHint`, `untrustedContentHint`. |
+| `add_shape` | `addShape` | |
+| `connect_shapes` | `connect` | |
+| `set_connection_style` | `setConnectionStyle` | |
+| `set_note` | `setNote` | |
+| `add_handwritten_shape` | `addHandwrittenShape` | |
+| `auto_arrange` | `autoArrange` | |
+| `delete_items` | `requestDelete` | `consequentialHint`, `destructiveHint`. Always asks the user. When the agent client has `requestUserInteraction`, the dialog runs inside it. |
+
+Each tool returns `{ content: [{ type: 'text', text: <JSON> }] }`. An error returns the message with `isError: true`, so the agent can correct the call.
+
+**Test.** Do both tests. Serve the folder with `python3 -m http.server` and open `http://localhost:<port>/discussion-studio.html`; a polyfill needs a secure context, and `localhost` is one.
+
+1. Mock: add a `navigator.modelContext` with only `registerTool` through `page.addInitScript`. Check that eight tools register. Call each tool's `execute`. For `delete_items`, check all three answers: `Don't allow`, `Escape`, and `Delete`.
+2. Polyfill: install `@mcp-b/global` in a scratch folder (not in this project) and inject `dist/index.iife.js` with `page.addInitScript`. Get the tools with `document.modelContext.getTools()` and run each with `document.modelContext.executeTool(tool, args)`, as an agent does. Call `DiagramAPI.registerWebMCP()` again and check that there are still eight tools.
+
+The tests are in the `tests` folder: `cd tests && npm install && npm test`. See `tests/README.md`. See also `agent.md`, the guide for AI agents that use these tools.
+
 The API help panel in the application lists the same calls. When you change the API, change that text also. It is in the template, in the `aside` element that shows when `showApiDoc` is `true`.
 
 On first load, the application creates a sample diagram of five shapes and four connections. It then clears the selection.
@@ -724,3 +774,4 @@ Do all of these tests. Do not trust the code by inspection alone.
 | 22 | Added PNG export: toolbar button, export dialog kind `png`, `exportPNG`, `DiagramAPI.exportPNG`. |
 | 23 | The PNG export includes open notes with their tether lines. |
 | 24 | Added live sharing with PeerJS: Share button, name dialogs, per-item sync through the host, presence dots, remote pointers. |
+| 25 | Added the agent API (`connect`, `setConnectionStyle`, `setNote`, `addHandwrittenShape`, `deleteItems`, `describe`), the **Allow delete?** dialog, and WebMCP tool registration. `addShape` now checks its input. |

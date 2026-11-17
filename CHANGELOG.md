@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-17
+
+- Added: AI agent support through WebMCP. When the browser or an extension provides WebMCP (`document.modelContext` or `navigator.modelContext`), an AI assistant in the browser can read the diagram, add shapes, connect them, set the connection style (elbow or straight), add notes, draw handwritten shapes, and auto-arrange.
+- Added: an **Allow delete?** dialog. When an AI assistant or a script asks to delete items, you see what will be deleted and why, and you choose to allow it or not.
+- Added: new `DiagramAPI` calls: `connect`, `setConnectionStyle`, `getConnectionStyle`, `setNote`, `getNote`, `addHandwrittenShape` (sketched rectangle, circle, diamond, triangle, arrow, or underline), `deleteItems`, `describe`, and `registerWebMCP`.
+- Changed: `DiagramAPI.addShape` and `DiagramAPI.addFreehand` now reject bad input with a clear error message.
+
 ## 2026-11-16
 
 - Added: live sharing. Click Share, enter your name, and send the link. Each person who opens it enters a name and edits the same diagram in real time. The toolbar shows who is here, and the canvas shows each person's pointer. The session lasts while the host's tab is open.
