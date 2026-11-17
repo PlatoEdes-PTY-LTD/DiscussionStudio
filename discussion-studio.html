@@ -1118,6 +1118,8 @@ DiagramAPI.getNote(id)
 // asks the user first; returns a promise:
 // { deleted, alsoDeleted, missing, cancelled }
 DiagramAPI.describe()
+DiagramAPI.getConnectionRoute(id)
+// [{x, y}, ...] as drawn
 // compact summary for an AI agent</code>
         <code>// WebMCP: when document.modelContext exists
 // the page registers these tools:
@@ -2152,76 +2154,218 @@ const app = createApp({
       return { x, y };
     }
 
-    // Orthogonal (Manhattan) routing between two named ports. Every shape's boundary at
-    // left-middle ('start') or right-middle ('end') is used as the anchor point — this lands
-    // exactly on the boundary for rectangles, circles, and diamonds alike, so no per-shape-type
-    // geometry is needed. Each end gets a short outward "stub" in its port's own direction.
+    // ---- Elbow routing ----
+    // Every connection leaves its source port and enters its target port horizontally: 'start'
+    // is the left-middle of a shape and 'end' the right-middle (on the boundary for all three
+    // shape types). The first and last segments are at least PORT_STUB long, so arrowheads and
+    // crow's feet always sit on a straight run.
     //
-    // When the two stubs already face each other (e.g. end→start with the target to the
-    // right), a simple 3-segment path between them is enough. But for same-side pairs
-    // (start→start, end→end) — or any pairing where a stub's outward direction points away
-    // from the other stub — a direct connector would double back through the source shape's
-    // own body. In that case the path detours above or below both shapes instead.
-    const PORT_STUB = 24;
-    const DETOUR_CLEARANCE = 30;
+    // All connections are routed together, in array order. For each one the router builds
+    // candidate routes and keeps the cheapest:
+    //   A. 3 segments: out of the source, along a vertical channel at x, into the target.
+    //   B. 5 segments: out of the source to x1, along a horizontal channel at y, to x2, in.
+    //      This covers the way around same-side ports (start→start, end→end), targets
+    //      "behind" the source, and the gap between two shapes as well as above or below them.
+    // Candidate channels are the clearance lines beside every shape plus lanes around the
+    // midpoints. Cost = length + a penalty per bend + a heavy penalty for passing through a
+    // shape + penalties for running on top of, or crossing, connections already routed.
+    // Connections that share a port may run together into it, like a bus.
+    // The result is cached in elbowRoutes and only recomputes when geometry changes.
+    const PORT_STUB = 24;        // minimum straight run out of and into a port
+    const ROUTE_CLEAR = 18;      // channel distance from a shape's side
+    const LANE_GAP = 12;         // distance between parallel connections in one channel
+    const ROUTE_COST = { bend: 18, shape: 4000, overlap: 12, near: 2, cross: 12, center: 0.02 };
+    const ROUTE_MAX_CHANNELS = 18;   // candidate channels per direction, nearest first
+    const ROUTE_MAX_DETOURS = 14;    // candidate horizontal channels for 5-segment routes
+    const ROUTE_MAX_SCORED = 40;     // candidates fully scored against other connections
+
+    function simplifyRoute(pts) {
+      const out = [];
+      pts.forEach(p => {
+        const q = out[out.length - 1];
+        if (!q || Math.abs(q.x - p.x) > 0.01 || Math.abs(q.y - p.y) > 0.01) out.push({ x: p.x, y: p.y });
+      });
+      for (let i = out.length - 2; i >= 1; i--) {
+        const a = out[i - 1], b = out[i], c = out[i + 1];
+        if ((Math.abs(a.x - b.x) < 0.01 && Math.abs(b.x - c.x) < 0.01) || (Math.abs(a.y - b.y) < 0.01 && Math.abs(b.y - c.y) < 0.01)) out.splice(i, 1);
+      }
+      return out;
+    }
+    // Axis-aligned segments as { h, c, a, b }: h = horizontal, c = the fixed coordinate,
+    // a < b = the range along the segment.
+    function routeSegments(pts) {
+      const segs = [];
+      for (let i = 0; i < pts.length - 1; i++) {
+        const p = pts[i], q = pts[i + 1];
+        if (Math.abs(p.y - q.y) < 0.01) segs.push({ h: true, c: p.y, a: Math.min(p.x, q.x), b: Math.max(p.x, q.x) });
+        else segs.push({ h: false, c: p.x, a: Math.min(p.y, q.y), b: Math.max(p.y, q.y) });
+      }
+      return segs;
+    }
+    function segHitsRect(s, r) {
+      if (s.h) return s.c > r.top && s.c < r.bottom && s.b > r.left && s.a < r.right;
+      return s.c > r.left && s.c < r.right && s.b > r.top && s.a < r.bottom;
+    }
+    // memo: segment key -> number of obstacles hit. Candidates of one connection share many
+    // segments, so each is tested once.
+    function shapeHits(pts, obstacles, memo) {
+      let n = 0;
+      for (const s of routeSegments(pts)) {
+        const key = (s.h ? 'h' : 'v') + s.c + ':' + s.a + ':' + s.b;
+        let hits = memo.get(key);
+        if (hits === undefined) {
+          hits = 0;
+          for (const r of obstacles) if (segHitsRect(s, r)) hits++;
+          memo.set(key, hits);
+        }
+        n += hits;
+      }
+      return n;
+    }
+    // Segments of the connections routed so far, in buckets of LANE_GAP by their fixed
+    // coordinate, so a check only looks at segments that can be near.
+    function makePlacedIndex() { return { H: new Map(), V: new Map() }; }
+    function placeSegment(idx, s, k1, k2) {
+      s.k1 = k1; s.k2 = k2;
+      const m = s.h ? idx.H : idx.V, k = Math.floor(s.c / LANE_GAP);
+      if (!m.has(k)) m.set(k, []);
+      m.get(k).push(s);
+    }
+    // Penalty for running on top of, near, or across connections already routed. Stops
+    // counting once it reaches `limit`. k1, k2 name this connection's two ports
+    // ('shape_3:end'). Connections that share a port may run together into it (a bus), so
+    // their overlap is free; crossings always count.
+    function placedCost(pts, idx, limit, k1, k2) {
+      let cost = 0;
+      for (const s of routeSegments(pts)) {
+        const same = s.h ? idx.H : idx.V, other = s.h ? idx.V : idx.H;
+        const k = Math.floor(s.c / LANE_GAP);
+        for (let kk = k - 1; kk <= k + 1; kk++) {
+          const list = same.get(kk);
+          if (!list) continue;
+          for (const o of list) {
+            if (o.k1 === k1 || o.k1 === k2 || o.k2 === k1 || o.k2 === k2) continue;
+            const d = Math.abs(s.c - o.c);
+            if (d >= LANE_GAP - 1) continue;
+            const len = Math.min(s.b, o.b) - Math.max(s.a, o.a);
+            if (len > 0) cost += len * (d < 3 ? ROUTE_COST.overlap : ROUTE_COST.near);
+          }
+        }
+        const b0 = Math.floor(s.a / LANE_GAP), b1 = Math.floor(s.b / LANE_GAP);
+        for (let kk = b0; kk <= b1; kk++) {
+          const list = other.get(kk);
+          if (!list) continue;
+          for (const o of list) {
+            if (o.c > s.a + 0.5 && o.c < s.b - 0.5 && s.c > o.a + 0.5 && s.c < o.b - 0.5) cost += ROUTE_COST.cross;
+          }
+        }
+        if (cost >= limit) return cost;
+      }
+      return cost;
+    }
+    // Keep the n values closest to `target`, without duplicates.
+    function nearestChannels(values, target, n) {
+      const seen = new Set();
+      return values
+        .filter(v => isFinite(v))
+        .map(v => Math.round(v * 10) / 10)
+        .filter(v => (seen.has(v) ? false : (seen.add(v), true)))
+        .sort((a, b) => Math.abs(a - target) - Math.abs(b - target))
+        .slice(0, n);
+    }
+    // geo: plain copies of the shapes and their channel lines, made once per routing pass
+    // (reading Vue's reactive arrays inside the candidate loops is far too slow).
+    function routeOne(conn, from, to, geo, placed) {
+      const fromPort = conn.fromPort || 'end', toPort = conn.toPort || 'start';
+      const p1 = portPoint(from, fromPort), p2 = portPoint(to, toPort);
+      const d1 = fromPort === 'start' ? -1 : 1, d2 = toPort === 'start' ? -1 : 1;
+      const s1x = p1.x + d1 * PORT_STUB, s2x = p2.x + d2 * PORT_STUB;
+      // The two end shapes block only their own inside; other shapes keep half a channel clear.
+      const pad = ROUTE_CLEAR / 2;
+      const lanes = (v, sign) => [0, 1, 2, 3].map(k => v + sign * k * LANE_GAP);
+      const lanesBoth = (v) => [v, v - LANE_GAP, v + LANE_GAP, v - 2 * LANE_GAP, v + 2 * LANE_GAP];
+      const midX = (s1x + s2x) / 2, midY = (p1.y + p2.y) / 2;
+      const okX1 = (x) => (x - p1.x) * d1 >= PORT_STUB - 0.01;
+      const okX2 = (x) => (x - p2.x) * d2 >= PORT_STUB - 0.01;
+
+      // Build every candidate with its cheap cost (length + bends + tie-break) first.
+      const cands = [];
+      const add = (pts, tie) => {
+        const simple = simplifyRoute(pts);
+        let base = (simple.length - 2) * ROUTE_COST.bend + tie;
+        for (let i = 0; i < simple.length - 1; i++) base += Math.abs(simple[i + 1].x - simple[i].x) + Math.abs(simple[i + 1].y - simple[i].y);
+        cands.push({ pts: simple, base, tie });
+      };
+
+      // A: one vertical channel that is beyond both stubs.
+      nearestChannels(geo.xEdges.concat(lanesBoth(midX), lanes(s1x, d1), lanes(s2x, d2)).filter(x => okX1(x) && okX2(x)), midX, ROUTE_MAX_CHANNELS)
+        .forEach(x => add([p1, { x, y: p1.y }, { x, y: p2.y }, p2], ROUTE_COST.center * Math.abs(x - midX)));
+
+      // B: a horizontal channel between two vertical runs, one beyond each stub.
+      const xs1 = nearestChannels(geo.xEdges.concat(lanes(s1x, d1)).filter(okX1), s1x, 2);
+      const xs2 = nearestChannels(geo.xEdges.concat(lanes(s2x, d2)).filter(okX2), s2x, 2);
+      const top = Math.min(from.y, to.y) - ROUTE_CLEAR, bottom = Math.max(from.y + from.h, to.y + to.h) + ROUTE_CLEAR;
+      const gapTop = Math.min(from.y + from.h, to.y + to.h), gapBottom = Math.max(from.y, to.y);
+      const ys = nearestChannels(geo.yEdges.concat(lanes(top, -1), lanes(bottom, 1), gapBottom > gapTop ? lanesBoth((gapTop + gapBottom) / 2) : [], [p1.y, p2.y]), midY, ROUTE_MAX_DETOURS);
+      xs1.forEach(x1 => xs2.forEach(x2 => ys.forEach(y => {
+        add([p1, { x: x1, y: p1.y }, { x: x1, y }, { x: x2, y }, { x: x2, y: p2.y }, p2], ROUTE_COST.center * Math.abs(y - midY));
+      })));
+
+      // Add the shape penalty (cheap: one test per shape and segment), sort, then add the
+      // penalty for other connections (expensive) cheapest first. A candidate whose partial
+      // cost already exceeds the best full cost cannot win, so the loop stops there.
+      // Only shapes inside the area that some candidate reaches can be hit. The two end shapes
+      // block only their own inside; other shapes keep half a channel clear.
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      cands.forEach(c => c.pts.forEach(q => {
+        if (q.x < minX) minX = q.x; if (q.x > maxX) maxX = q.x;
+        if (q.y < minY) minY = q.y; if (q.y > maxY) maxY = q.y;
+      }));
+      const obstacles = [];
+      geo.shapes.forEach(s => {
+        const own = s.id === from.id || s.id === to.id;
+        const r = own
+          ? { left: s.x + 1, right: s.x + s.w - 1, top: s.y + 1, bottom: s.y + s.h - 1 }
+          : { left: s.x - pad, right: s.x + s.w + pad, top: s.y - pad, bottom: s.y + s.h + pad };
+        if (r.right >= minX && r.left <= maxX && r.bottom >= minY && r.top <= maxY) obstacles.push(r);
+      });
+      const memo = new Map();
+      cands.forEach(c => { c.part = c.base + shapeHits(c.pts, obstacles, memo) * ROUTE_COST.shape; });
+      cands.sort((a, b) => a.part - b.part);
+      let best = Infinity, bestPts = null, tried = 0;
+      for (const c of cands) {
+        if (c.part >= best || tried++ >= ROUTE_MAX_SCORED) break;
+        const cost = c.part + placedCost(c.pts, placed, best - c.part, conn.k1, conn.k2);
+        if (cost < best) { best = cost; bestPts = c.pts; }
+      }
+      return bestPts || [p1, { x: s1x, y: p1.y }, { x: s2x, y: p2.y }, p2];
+    }
+    const elbowRoutes = computed(() => {
+      const geo = { shapes: [], xEdges: [], yEdges: [] };
+      const byId = new Map();
+      shapes.forEach(s => {
+        const g = { id: s.id, x: s.x, y: s.y, w: s.w, h: s.h };
+        geo.shapes.push(g);
+        byId.set(g.id, g);
+        geo.xEdges.push(g.x - ROUTE_CLEAR, g.x + g.w + ROUTE_CLEAR);
+        geo.yEdges.push(g.y - ROUTE_CLEAR, g.y + g.h + ROUTE_CLEAR);
+      });
+      const map = new Map();
+      const placed = makePlacedIndex();
+      connections.forEach(c => {
+        const from = byId.get(c.from), to = byId.get(c.to);
+        if (!from || !to) return;
+        const fp = c.fromPort || 'end', tp = c.toPort || 'start';
+        const k1 = c.from + ':' + fp, k2 = c.to + ':' + tp;
+        const pts = routeOne({ fromPort: fp, toPort: tp, k1, k2 }, from, to, geo, placed);
+        map.set(c.id, pts);
+        routeSegments(pts).forEach(s => placeSegment(placed, s, k1, k2));
+      });
+      return map;
+    });
 
     function connRoute(conn) {
-      const from = shapes.find(s => s.id === conn.from);
-      const to = shapes.find(s => s.id === conn.to);
-      if (!from || !to) return null;
-      const fromPort = conn.fromPort || 'end';
-      const toPort = conn.toPort || 'start';
-
-      const p1 = portPoint(from, fromPort);
-      const p2 = portPoint(to, toPort);
-      const dir1 = fromPort === 'start' ? -1 : 1;
-      const dir2 = toPort === 'start' ? -1 : 1;
-      const s1 = { x: p1.x + dir1 * PORT_STUB, y: p1.y };
-      const s2 = { x: p2.x + dir2 * PORT_STUB, y: p2.y };
-
-      // "Consistent" means the straight-line travel direction from s1 to s2 matches both
-      // stubs' own outward-facing sense — i.e. continuing outward from s1 actually approaches
-      // s2, AND s2 is approached from the correct side to enter p2 without backtracking. Any
-      // same-side pair (start→start, end→end) fails this by construction — both stubs face the
-      // same absolute direction, so no straight path can join them — and so does either
-      // "facing-away" spatial arrangement. All of those need the detour.
-      const travelDir = Math.sign(s2.x - s1.x);
-      const consistent = travelDir !== 0 && travelDir === dir1 && travelDir === -dir2;
-
-      if (consistent) {
-        const midX = (s1.x + s2.x) / 2;
-        return [p1, s1, { x: midX, y: s1.y }, { x: midX, y: s2.y }, s2, p2];
-      }
-
-      // Detour above or below both shapes, whichever is the shorter vertical travel. If more
-      // than one connection between this same pair of shapes also detours on the same side,
-      // stagger them so they don't all draw on top of each other.
-      const topY = Math.min(from.y, to.y) - DETOUR_CLEARANCE;
-      const bottomY = Math.max(from.y + from.h, to.y + to.h) + DETOUR_CLEARANCE;
-      const avgY = (s1.y + s2.y) / 2;
-      const useTop = Math.abs(avgY - topY) <= Math.abs(bottomY - avgY);
-
-      const pairKey = [conn.from, conn.to].slice().sort().join('|');
-      const detourSiblings = connections.filter(c => {
-        if ([c.from, c.to].slice().sort().join('|') !== pairKey) return false;
-        const cf = shapes.find(s => s.id === c.from), ct = shapes.find(s => s.id === c.to);
-        if (!cf || !ct) return false;
-        const cFromPort = c.fromPort || 'end', cToPort = c.toPort || 'start';
-        const cp1 = portPoint(cf, cFromPort), cp2 = portPoint(ct, cToPort);
-        const cdir1 = cFromPort === 'start' ? -1 : 1, cdir2 = cToPort === 'start' ? -1 : 1;
-        const cs1 = { x: cp1.x + cdir1 * PORT_STUB, y: cp1.y }, cs2 = { x: cp2.x + cdir2 * PORT_STUB, y: cp2.y };
-        const ctravel = Math.sign(cs2.x - cs1.x);
-        const cConsistent = ctravel !== 0 && ctravel === cdir1 && ctravel === -cdir2;
-        if (cConsistent) return false;
-        const ctopY = Math.min(cf.y, ct.y) - DETOUR_CLEARANCE, cbottomY = Math.max(cf.y + cf.h, ct.y + ct.h) + DETOUR_CLEARANCE;
-        const cavgY = (cs1.y + cs2.y) / 2;
-        const cUseTop = Math.abs(cavgY - ctopY) <= Math.abs(cbottomY - cavgY);
-        return cUseTop === useTop;
-      });
-      const myIdx = Math.max(0, detourSiblings.findIndex(c => c.id === conn.id));
-      const stagger = myIdx * 14;
-      const detourY = useTop ? topY - stagger : bottomY + stagger;
-      return [p1, s1, { x: s1.x, y: detourY }, { x: s2.x, y: detourY }, s2, p2];
+      return (conn && elbowRoutes.value.get(conn.id)) || null;
     }
 
     // Point-to-point mode: a direct line from the source shape's center toward the target
@@ -2277,8 +2421,14 @@ const app = createApp({
       }
       const pts = connRoute(conn);
       if (!pts) return { x: 0, y: 0 };
-      // midpoint of the connecting segment (the visual "middle" of the routed elbow)
-      const a = pts[2], b = pts[3];
+      // The middle of the longest inner segment (the first and last segments are the port
+      // stubs). A straight route has only one segment.
+      let a = pts[0], b = pts[pts.length - 1], len = -1;
+      const first = pts.length > 3 ? 1 : 0, last = pts.length > 3 ? pts.length - 2 : pts.length - 1;
+      for (let i = first; i < last; i++) {
+        const l = Math.abs(pts[i + 1].x - pts[i].x) + Math.abs(pts[i + 1].y - pts[i].y);
+        if (l > len) { len = l; a = pts[i]; b = pts[i + 1]; }
+      }
       return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
     }
 
@@ -3921,6 +4071,11 @@ const app = createApp({
         // Agent API (validated; throws an Error with a clear message on bad input)
         connect: apiConnect,
         setConnectionStyle, getConnectionStyle,
+        getConnectionRoute: (id) => {
+          const c = connections.find(x => x.id === id);
+          const pts = c && (edgeStyle.value === 'point' ? connRoutePointToPoint(c) : connRoute(c));
+          return pts ? pts.map(p => ({ x: p.x, y: p.y })) : null;
+        },
         setNote, getNote,
         addHandwrittenShape, addFreehand: apiAddFreehand,
         deleteItems: (ids, opts) => requestDelete(ids, Object.assign({ source: 'A script' }, opts)),

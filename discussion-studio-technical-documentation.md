@@ -315,12 +315,38 @@ The global value `edgeStyle` sets the drawing mode for all connections.
 
 ### 7.2 Elbow routing
 
-The function `connRoute` calculates the route. It handles all four port combinations:
-`end→start`, `end→end`, `start→start`, and `start→end`.
+The computed value `elbowRoutes` routes all connections in one pass, in the order of the `connections` array. `connRoute(conn)` reads the route from it. Vue caches the value and computes it again only when a shape's position or size, or a connection's ends or ports, change. The pass reads plain copies of the shapes once; do not read the reactive arrays inside the candidate loops, because that is much slower.
 
-When two ports are on the same side, the line goes around that side.
+The ports are not changed. Each route leaves the source port and enters the target port horizontally, with a straight run of at least `PORT_STUB` (24) units at each end. Arrowheads and crow's feet sit on that run.
 
-The function `portPoint` returns the point of a port. The function `boundaryPoint` returns the point where a line meets the edge of a shape. The function `connPath` returns the SVG path. The function `connMid` returns the middle of the connection. The label and the note anchor use that middle point.
+For each connection, `routeOne` makes candidate routes of two kinds:
+
+- **3 segments.** Out of the source, along a vertical channel at `x`, into the target. The channel must be beyond the run at both ends.
+- **5 segments.** Out of the source to `x1`, along a horizontal channel at `y`, then to `x2` and into the target. This kind covers same-side ports (`end→end`, `start→start`), a target behind the source, and the gap between two shapes as well as the space above or below them.
+
+Candidate channels are the lines `ROUTE_CLEAR` (18) units beside each shape, plus lanes `LANE_GAP` (12) units apart around the middle, the stubs, and the gap between the two shapes. Each list keeps the channels nearest to the middle (`ROUTE_MAX_CHANNELS`, `ROUTE_MAX_DETOURS`).
+
+The cost of a candidate is the sum of:
+
+| Part | Weight (`ROUTE_COST`) |
+|---|---|
+| Length | 1 per unit |
+| Bend | 18 per bend |
+| Passes through a shape | 4000 per shape and segment. Other shapes keep half a channel clear; the two end shapes block only their inside. |
+| Lies on top of a routed connection (closer than 3 units) | 12 per unit of shared length |
+| Runs close to a routed connection (closer than `LANE_GAP`) | 2 per unit |
+| Crosses a routed connection | 12 per crossing |
+| Distance of the channel from the middle | 0.02 per unit (tie-break only) |
+
+Connections that share a port (the same shape and the same side) may run together into that port, like a bus. Their overlap with each other is free. So several inputs into one port share one trunk, and a straight connection is not pushed aside by another one that ends at the same port.
+
+Speed: `shapeHits` tests each unique segment once per connection (`memo`), and only against the shapes inside the area that the candidates reach. Candidates are sorted by length, bends, and shape hits. Only the cheapest `ROUTE_MAX_SCORED` (40) are compared with the routed connections, which are kept in buckets by coordinate (`makePlacedIndex`). The loop stops when the cheap part of the cost is already higher than the best full cost. With 40 shapes and 60 connections a full pass takes about 20–25 ms; a typical diagram takes a few milliseconds.
+
+The route is a list of points with no repeated or collinear points. A straight route has two points. `DiagramAPI.getConnectionRoute(id)` returns a copy of it.
+
+The function `portPoint` returns the point of a port. The function `boundaryPoint` returns the point where a line meets the edge of a shape. The function `connPath` returns the SVG path. The function `connMid` returns the middle of the connection: the middle of the longest segment that is not an end run, or the middle of a straight route. The label and the note anchor use that middle point.
+
+**Test.** `tests/routing.test.js` checks the cases in this section and the speed.
 
 ---
 
@@ -625,6 +651,7 @@ These calls are also on `window.DiagramAPI`. They check their input. On bad inpu
 | `addFreehand(points, opts?)` | As before. It now throws when a point is not numeric. |
 | `deleteItems(ids, { reason? })` | Opens the **Allow delete?** dialog. Returns a promise of `{ deleted, alsoDeleted, missing, cancelled }`. `alsoDeleted` lists the connections that went with deleted shapes. |
 | `describe()` | Returns a compact summary: `connectionStyle`, `shapes`, `connections`, and `drawings` (bounding boxes, no points). |
+| `getConnectionRoute(id)` | Returns the points of the drawn route `[{ x, y }, ...]` in the current connection style, or `null`. |
 | `tools` | The WebMCP tool definitions (Section 11.2). |
 | `registerWebMCP()` | Registers the tools again. Returns `true` on success. |
 
@@ -775,3 +802,4 @@ Do all of these tests. Do not trust the code by inspection alone.
 | 23 | The PNG export includes open notes with their tether lines. |
 | 24 | Added live sharing with PeerJS: Share button, name dialogs, per-item sync through the host, presence dots, remote pointers. |
 | 25 | Added the agent API (`connect`, `setConnectionStyle`, `setNote`, `addHandwrittenShape`, `deleteItems`, `describe`), the **Allow delete?** dialog, and WebMCP tool registration. `addShape` now checks its input. |
+| 26 | Replaced elbow routing. All connections are routed together: shortest route for the given ports, around shapes, through gaps between shapes, without lying on top of other connections; connections into one port share a trunk. Added `DiagramAPI.getConnectionRoute`. |
