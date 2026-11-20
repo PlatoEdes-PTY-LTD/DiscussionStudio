@@ -26,7 +26,7 @@ const polyfill = fs.readFileSync(path.join(__dirname, 'node_modules/@mcp-b/globa
     return { mc: true, secure: isSecureContext, names: tools.map(t => t.name), annotations: tools.find(t => t.name === 'delete_items').annotations };
   });
   console.log('  polyfill:', JSON.stringify(info));
-  assert(info.mc && info.names.length === 8, 'all 8 tools visible through document.modelContext.getTools()');
+  assert(info.mc && info.names.length === 12, 'all 12 tools visible through document.modelContext.getTools()');
 
   // Helper in page: run a tool the way an agent would.
   await page.evaluate(() => {
@@ -80,9 +80,55 @@ const polyfill = fs.readFileSync(path.join(__dirname, 'node_modules/@mcp-b/globa
   const counts = await page.evaluate(() => { const s = DiagramAPI.getState(); return [s.shapes.length, s.connections.length]; });
   assert(d.val.deleted[0] === 'shape_1' && counts.join() === '2,1', 'delete_items allowed -> shape and its connection gone');
 
+  // groups
+  const g = await page.evaluate(async () => {
+    const out = {};
+    out.make = await __run('create_group', { shapeIds: ['shape_2', 'shape_3'], groupId: 'Core', label: 'Core flow', note: 'main path' });
+    out.badId = await __run('create_group', { shapeIds: ['nope'] });
+    out.dupGid = await __run('create_group', { shapeIds: ['shape_2'], groupId: 'Core' });
+    out.upd = await __run('update_group', { id: 'Core', groupId: 'Core-2', label: 'Renamed', fill: '#E8F7EF' });
+    out.ext = await __run('add_shape', { label: 'Outside', x: 800, y: 300 });
+    out.conn = await __run('connect_shapes', { from: out.make.val.id, to: out.ext.val.id, label: 'feeds' });
+    out.get = await __run('get_diagram', {});
+    out.dup = await __run('duplicate_items', { ids: [out.make.val.id], dx: 0, dy: 300 });
+    out.get2 = await __run('get_diagram', {});
+    return out;
+  });
+  assert(!g.make.isError && g.make.val.groupId === 'Core' && g.make.val.members.length === 2 && g.make.val.connections.length === 1, 'create_group -> ' + JSON.stringify(g.make.val));
+  assert(g.badId.isError && /nope/.test(JSON.stringify(g.badId.val)), 'create_group rejects unknown shape id');
+  assert(g.dupGid.isError && /already/.test(JSON.stringify(g.dupGid.val)), 'create_group rejects duplicate Group ID');
+  assert(!g.upd.isError && g.upd.val.groupId === 'Core-2' && g.upd.val.label === 'Renamed', 'update_group by Group ID');
+  assert(!g.conn.isError, 'connect_shapes from a group');
+  const gs = g.get.val.shapes.find(x => x.type === 'group');
+  assert(gs && gs.groupId === 'Core-2' && g.get.val.shapes.find(x => x.id === 'shape_2').inGroup === gs.id, 'get_diagram shows groups and inGroup');
+  assert(!g.dup.isError && g.dup.val.shapes.length === 1 && Object.keys(g.dup.val.idMap).length === 4, 'duplicate_items copies group, members and inner connection');
+  const groups2 = g.get2.val.shapes.filter(x => x.type === 'group');
+  assert(groups2.length === 2 && groups2[1].groupId !== 'Core-2' && groups2[1].label === 'Renamed', 'duplicated group gets a new Group ID');
+
+  // delete_items on a group lists its contents and deletes them
+  p = page.evaluate(id => __run('delete_items', { ids: [id] }), g.dup.val.shapes[0]);
+  await page.waitForSelector('text=inside these groups');
+  await page.click('.modal-box .tbtn-danger');
+  d = await p;
+  assert(d.val.alsoDeleted.length === 3, 'delete_items on a group also deletes its 2 members and inner connection');
+
+  // ungroup with a connection to the group: asks first
+  p = page.evaluate(() => __run('ungroup', { id: 'Core-2' }));
+  await page.waitForSelector('text=Allow delete?');
+  await page.click("text=Don't allow");
+  d = await p;
+  assert(d.val.cancelled === true && (await page.evaluate(() => !!DiagramAPI.findGroup('Core-2'))), 'ungroup declined -> group kept');
+  p = page.evaluate(() => __run('ungroup', { id: 'Core-2' }));
+  await page.waitForSelector('text=Allow delete?');
+  await page.click('.modal-box .tbtn-danger');
+  d = await p;
+  const after = await page.evaluate(() => DiagramAPI.getState());
+  assert(!d.val.cancelled && d.val.members.length === 2 && !after.shapes.some(x => x.type === 'group') && after.shapes.length === 3, 'ungroup allowed -> members kept, group gone');
+  assert(!after.connections.some(c => c.label === 'feeds') && after.connections.length === 1, 'ungroup removed only the connection to the group');
+
   // Re-registration does not duplicate tools
   const n = await page.evaluate(async () => { DiagramAPI.registerWebMCP(); return (await document.modelContext.getTools()).length; });
-  assert(n === 8, 'registerWebMCP() again keeps 8 tools');
+  assert(n === 12, 'registerWebMCP() again keeps 12 tools');
 
   assert(errors.length === 0, 'no page errors ' + errors.join('; '));
   await browser.close();

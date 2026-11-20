@@ -21,6 +21,8 @@ A conversation can move faster than a document or a traditional diagramming work
 - **Two line styles** — orthogonal elbow lines or straight point-to-point lines, switchable for the whole diagram.
 - **Lines and freehand** — draw straight lines (with an optional arrow) or sketch freehand. Pick a color and thickness. Select a line to move it, drag its end handles, add a note, or delete it. Thin lines stay easy to click at any zoom level.
 - **Select many** — Shift-click (or `Ctrl`/`Cmd`-click) items, or Shift-drag a box on empty canvas, to select shapes, connections, and lines together. The side panel shows how many are selected. Delete them in one step.
+- **Copy and paste** — Select one or more shapes (and lines) and press `Ctrl`/`Cmd`+`C`, then `Ctrl`/`Cmd`+`V` to paste a copy offset on the canvas (`Ctrl`/`Cmd`+`D` duplicates in one step). Copies keep their size, label, colours and notes; connections between copied shapes come along. Pasting also works into another open tab.
+- **Groups** — Select shapes and press `Ctrl`/`Cmd`+`G` (or click **Group** in the panel) to put them in a group. Connections whose two shapes are both selected go into the group. Each group has a Group ID you can edit, plus a label and a note. A group works like a shape: drag it to move everything inside, resize it to scale its contents, connect it to other shapes, and copy and paste it. `Ctrl`/`Cmd`+`Shift`+`G` ungroups.
 - **Labels** — double-click a shape or connection to rename it.
 - **Notes** — pin draggable note cards to any shape, connection, or line. A dotted line ties each note to its owner.
 - **Auto-arrange** — lays shapes out in layers from left to right by dependency.
@@ -89,7 +91,7 @@ DiagramAPI.addHandwrittenShape('circle', { x: 20, y: 20, w: 200, h: 120, stroke:
 await DiagramAPI.deleteItems([idea], { reason: 'duplicate' });   // asks you first
 ```
 
-When the browser provides WebMCP (`document.modelContext`, or `navigator.modelContext` in older drafts), the same actions are registered as tools for an AI assistant: `get_diagram`, `add_shape`, `connect_shapes`, `set_connection_style`, `set_note`, `add_handwritten_shape`, `auto_arrange`, and `delete_items`.
+When the browser provides WebMCP (`document.modelContext`, or `navigator.modelContext` in older drafts), the same actions are registered as tools for an AI assistant: `get_diagram`, `add_shape`, `connect_shapes`, `set_connection_style`, `set_note`, `add_handwritten_shape`, `create_group`, `update_group`, `ungroup`, `duplicate_items`, `auto_arrange`, and `delete_items`.
 
 The API also supports reading and loading diagram state, managing shapes and connections, selecting and deleting items, opening documents, and exporting to PowerPoint or PNG. For the complete API reference and JSON format, see the [technical documentation](discussion-studio-technical-documentation.md) and the in-app API panel.
 

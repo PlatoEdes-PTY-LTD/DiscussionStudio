@@ -266,6 +266,18 @@
   svg.board:active{cursor:grabbing;}
 
   .shape-group{cursor:move;}
+  .group-frame .group-body{fill-opacity:.55;stroke-dasharray:7 4;}
+  .group-frame.multi .group-body{stroke:var(--accent);stroke-width:3;}
+  :root[data-theme="dark"] .group-frame .group-body{fill-opacity:.14;stroke:#8FA3C7;}
+  :root[data-theme="dark"] .group-frame.selected .group-body{stroke:var(--accent);}
+  :root[data-theme="dark"] .group-title{color:var(--ink);}
+  :root[data-theme="dark"] .group-gid{background:rgba(230,236,247,.14);}
+  .group-title{font-size:12px;font-weight:600;line-height:24px;color:var(--shape-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;user-select:none;}
+  .group-gid{display:inline-block;margin-right:6px;padding:0 6px;border-radius:6px;background:rgba(20,33,61,.1);font:600 10.5px/18px ui-monospace, SFMono-Regular, Menlo, monospace;vertical-align:1px;}
+  .group-actions{display:flex;gap:8px;margin:10px 0 4px;}
+  .panel-btn{flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--panel);color:var(--accent);font-weight:600;font-size:13px;cursor:pointer;}
+  .panel-btn:hover{border-color:var(--accent);background:rgba(29,108,224,.08);}
+  .field-error{color:#C0392B;font-size:11.5px;margin-top:4px;}
   .shape-group.connect-source > *{filter:drop-shadow(0 0 0 2px var(--green));}
   .shape-label{
     width:100%;height:100%;display:flex;align-items:center;justify-content:center;
@@ -586,7 +598,7 @@
     isUnifiedPlanSupported:${this.isUnifiedPlanSupported()}`}constructor(){this.isIOS="undefined"!=typeof navigator&&["iPad","iPhone","iPod"].includes(navigator.platform),this.supportedBrowsers=["firefox","chrome","safari"],this.minFirefoxVersion=59,this.minChromeVersion=72,this.minSafariVersion=605}},ew=e=>!e||/^[A-Za-z0-9]+(?:[ _-][A-Za-z0-9]+)*$/.test(e),eE=()=>Math.random().toString(36).slice(2),eD={iceServers:[{urls:"stun:stun.l.google.com:19302"},{urls:["turn:eu-0.turn.peerjs.com:3478","turn:us-0.turn.peerjs.com:3478"],username:"peerjs",credential:"peerjsp"}],sdpSemantics:"unified-plan"},ex=new class extends n{noop(){}blobToArrayBuffer(e,t){let n=new FileReader;return n.onload=function(e){e.target&&t(e.target.result)},n.readAsArrayBuffer(e),n}binaryStringToArrayBuffer(e){let t=new Uint8Array(e.length);for(let n=0;n<e.length;n++)t[n]=255&e.charCodeAt(n);return t.buffer}isSecure(){return"https:"===location.protocol}constructor(...e){super(...e),this.CLOUD_HOST="0.peerjs.com",this.CLOUD_PORT=443,this.chunkedBrowsers={Chrome:1,chrome:1},this.defaultConfig=eD,this.browser=eP.getBrowser(),this.browserVersion=eP.getVersion(),this.pack=o,this.unpack=i,this.supports=function(){let e;let t={browser:eP.isBrowserSupported(),webRTC:eP.isWebRTCSupported(),audioVideo:!1,data:!1,binaryBlob:!1,reliable:!1};if(!t.webRTC)return t;try{let n;e=new RTCPeerConnection(eD),t.audioVideo=!0;try{n=e.createDataChannel("_PEERJSTEST",{ordered:!0}),t.data=!0,t.reliable=!!n.ordered;try{n.binaryType="blob",t.binaryBlob=!eP.isIOS}catch(e){}}catch(e){}finally{n&&n.close()}}catch(e){}finally{e&&e.close()}return t}(),this.validateId=ew,this.randomToken=eE}};(_=P||(P={}))[_.Disabled=0]="Disabled",_[_.Errors=1]="Errors",_[_.Warnings=2]="Warnings",_[_.All=3]="All";var eI=new class{get logLevel(){return this._logLevel}set logLevel(e){this._logLevel=e}log(...e){this._logLevel>=3&&this._print(3,...e)}warn(...e){this._logLevel>=2&&this._print(2,...e)}error(...e){this._logLevel>=1&&this._print(1,...e)}setLogFunction(e){this._print=e}_print(e,...t){let n=["PeerJS: ",...t];for(let e in n)n[e]instanceof Error&&(n[e]="("+n[e].name+") "+n[e].message);e>=3?console.log(...n):e>=2?console.warn("WARNING",...n):e>=1&&console.error("ERROR",...n)}constructor(){this._logLevel=0}},eM={},eO=Object.prototype.hasOwnProperty,ej="~";function eL(){}function eA(e,t,n){this.fn=e,this.context=t,this.once=n||!1}function eB(e,t,n,r,i){if("function"!=typeof n)throw TypeError("The listener must be a function");var o=new eA(n,r||e,i),s=ej?ej+t:t;return e._events[s]?e._events[s].fn?e._events[s]=[e._events[s],o]:e._events[s].push(o):(e._events[s]=o,e._eventsCount++),e}function eF(e,t){0==--e._eventsCount?e._events=new eL:delete e._events[t]}function eU(){this._events=new eL,this._eventsCount=0}Object.create&&(eL.prototype=Object.create(null),new eL().__proto__||(ej=!1)),eU.prototype.eventNames=function(){var e,t,n=[];if(0===this._eventsCount)return n;for(t in e=this._events)eO.call(e,t)&&n.push(ej?t.slice(1):t);return Object.getOwnPropertySymbols?n.concat(Object.getOwnPropertySymbols(e)):n},eU.prototype.listeners=function(e){var t=ej?ej+e:e,n=this._events[t];if(!n)return[];if(n.fn)return[n.fn];for(var r=0,i=n.length,o=Array(i);r<i;r++)o[r]=n[r].fn;return o},eU.prototype.listenerCount=function(e){var t=ej?ej+e:e,n=this._events[t];return n?n.fn?1:n.length:0},eU.prototype.emit=function(e,t,n,r,i,o){var s=ej?ej+e:e;if(!this._events[s])return!1;var a,c,l=this._events[s],p=arguments.length;if(l.fn){switch(l.once&&this.removeListener(e,l.fn,void 0,!0),p){case 1:return l.fn.call(l.context),!0;case 2:return l.fn.call(l.context,t),!0;case 3:return l.fn.call(l.context,t,n),!0;case 4:return l.fn.call(l.context,t,n,r),!0;case 5:return l.fn.call(l.context,t,n,r,i),!0;case 6:return l.fn.call(l.context,t,n,r,i,o),!0}for(c=1,a=Array(p-1);c<p;c++)a[c-1]=arguments[c];l.fn.apply(l.context,a)}else{var d,h=l.length;for(c=0;c<h;c++)switch(l[c].once&&this.removeListener(e,l[c].fn,void 0,!0),p){case 1:l[c].fn.call(l[c].context);break;case 2:l[c].fn.call(l[c].context,t);break;case 3:l[c].fn.call(l[c].context,t,n);break;case 4:l[c].fn.call(l[c].context,t,n,r);break;default:if(!a)for(d=1,a=Array(p-1);d<p;d++)a[d-1]=arguments[d];l[c].fn.apply(l[c].context,a)}}return!0},eU.prototype.on=function(e,t,n){return eB(this,e,t,n,!1)},eU.prototype.once=function(e,t,n){return eB(this,e,t,n,!0)},eU.prototype.removeListener=function(e,t,n,r){var i=ej?ej+e:e;if(!this._events[i])return this;if(!t)return eF(this,i),this;var o=this._events[i];if(o.fn)o.fn!==t||r&&!o.once||n&&o.context!==n||eF(this,i);else{for(var s=0,a=[],c=o.length;s<c;s++)(o[s].fn!==t||r&&!o[s].once||n&&o[s].context!==n)&&a.push(o[s]);a.length?this._events[i]=1===a.length?a[0]:a:eF(this,i)}return this},eU.prototype.removeAllListeners=function(e){var t;return e?(t=ej?ej+e:e,this._events[t]&&eF(this,t)):(this._events=new eL,this._eventsCount=0),this},eU.prototype.off=eU.prototype.removeListener,eU.prototype.addListener=eU.prototype.on,eU.prefixed=ej,eU.EventEmitter=eU,eM=eU,(C=w||(w={})).Data="data",C.Media="media",(b=E||(E={})).BrowserIncompatible="browser-incompatible",b.Disconnected="disconnected",b.InvalidID="invalid-id",b.InvalidKey="invalid-key",b.Network="network",b.PeerUnavailable="peer-unavailable",b.SslUnavailable="ssl-unavailable",b.ServerError="server-error",b.SocketError="socket-error",b.SocketClosed="socket-closed",b.UnavailableID="unavailable-id",b.WebRTC="webrtc",(v=D||(D={})).NegotiationFailed="negotiation-failed",v.ConnectionClosed="connection-closed",(k=x||(x={})).NotOpenYet="not-open-yet",k.MessageToBig="message-too-big",(T=I||(I={})).Binary="binary",T.BinaryUTF8="binary-utf8",T.JSON="json",T.None="raw",(S=M||(M={})).Message="message",S.Disconnected="disconnected",S.Error="error",S.Close="close",(R=O||(O={})).Heartbeat="HEARTBEAT",R.Candidate="CANDIDATE",R.Offer="OFFER",R.Answer="ANSWER",R.Open="OPEN",R.Error="ERROR",R.IdTaken="ID-TAKEN",R.InvalidKey="INVALID-KEY",R.Leave="LEAVE",R.Expire="EXPIRE";var ez={};ez=JSON.parse('{"name":"peerjs","version":"1.5.4","keywords":["peerjs","webrtc","p2p","rtc"],"description":"PeerJS client","homepage":"https://peerjs.com","bugs":{"url":"https://github.com/peers/peerjs/issues"},"repository":{"type":"git","url":"https://github.com/peers/peerjs"},"license":"MIT","contributors":["Michelle Bu <michelle@michellebu.com>","afrokick <devbyru@gmail.com>","ericz <really.ez@gmail.com>","Jairo <kidandcat@gmail.com>","Jonas Gloning <34194370+jonasgloning@users.noreply.github.com>","Jairo Caro-Accino Viciana <jairo@galax.be>","Carlos Caballero <carlos.caballero.gonzalez@gmail.com>","hc <hheennrryy@gmail.com>","Muhammad Asif <capripio@gmail.com>","PrashoonB <prashoonbhattacharjee@gmail.com>","Harsh Bardhan Mishra <47351025+HarshCasper@users.noreply.github.com>","akotynski <aleksanderkotbury@gmail.com>","lmb <i@lmb.io>","Jairooo <jairocaro@msn.com>","Moritz Stückler <moritz.stueckler@gmail.com>","Simon <crydotsnakegithub@gmail.com>","Denis Lukov <denismassters@gmail.com>","Philipp Hancke <fippo@andyet.net>","Hans Oksendahl <hansoksendahl@gmail.com>","Jess <jessachandler@gmail.com>","khankuan <khankuan@gmail.com>","DUODVK <kurmanov.work@gmail.com>","XiZhao <kwang1imsa@gmail.com>","Matthias Lohr <matthias@lohr.me>","=frank tree <=frnktrb@googlemail.com>","Andre Eckardt <aeckardt@outlook.com>","Chris Cowan <agentme49@gmail.com>","Alex Chuev <alex@chuev.com>","alxnull <alxnull@e.mail.de>","Yemel Jardi <angel.jardi@gmail.com>","Ben Parnell <benjaminparnell.94@gmail.com>","Benny Lichtner <bennlich@gmail.com>","fresheneesz <bitetrudpublic@gmail.com>","bob.barstead@exaptive.com <bob.barstead@exaptive.com>","chandika <chandika@gmail.com>","emersion <contact@emersion.fr>","Christopher Van <cvan@users.noreply.github.com>","eddieherm <edhermoso@gmail.com>","Eduardo Pinho <enet4mikeenet@gmail.com>","Evandro Zanatta <ezanatta@tray.net.br>","Gardner Bickford <gardner@users.noreply.github.com>","Gian Luca <gianluca.cecchi@cynny.com>","PatrickJS <github@gdi2290.com>","jonnyf <github@jonathanfoss.co.uk>","Hizkia Felix <hizkifw@gmail.com>","Hristo Oskov <hristo.oskov@gmail.com>","Isaac Madwed <i.madwed@gmail.com>","Ilya Konanykhin <ilya.konanykhin@gmail.com>","jasonbarry <jasbarry@me.com>","Jonathan Burke <jonathan.burke.1311@googlemail.com>","Josh Hamit <josh.hamit@gmail.com>","Jordan Austin <jrax86@gmail.com>","Joel Wetzell <jwetzell@yahoo.com>","xizhao <kevin.wang@cloudera.com>","Alberto Torres <kungfoobar@gmail.com>","Jonathan Mayol <mayoljonathan@gmail.com>","Jefferson Felix <me@jsfelix.dev>","Rolf Erik Lekang <me@rolflekang.com>","Kevin Mai-Husan Chia <mhchia@users.noreply.github.com>","Pepijn de Vos <pepijndevos@gmail.com>","JooYoung <qkdlql@naver.com>","Tobias Speicher <rootcommander@gmail.com>","Steve Blaurock <sblaurock@gmail.com>","Kyrylo Shegeda <shegeda@ualberta.ca>","Diwank Singh Tomer <singh@diwank.name>","Sören Balko <Soeren.Balko@gmail.com>","Arpit Solanki <solankiarpit1997@gmail.com>","Yuki Ito <yuki@gnnk.net>","Artur Zayats <zag2art@gmail.com>"],"funding":{"type":"opencollective","url":"https://opencollective.com/peer"},"collective":{"type":"opencollective","url":"https://opencollective.com/peer"},"files":["dist/*"],"sideEffects":["lib/global.ts","lib/supports.ts"],"main":"dist/bundler.cjs","module":"dist/bundler.mjs","browser-minified":"dist/peerjs.min.js","browser-unminified":"dist/peerjs.js","browser-minified-msgpack":"dist/serializer.msgpack.mjs","types":"dist/types.d.ts","engines":{"node":">= 14"},"targets":{"types":{"source":"lib/exports.ts"},"main":{"source":"lib/exports.ts","sourceMap":{"inlineSources":true}},"module":{"source":"lib/exports.ts","includeNodeModules":["eventemitter3"],"sourceMap":{"inlineSources":true}},"browser-minified":{"context":"browser","outputFormat":"global","optimize":true,"engines":{"browsers":"chrome >= 83, edge >= 83, firefox >= 80, safari >= 15"},"source":"lib/global.ts"},"browser-unminified":{"context":"browser","outputFormat":"global","optimize":false,"engines":{"browsers":"chrome >= 83, edge >= 83, firefox >= 80, safari >= 15"},"source":"lib/global.ts"},"browser-minified-msgpack":{"context":"browser","outputFormat":"esmodule","isLibrary":true,"optimize":true,"engines":{"browsers":"chrome >= 83, edge >= 83, firefox >= 102, safari >= 15"},"source":"lib/dataconnection/StreamConnection/MsgPack.ts"}},"scripts":{"contributors":"git-authors-cli --print=false && prettier --write package.json && git add package.json package-lock.json && git commit -m \\"chore(contributors): update and sort contributors list\\"","check":"tsc --noEmit && tsc -p e2e/tsconfig.json --noEmit","watch":"parcel watch","build":"rm -rf dist && parcel build","prepublishOnly":"npm run build","test":"jest","test:watch":"jest --watch","coverage":"jest --coverage --collectCoverageFrom=\\"./lib/**\\"","format":"prettier --write .","format:check":"prettier --check .","semantic-release":"semantic-release","e2e":"wdio run e2e/wdio.local.conf.ts","e2e:bstack":"wdio run e2e/wdio.bstack.conf.ts"},"devDependencies":{"@parcel/config-default":"^2.9.3","@parcel/packager-ts":"^2.9.3","@parcel/transformer-typescript-tsc":"^2.9.3","@parcel/transformer-typescript-types":"^2.9.3","@semantic-release/changelog":"^6.0.1","@semantic-release/git":"^10.0.1","@swc/core":"^1.3.27","@swc/jest":"^0.2.24","@types/jasmine":"^4.3.4","@wdio/browserstack-service":"^8.11.2","@wdio/cli":"^8.11.2","@wdio/globals":"^8.11.2","@wdio/jasmine-framework":"^8.11.2","@wdio/local-runner":"^8.11.2","@wdio/spec-reporter":"^8.11.2","@wdio/types":"^8.10.4","http-server":"^14.1.1","jest":"^29.3.1","jest-environment-jsdom":"^29.3.1","mock-socket":"^9.0.0","parcel":"^2.9.3","prettier":"^3.0.0","semantic-release":"^21.0.0","ts-node":"^10.9.1","typescript":"^5.0.0","wdio-geckodriver-service":"^5.0.1"},"dependencies":{"@msgpack/msgpack":"^2.8.0","eventemitter3":"^4.0.7","peerjs-js-binarypack":"^2.1.0","webrtc-adapter":"^9.0.0"},"alias":{"process":false,"buffer":false}}');class eN extends eM.EventEmitter{start(e,t){this._id=e;let n=`${this._baseUrl}&id=${e}&token=${t}`;!this._socket&&this._disconnected&&(this._socket=new WebSocket(n+"&version="+ez.version),this._disconnected=!1,this._socket.onmessage=e=>{let t;try{t=JSON.parse(e.data),eI.log("Server message received:",t)}catch(t){eI.log("Invalid server message",e.data);return}this.emit(M.Message,t)},this._socket.onclose=e=>{this._disconnected||(eI.log("Socket closed.",e),this._cleanup(),this._disconnected=!0,this.emit(M.Disconnected))},this._socket.onopen=()=>{this._disconnected||(this._sendQueuedMessages(),eI.log("Socket open"),this._scheduleHeartbeat())})}_scheduleHeartbeat(){this._wsPingTimer=setTimeout(()=>{this._sendHeartbeat()},this.pingInterval)}_sendHeartbeat(){if(!this._wsOpen()){eI.log("Cannot send heartbeat, because socket closed");return}let e=JSON.stringify({type:O.Heartbeat});this._socket.send(e),this._scheduleHeartbeat()}_wsOpen(){return!!this._socket&&1===this._socket.readyState}_sendQueuedMessages(){let e=[...this._messagesQueue];for(let t of(this._messagesQueue=[],e))this.send(t)}send(e){if(this._disconnected)return;if(!this._id){this._messagesQueue.push(e);return}if(!e.type){this.emit(M.Error,"Invalid message");return}if(!this._wsOpen())return;let t=JSON.stringify(e);this._socket.send(t)}close(){this._disconnected||(this._cleanup(),this._disconnected=!0)}_cleanup(){this._socket&&(this._socket.onopen=this._socket.onmessage=this._socket.onclose=null,this._socket.close(),this._socket=void 0),clearTimeout(this._wsPingTimer)}constructor(e,t,n,r,i,o=5e3){super(),this.pingInterval=o,this._disconnected=!0,this._messagesQueue=[],this._baseUrl=(e?"wss://":"ws://")+t+":"+n+r+"peerjs?key="+i}}class e${startConnection(e){let t=this._startPeerConnection();if(this.connection.peerConnection=t,this.connection.type===w.Media&&e._stream&&this._addTracksToConnection(e._stream,t),e.originator){let n=this.connection,r={ordered:!!e.reliable},i=t.createDataChannel(n.label,r);n._initializeDataChannel(i),this._makeOffer()}else this.handleSDP("OFFER",e.sdp)}_startPeerConnection(){eI.log("Creating RTCPeerConnection.");let e=new RTCPeerConnection(this.connection.provider.options.config);return this._setupListeners(e),e}_setupListeners(e){let t=this.connection.peer,n=this.connection.connectionId,r=this.connection.type,i=this.connection.provider;eI.log("Listening for ICE candidates."),e.onicecandidate=e=>{e.candidate&&e.candidate.candidate&&(eI.log(`Received ICE candidates for ${t}:`,e.candidate),i.socket.send({type:O.Candidate,payload:{candidate:e.candidate,type:r,connectionId:n},dst:t}))},e.oniceconnectionstatechange=()=>{switch(e.iceConnectionState){case"failed":eI.log("iceConnectionState is failed, closing connections to "+t),this.connection.emitError(D.NegotiationFailed,"Negotiation of connection to "+t+" failed."),this.connection.close();break;case"closed":eI.log("iceConnectionState is closed, closing connections to "+t),this.connection.emitError(D.ConnectionClosed,"Connection to "+t+" closed."),this.connection.close();break;case"disconnected":eI.log("iceConnectionState changed to disconnected on the connection with "+t);break;case"completed":e.onicecandidate=()=>{}}this.connection.emit("iceStateChanged",e.iceConnectionState)},eI.log("Listening for data channel"),e.ondatachannel=e=>{eI.log("Received data channel");let r=e.channel;i.getConnection(t,n)._initializeDataChannel(r)},eI.log("Listening for remote stream"),e.ontrack=e=>{eI.log("Received remote stream");let r=e.streams[0],o=i.getConnection(t,n);o.type===w.Media&&this._addStreamToMediaConnection(r,o)}}cleanup(){eI.log("Cleaning up PeerConnection to "+this.connection.peer);let e=this.connection.peerConnection;if(!e)return;this.connection.peerConnection=null,e.onicecandidate=e.oniceconnectionstatechange=e.ondatachannel=e.ontrack=()=>{};let t="closed"!==e.signalingState,n=!1,r=this.connection.dataChannel;r&&(n=!!r.readyState&&"closed"!==r.readyState),(t||n)&&e.close()}async _makeOffer(){let e=this.connection.peerConnection,t=this.connection.provider;try{let n=await e.createOffer(this.connection.options.constraints);eI.log("Created offer."),this.connection.options.sdpTransform&&"function"==typeof this.connection.options.sdpTransform&&(n.sdp=this.connection.options.sdpTransform(n.sdp)||n.sdp);try{await e.setLocalDescription(n),eI.log("Set localDescription:",n,`for:${this.connection.peer}`);let r={sdp:n,type:this.connection.type,connectionId:this.connection.connectionId,metadata:this.connection.metadata};if(this.connection.type===w.Data){let e=this.connection;r={...r,label:e.label,reliable:e.reliable,serialization:e.serialization}}t.socket.send({type:O.Offer,payload:r,dst:this.connection.peer})}catch(e){"OperationError: Failed to set local offer sdp: Called in wrong state: kHaveRemoteOffer"!=e&&(t.emitError(E.WebRTC,e),eI.log("Failed to setLocalDescription, ",e))}}catch(e){t.emitError(E.WebRTC,e),eI.log("Failed to createOffer, ",e)}}async _makeAnswer(){let e=this.connection.peerConnection,t=this.connection.provider;try{let n=await e.createAnswer();eI.log("Created answer."),this.connection.options.sdpTransform&&"function"==typeof this.connection.options.sdpTransform&&(n.sdp=this.connection.options.sdpTransform(n.sdp)||n.sdp);try{await e.setLocalDescription(n),eI.log("Set localDescription:",n,`for:${this.connection.peer}`),t.socket.send({type:O.Answer,payload:{sdp:n,type:this.connection.type,connectionId:this.connection.connectionId},dst:this.connection.peer})}catch(e){t.emitError(E.WebRTC,e),eI.log("Failed to setLocalDescription, ",e)}}catch(e){t.emitError(E.WebRTC,e),eI.log("Failed to create answer, ",e)}}async handleSDP(e,t){t=new RTCSessionDescription(t);let n=this.connection.peerConnection,r=this.connection.provider;eI.log("Setting remote description",t);try{await n.setRemoteDescription(t),eI.log(`Set remoteDescription:${e} for:${this.connection.peer}`),"OFFER"===e&&await this._makeAnswer()}catch(e){r.emitError(E.WebRTC,e),eI.log("Failed to setRemoteDescription, ",e)}}async handleCandidate(e){eI.log("handleCandidate:",e);try{await this.connection.peerConnection.addIceCandidate(e),eI.log(`Added ICE candidate for:${this.connection.peer}`)}catch(e){this.connection.provider.emitError(E.WebRTC,e),eI.log("Failed to handleCandidate, ",e)}}_addTracksToConnection(e,t){if(eI.log(`add tracks from stream ${e.id} to peer connection`),!t.addTrack)return eI.error("Your browser does't support RTCPeerConnection#addTrack. Ignored.");e.getTracks().forEach(n=>{t.addTrack(n,e)})}_addStreamToMediaConnection(e,t){eI.log(`add stream ${e.id} to media connection ${t.connectionId}`),t.addStream(e)}constructor(e){this.connection=e}}class eJ extends eM.EventEmitter{emitError(e,t){eI.error("Error:",t),this.emit("error",new eV(`${e}`,t))}}class eV extends Error{constructor(e,t){"string"==typeof t?super(t):(super(),Object.assign(this,t)),this.type=e}}class eG extends eJ{get open(){return this._open}constructor(e,t,n){super(),this.peer=e,this.provider=t,this.options=n,this._open=!1,this.metadata=n.metadata}}class eW extends eG{get type(){return w.Media}get localStream(){return this._localStream}get remoteStream(){return this._remoteStream}_initializeDataChannel(e){this.dataChannel=e,this.dataChannel.onopen=()=>{eI.log(`DC#${this.connectionId} dc connection success`),this.emit("willCloseOnRemote")},this.dataChannel.onclose=()=>{eI.log(`DC#${this.connectionId} dc closed for:`,this.peer),this.close()}}addStream(e){eI.log("Receiving stream",e),this._remoteStream=e,super.emit("stream",e)}handleMessage(e){let t=e.type,n=e.payload;switch(e.type){case O.Answer:this._negotiator.handleSDP(t,n.sdp),this._open=!0;break;case O.Candidate:this._negotiator.handleCandidate(n.candidate);break;default:eI.warn(`Unrecognized message type:${t} from peer:${this.peer}`)}}answer(e,t={}){if(this._localStream){eI.warn("Local stream already exists on this MediaConnection. Are you answering a call twice?");return}for(let n of(this._localStream=e,t&&t.sdpTransform&&(this.options.sdpTransform=t.sdpTransform),this._negotiator.startConnection({...this.options._payload,_stream:e}),this.provider._getMessages(this.connectionId)))this.handleMessage(n);this._open=!0}close(){this._negotiator&&(this._negotiator.cleanup(),this._negotiator=null),this._localStream=null,this._remoteStream=null,this.provider&&(this.provider._removeConnection(this),this.provider=null),this.options&&this.options._stream&&(this.options._stream=null),this.open&&(this._open=!1,super.emit("close"))}constructor(e,t,n){super(e,t,n),this._localStream=this.options._stream,this.connectionId=this.options.connectionId||eW.ID_PREFIX+ex.randomToken(),this._negotiator=new e$(this),this._localStream&&this._negotiator.startConnection({_stream:this._localStream,originator:!0})}}eW.ID_PREFIX="mc_";class eH{_buildRequest(e){let t=this._options.secure?"https":"http",{host:n,port:r,path:i,key:o}=this._options,s=new URL(`${t}://${n}:${r}${i}${o}/${e}`);return s.searchParams.set("ts",`${Date.now()}${Math.random()}`),s.searchParams.set("version",ez.version),fetch(s.href,{referrerPolicy:this._options.referrerPolicy})}async retrieveId(){try{let e=await this._buildRequest("id");if(200!==e.status)throw Error(`Error. Status:${e.status}`);return e.text()}catch(t){eI.error("Error retrieving ID",t);let e="";throw"/"===this._options.path&&this._options.host!==ex.CLOUD_HOST&&(e=" If you passed in a `path` to your self-hosted PeerServer, you'll also need to pass in that same path when creating a new Peer."),Error("Could not get an ID from the server."+e)}}async listAllPeers(){try{let e=await this._buildRequest("peers");if(200!==e.status){if(401===e.status){let e="";throw e=this._options.host===ex.CLOUD_HOST?"It looks like you're using the cloud server. You can email team@peerjs.com to enable peer listing for your API key.":"You need to enable `allow_discovery` on your self-hosted PeerServer to use this feature.",Error("It doesn't look like you have permission to list peers IDs. "+e)}throw Error(`Error. Status:${e.status}`)}return e.json()}catch(e){throw eI.error("Error retrieving list peers",e),Error("Could not get list peers from the server."+e)}}constructor(e){this._options=e}}class eY extends eG{get type(){return w.Data}_initializeDataChannel(e){this.dataChannel=e,this.dataChannel.onopen=()=>{eI.log(`DC#${this.connectionId} dc connection success`),this._open=!0,this.emit("open")},this.dataChannel.onmessage=e=>{eI.log(`DC#${this.connectionId} dc onmessage:`,e.data)},this.dataChannel.onclose=()=>{eI.log(`DC#${this.connectionId} dc closed for:`,this.peer),this.close()}}close(e){if(e?.flush){this.send({__peerData:{type:"close"}});return}this._negotiator&&(this._negotiator.cleanup(),this._negotiator=null),this.provider&&(this.provider._removeConnection(this),this.provider=null),this.dataChannel&&(this.dataChannel.onopen=null,this.dataChannel.onmessage=null,this.dataChannel.onclose=null,this.dataChannel=null),this.open&&(this._open=!1,super.emit("close"))}send(e,t=!1){if(!this.open){this.emitError(x.NotOpenYet,"Connection is not open. You should listen for the `open` event before sending messages.");return}return this._send(e,t)}async handleMessage(e){let t=e.payload;switch(e.type){case O.Answer:await this._negotiator.handleSDP(e.type,t.sdp);break;case O.Candidate:await this._negotiator.handleCandidate(t.candidate);break;default:eI.warn("Unrecognized message type:",e.type,"from peer:",this.peer)}}constructor(e,t,n){super(e,t,n),this.connectionId=this.options.connectionId||eY.ID_PREFIX+eE(),this.label=this.options.label||this.connectionId,this.reliable=!!this.options.reliable,this._negotiator=new e$(this),this._negotiator.startConnection(this.options._payload||{originator:!0,reliable:this.reliable})}}eY.ID_PREFIX="dc_",eY.MAX_BUFFERED_AMOUNT=8388608;class eK extends eY{get bufferSize(){return this._bufferSize}_initializeDataChannel(e){super._initializeDataChannel(e),this.dataChannel.binaryType="arraybuffer",this.dataChannel.addEventListener("message",e=>this._handleDataMessage(e))}_bufferedSend(e){(this._buffering||!this._trySend(e))&&(this._buffer.push(e),this._bufferSize=this._buffer.length)}_trySend(e){if(!this.open)return!1;if(this.dataChannel.bufferedAmount>eY.MAX_BUFFERED_AMOUNT)return this._buffering=!0,setTimeout(()=>{this._buffering=!1,this._tryBuffer()},50),!1;try{this.dataChannel.send(e)}catch(e){return eI.error(`DC#:${this.connectionId} Error when sending:`,e),this._buffering=!0,this.close(),!1}return!0}_tryBuffer(){if(!this.open||0===this._buffer.length)return;let e=this._buffer[0];this._trySend(e)&&(this._buffer.shift(),this._bufferSize=this._buffer.length,this._tryBuffer())}close(e){if(e?.flush){this.send({__peerData:{type:"close"}});return}this._buffer=[],this._bufferSize=0,super.close()}constructor(...e){super(...e),this._buffer=[],this._bufferSize=0,this._buffering=!1}}class eX extends eK{close(e){super.close(e),this._chunkedData={}}_handleDataMessage({data:e}){let t=i(e),n=t.__peerData;if(n){if("close"===n.type){this.close();return}this._handleChunk(t);return}this.emit("data",t)}_handleChunk(e){let t=e.__peerData,n=this._chunkedData[t]||{data:[],count:0,total:e.total};if(n.data[e.n]=new Uint8Array(e.data),n.count++,this._chunkedData[t]=n,n.total===n.count){delete this._chunkedData[t];let e=function(e){let t=0;for(let n of e)t+=n.byteLength;let n=new Uint8Array(t),r=0;for(let t of e)n.set(t,r),r+=t.byteLength;return n}(n.data);this._handleDataMessage({data:e})}}_send(e,t){let n=o(e);if(n instanceof Promise)return this._send_blob(n);if(!t&&n.byteLength>this.chunker.chunkedMTU){this._sendChunks(n);return}this._bufferedSend(n)}async _send_blob(e){let t=await e;if(t.byteLength>this.chunker.chunkedMTU){this._sendChunks(t);return}this._bufferedSend(t)}_sendChunks(e){let t=this.chunker.chunk(e);for(let e of(eI.log(`DC#${this.connectionId} Try to send ${t.length} chunks...`),t))this.send(e,!0)}constructor(e,t,r){super(e,t,r),this.chunker=new n,this.serialization=I.Binary,this._chunkedData={}}}class eq extends eK{_handleDataMessage({data:e}){super.emit("data",e)}_send(e,t){this._bufferedSend(e)}constructor(...e){super(...e),this.serialization=I.None}}class eQ extends eK{_handleDataMessage({data:e}){let t=this.parse(this.decoder.decode(e)),n=t.__peerData;if(n&&"close"===n.type){this.close();return}this.emit("data",t)}_send(e,t){let n=this.encoder.encode(this.stringify(e));if(n.byteLength>=ex.chunkedMTU){this.emitError(x.MessageToBig,"Message too big for JSON channel");return}this._bufferedSend(n)}constructor(...e){super(...e),this.serialization=I.JSON,this.encoder=new TextEncoder,this.decoder=new TextDecoder,this.stringify=JSON.stringify,this.parse=JSON.parse}}class eZ extends eJ{get id(){return this._id}get options(){return this._options}get open(){return this._open}get socket(){return this._socket}get connections(){let e=Object.create(null);for(let[t,n]of this._connections)e[t]=n;return e}get destroyed(){return this._destroyed}get disconnected(){return this._disconnected}_createServerConnection(){let e=new eN(this._options.secure,this._options.host,this._options.port,this._options.path,this._options.key,this._options.pingInterval);return e.on(M.Message,e=>{this._handleMessage(e)}),e.on(M.Error,e=>{this._abort(E.SocketError,e)}),e.on(M.Disconnected,()=>{this.disconnected||(this.emitError(E.Network,"Lost connection to server."),this.disconnect())}),e.on(M.Close,()=>{this.disconnected||this._abort(E.SocketClosed,"Underlying socket is already closed.")}),e}_initialize(e){this._id=e,this.socket.start(e,this._options.token)}_handleMessage(e){let t=e.type,n=e.payload,r=e.src;switch(t){case O.Open:this._lastServerId=this.id,this._open=!0,this.emit("open",this.id);break;case O.Error:this._abort(E.ServerError,n.msg);break;case O.IdTaken:this._abort(E.UnavailableID,`ID "${this.id}" is taken`);break;case O.InvalidKey:this._abort(E.InvalidKey,`API KEY "${this._options.key}" is invalid`);break;case O.Leave:eI.log(`Received leave message from ${r}`),this._cleanupPeer(r),this._connections.delete(r);break;case O.Expire:this.emitError(E.PeerUnavailable,`Could not connect to peer ${r}`);break;case O.Offer:{let e=n.connectionId,t=this.getConnection(r,e);if(t&&(t.close(),eI.warn(`Offer received for existing Connection ID:${e}`)),n.type===w.Media){let i=new eW(r,this,{connectionId:e,_payload:n,metadata:n.metadata});t=i,this._addConnection(r,t),this.emit("call",i)}else if(n.type===w.Data){let i=new this._serializers[n.serialization](r,this,{connectionId:e,_payload:n,metadata:n.metadata,label:n.label,serialization:n.serialization,reliable:n.reliable});t=i,this._addConnection(r,t),this.emit("connection",i)}else{eI.warn(`Received malformed connection type:${n.type}`);return}for(let n of this._getMessages(e))t.handleMessage(n);break}default:{if(!n){eI.warn(`You received a malformed message from ${r} of type ${t}`);return}let i=n.connectionId,o=this.getConnection(r,i);o&&o.peerConnection?o.handleMessage(e):i?this._storeMessage(i,e):eI.warn("You received an unrecognized message:",e)}}}_storeMessage(e,t){this._lostMessages.has(e)||this._lostMessages.set(e,[]),this._lostMessages.get(e).push(t)}_getMessages(e){let t=this._lostMessages.get(e);return t?(this._lostMessages.delete(e),t):[]}connect(e,t={}){if(t={serialization:"default",...t},this.disconnected){eI.warn("You cannot connect to a new Peer because you called .disconnect() on this Peer and ended your connection with the server. You can create a new Peer to reconnect, or call reconnect on this peer if you believe its ID to still be available."),this.emitError(E.Disconnected,"Cannot connect to new Peer after disconnecting from server.");return}let n=new this._serializers[t.serialization](e,this,t);return this._addConnection(e,n),n}call(e,t,n={}){if(this.disconnected){eI.warn("You cannot connect to a new Peer because you called .disconnect() on this Peer and ended your connection with the server. You can create a new Peer to reconnect."),this.emitError(E.Disconnected,"Cannot connect to new Peer after disconnecting from server.");return}if(!t){eI.error("To call a peer, you must provide a stream from your browser's `getUserMedia`.");return}let r=new eW(e,this,{...n,_stream:t});return this._addConnection(e,r),r}_addConnection(e,t){eI.log(`add connection ${t.type}:${t.connectionId} to peerId:${e}`),this._connections.has(e)||this._connections.set(e,[]),this._connections.get(e).push(t)}_removeConnection(e){let t=this._connections.get(e.peer);if(t){let n=t.indexOf(e);-1!==n&&t.splice(n,1)}this._lostMessages.delete(e.connectionId)}getConnection(e,t){let n=this._connections.get(e);if(!n)return null;for(let e of n)if(e.connectionId===t)return e;return null}_delayedAbort(e,t){setTimeout(()=>{this._abort(e,t)},0)}_abort(e,t){eI.error("Aborting!"),this.emitError(e,t),this._lastServerId?this.disconnect():this.destroy()}destroy(){this.destroyed||(eI.log(`Destroy peer with ID:${this.id}`),this.disconnect(),this._cleanup(),this._destroyed=!0,this.emit("close"))}_cleanup(){for(let e of this._connections.keys())this._cleanupPeer(e),this._connections.delete(e);this.socket.removeAllListeners()}_cleanupPeer(e){let t=this._connections.get(e);if(t)for(let e of t)e.close()}disconnect(){if(this.disconnected)return;let e=this.id;eI.log(`Disconnect peer with ID:${e}`),this._disconnected=!0,this._open=!1,this.socket.close(),this._lastServerId=e,this._id=null,this.emit("disconnected",e)}reconnect(){if(this.disconnected&&!this.destroyed)eI.log(`Attempting reconnection to server with ID ${this._lastServerId}`),this._disconnected=!1,this._initialize(this._lastServerId);else if(this.destroyed)throw Error("This peer cannot reconnect to the server. It has already been destroyed.");else if(this.disconnected||this.open)throw Error(`Peer ${this.id} cannot reconnect because it is not disconnected from the server!`);else eI.error("In a hurry? We're still trying to make the initial connection!")}listAllPeers(e=e=>{}){this._api.listAllPeers().then(t=>e(t)).catch(e=>this._abort(E.ServerError,e))}constructor(e,t){let n;if(super(),this._serializers={raw:eq,json:eQ,binary:eX,"binary-utf8":eX,default:eX},this._id=null,this._lastServerId=null,this._destroyed=!1,this._disconnected=!1,this._open=!1,this._connections=new Map,this._lostMessages=new Map,e&&e.constructor==Object?t=e:e&&(n=e.toString()),t={debug:0,host:ex.CLOUD_HOST,port:ex.CLOUD_PORT,path:"/",key:eZ.DEFAULT_KEY,token:ex.randomToken(),config:ex.defaultConfig,referrerPolicy:"strict-origin-when-cross-origin",serializers:{},...t},this._options=t,this._serializers={...this._serializers,...this.options.serializers},"/"===this._options.host&&(this._options.host=window.location.hostname),this._options.path&&("/"!==this._options.path[0]&&(this._options.path="/"+this._options.path),"/"!==this._options.path[this._options.path.length-1]&&(this._options.path+="/")),void 0===this._options.secure&&this._options.host!==ex.CLOUD_HOST?this._options.secure=ex.isSecure():this._options.host==ex.CLOUD_HOST&&(this._options.secure=!0),this._options.logFunction&&eI.setLogFunction(this._options.logFunction),eI.logLevel=this._options.debug||0,this._api=new eH(t),this._socket=this._createServerConnection(),!ex.supports.audioVideo&&!ex.supports.data){this._delayedAbort(E.BrowserIncompatible,"The current browser does not support WebRTC");return}if(n&&!ex.validateId(n)){this._delayedAbort(E.InvalidID,`ID "${n}" is invalid`);return}n?this._initialize(n):this._api.retrieveId().then(e=>this._initialize(e)).catch(e=>this._abort(E.ServerError,e))}}eZ.DEFAULT_KEY="peerjs",window.peerjs={Peer:eZ,util:ex},window.Peer=eZ})();
 </script>
 <script>
-const { createApp, reactive, ref, computed, onMounted, onBeforeUnmount, nextTick } = Vue;
+const { createApp, reactive, ref, computed, watch, onMounted, onBeforeUnmount, nextTick } = Vue;
 
 const SHAPE_DEFAULTS = {
   rectangle: { w: 140, h: 70 },
@@ -595,6 +607,7 @@ const SHAPE_DEFAULTS = {
 };
 
 const PALETTE = ['#FFFFFF', '#E4EEFD', '#FFF0E2', '#E0F6EB', '#FFF6D6', '#EFE6FB'];
+const GROUP_PALETTE = ['#EAF1FC', '#F4F6FA', '#FFF3E6', '#E8F7EF', '#FFF8DD', '#F3ECFC'];
 
 const ICONS = {
   selectMany: '<svg width="18" height="18" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="3" width="11" height="11" rx="1.5" stroke-dasharray="2.6 2.4"/><path d="M11.5 11.5l7 2.6-3 1.1-1.1 3z" stroke-linejoin="round" fill="currentColor"/></svg>',
@@ -740,6 +753,18 @@ const TEMPLATE = `
         <g :transform="viewportTransform">
           <rect class="canvas-bg" x="-4000" y="-4000" width="9000" height="9000" fill="url(#dotgrid)" />
 
+          <!-- group frames sit under connections and shapes, so their members stay clickable -->
+          <g v-for="g in groupFrames" :key="'frame-' + g.id" class="shape-group group-frame"
+             :class="{selected: g.id===selectedShapeId, multi: isMulti('s', g.id), 'connect-source': g.id===connectFrom}"
+             :transform="'translate(' + g.x + ' ' + g.y + ')'"
+             @pointerdown="onShapeMouseDown(g, $event)" @click.stop @dblclick.stop="openTextDialog(g)">
+            <rect class="group-body" :width="g.w" :height="g.h" rx="14" ry="14" :fill="g.fill"
+                  :stroke="g.id===selectedShapeId ? '#1D6CE0' : g.stroke" :stroke-width="g.id===selectedShapeId ? 2.5 : 1.6" />
+            <foreignObject x="10" y="5" :width="Math.max(0, g.w - 34)" :height="GROUP_HEAD - 6">
+              <div class="group-title" xmlns="http://www.w3.org/1999/xhtml"><span class="group-gid">{{ g.gid }}</span>{{ g.label }}</div>
+            </foreignObject>
+          </g>
+
           <g v-for="conn in connections" :key="conn.id" class="conn-group" :class="{selected: conn.id===selectedConnId, multi: isMulti('c', conn.id)}"
              @pointerdown.stop="onConnMouseDown(conn, $event)" @click.stop @dblclick.stop="openTextDialog(conn)">
             <path class="conn-hit" :d="connPath(conn)" />
@@ -768,7 +793,7 @@ const TEMPLATE = `
                 :y1="edgeStyle==='point' ? boundaryPoint(connectFromShape, mousePos.x, mousePos.y).y : portPoint(connectFromShape, connectFromPort || 'end').y"
                 :x2="mousePos.x" :y2="mousePos.y" />
 
-          <g v-for="shape in shapes" :key="shape.id" class="shape-group"
+          <g v-for="shape in shapeLayer" :key="shape.id" class="shape-group" :data-group="shape.type==='group' ? '' : null"
              :class="{selected: shape.id===selectedShapeId, multi: isMulti('s', shape.id), 'connect-source': shape.id===connectFrom}"
              :transform="'translate(' + shape.x + ' ' + shape.y + ')'"
              @pointerdown="onShapeMouseDown(shape, $event)" @click.stop @dblclick.stop="openTextDialog(shape)">
@@ -781,7 +806,7 @@ const TEMPLATE = `
             <polygon v-else-if="shape.type==='diamond'" :points="diamondPoints(shape)"
                   :fill="shape.fill" :stroke="shape.id===selectedShapeId ? '#1D6CE0' : shape.stroke"
                   :stroke-width="shape.id===selectedShapeId ? 2.5 : 1.6" stroke-linejoin="round" />
-            <foreignObject :width="shape.w" :height="shape.h">
+            <foreignObject v-if="shape.type!=='group'" :width="shape.w" :height="shape.h">
               <div class="shape-label" xmlns="http://www.w3.org/1999/xhtml">{{ shape.label }}</div>
             </foreignObject>
 
@@ -803,7 +828,7 @@ const TEMPLATE = `
 
             <g class="connect-icon port-start" title="Start (left)"
                :class="{active: shape.id===connectFrom && connectFromPort==='start'}"
-               :transform="'translate(0 ' + (shape.h/2) + ')'"
+               :transform="'translate(0 ' + (shape.type==='group' ? GROUP_HEAD : shape.h/2) + ')'"
                @pointerdown.stop @click.stop="onPortClick(shape, 'start')">
               <circle class="touch-hit" r="18" /><circle r="8.5" />
               <line x1="4" y1="0" x2="-3.5" y2="0" />
@@ -812,7 +837,7 @@ const TEMPLATE = `
 
             <g class="connect-icon port-end" title="End (right)"
                :class="{active: shape.id===connectFrom && connectFromPort==='end'}"
-               :transform="'translate(' + shape.w + ' ' + (shape.h/2) + ')'"
+               :transform="'translate(' + shape.w + ' ' + (shape.type==='group' ? GROUP_HEAD : shape.h/2) + ')'"
                @pointerdown.stop @click.stop="onPortClick(shape, 'end')">
               <circle class="touch-hit" r="18" /><circle r="8.5" />
               <line x1="-4" y1="0" x2="3.5" y2="0" />
@@ -929,8 +954,53 @@ const TEMPLATE = `
         <h3>{{ multiCount }} selected</h3>
         <div class="meta-row">{{ multi.shapes.length }} shapes · {{ multi.conns.length }} connections · {{ multi.lines.length }} lines</div>
         <p class="empty-panel" v-if="multiMode">Tap an item to add it or remove it. Drag on empty canvas to select with a box. Tap the Select many button again to finish.</p>
-        <p class="empty-panel" v-else>Shift-click an item to add it or remove it. Shift-drag on empty canvas to select with a box. Press Escape to clear the selection.</p>
+        <p class="empty-panel" v-else>Shift-click an item to add it or remove it. Shift-drag on empty canvas to select with a box. Ctrl/Cmd+G groups the shapes, Ctrl/Cmd+C copies, Ctrl/Cmd+V pastes, Ctrl/Cmd+D duplicates. Press Escape to clear the selection.</p>
+        <div class="group-actions" v-if="multi.shapes.length">
+          <button class="panel-btn" @click="groupSelected()" title="Group the selected shapes (Ctrl/Cmd+G)">Group</button>
+          <button class="panel-btn" v-if="multi.shapes.some(id => shapes.some(s => s.id === id && s.type === 'group'))" @click="ungroupSelected()" title="Ungroup (Ctrl/Cmd+Shift+G)">Ungroup</button>
+        </div>
         <button class="delete-btn" @click="deleteMulti()">Delete {{ multiCount }} selected</button>
+      </template>
+
+      <template v-else-if="selectedShape && selectedShape.type==='group'">
+        <h3>Group</h3>
+        <div class="field">
+          <label>Group ID</label>
+          <input type="text" :value="selectedShape.gid" :key="'gid-' + selectedShape.id"
+                 @change="setGroupId(selectedShape, $event.target.value) || ($event.target.value = selectedShape.gid)"
+                 @keydown.enter="$event.target.blur()" />
+          <div class="field-error" v-if="gidError">{{ gidError }}</div>
+        </div>
+        <div class="field">
+          <label>Label</label>
+          <input type="text" v-model="selectedShape.label" />
+        </div>
+        <div class="field">
+          <label>Fill color</label>
+          <div class="swatches">
+            <div v-for="c in groupPalette" :key="c" class="swatch" :class="{selected: selectedShape.fill===c}"
+                 :style="{background:c}" @click="selectedShape.fill = c"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Note</label>
+          <textarea class="panel-note" v-model="selectedShape.note" placeholder="Add a note…"></textarea>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>Width</label>
+            <input type="number" step="1" :value="Math.round(selectedShape.w)" @change="setShapeSize(selectedShape, 'w', $event.target.value)" />
+          </div>
+          <div class="field">
+            <label>Height</label>
+            <input type="number" step="1" :value="Math.round(selectedShape.h)" @change="setShapeSize(selectedShape, 'h', $event.target.value)" />
+          </div>
+        </div>
+        <div class="meta-row">{{ (selectedShape.members || []).length }} items · {{ (selectedShape.conns || []).length }} connections · id: {{ selectedShape.id }}</div>
+        <div class="group-actions">
+          <button class="panel-btn" @click="ungroupShape(selectedShape.id)" title="Ungroup (Ctrl/Cmd+Shift+G)">Ungroup</button>
+        </div>
+        <button class="delete-btn" @click="removeShape(selectedShape.id)">Delete group and contents</button>
       </template>
 
       <template v-else-if="selectedShape">
@@ -960,7 +1030,10 @@ const TEMPLATE = `
             <input type="number" min="30" step="1" :value="Math.round(selectedShape.h)" @change="setShapeSize(selectedShape, 'h', $event.target.value)" />
           </div>
         </div>
-        <div class="meta-row">id: {{ selectedShape.id }}</div>
+        <div class="meta-row">id: {{ selectedShape.id }}<template v-if="parentGroupOf(selectedShape.id)"> · in group {{ parentGroupOf(selectedShape.id).gid }}</template></div>
+        <div class="group-actions">
+          <button class="panel-btn" @click="groupSelected()" title="Put this shape in a new group (Ctrl/Cmd+G)">Group</button>
+        </div>
         <button class="delete-btn" @click="removeShape(selectedShape.id)">Delete shape</button>
       </template>
 
@@ -1066,6 +1139,20 @@ DiagramAPI.selectLine(id)
 DiagramAPI.deleteSelected()
 // Shift-click or Shift-drag a box in the UI.
 // deleteSelected deletes the whole selection.</code>
+        <code>DiagramAPI.group([shapeIds], { groupId, label, fill, note })
+// → id of the new group
+DiagramAPI.updateGroup(idOrGroupId, { groupId, label, fill, note })
+DiagramAPI.ungroup(idOrGroupId)   // Promise; asks first
+// if connections to the group would be deleted
+DiagramAPI.setGroupId(groupId, 'Team-1')
+DiagramAPI.findGroup('Team-1')   // → internal id
+// a connection joins the group when both of
+// its shapes are in the list</code>
+        <code>DiagramAPI.copySelected()
+DiagramAPI.paste()
+DiagramAPI.duplicateSelected()
+DiagramAPI.duplicate([ids], { dx, dy })
+// → { shapes, connections, drawings, idMap }</code>
         <code>DiagramAPI.autoArrange()
 // layered left-to-right, top-to-bottom
 // by link dependency</code>
@@ -1159,6 +1246,7 @@ DiagramAPI.tools             // definitions</code>
         <li v-for="it in deleteRequest.items.slice(0, 8)" :key="it.id">{{ it.text }}</li>
         <li v-if="deleteRequest.items.length > 8">and {{ deleteRequest.items.length - 8 }} more</li>
       </ul>
+      <p v-if="deleteRequest.cascadeShapes">Also deleted: {{ deleteRequest.cascadeShapes }} {{ deleteRequest.cascadeShapes === 1 ? 'shape' : 'shapes' }} inside these groups.</p>
       <p v-if="deleteRequest.cascade">Also deleted: {{ deleteRequest.cascade }} {{ deleteRequest.cascade === 1 ? 'connection' : 'connections' }} attached to these shapes.</p>
       <p v-if="deleteRequest.reason" class="delete-request-reason">Reason given: {{ deleteRequest.reason }}</p>
       <div class="modal-actions">
@@ -1401,11 +1489,21 @@ const app = createApp({
 
     function removeShape(id) {
       const idx = shapes.findIndex(s => s.id === id);
-      if (idx !== -1) shapes.splice(idx, 1);
+      if (idx === -1) return;
+      const shape = shapes[idx];
+      const parent = parentGroupOf(id);
+      shapes.splice(idx, 1);
       for (let i = connections.length - 1; i >= 0; i--) {
-        if (connections[i].from === id || connections[i].to === id) connections.splice(i, 1);
+        if (connections[i].from === id || connections[i].to === id) removeConnection(connections[i].id);
       }
       if (selectedShapeId.value === id) selectedShapeId.value = null;
+      // Deleting a group deletes everything inside it.
+      if (isGroup(shape)) (shape.members || []).slice().forEach(removeShape);
+      if (parent) {
+        const i = parent.members.indexOf(id);
+        if (i !== -1) parent.members.splice(i, 1);
+        if (!parent.members.length) removeShape(parent.id);   // an empty group goes too
+      }
     }
 
     function addConnection(fromId, toId, label, note, fromPort, toPort, kind) {
@@ -1429,6 +1527,157 @@ const app = createApp({
       const idx = connections.findIndex(c => c.id === id);
       if (idx !== -1) connections.splice(idx, 1);
       if (selectedConnId.value === id) selectedConnId.value = null;
+      shapes.forEach(g => { if (g.conns) { const i = g.conns.indexOf(id); if (i !== -1) g.conns.splice(i, 1); } });
+    }
+
+    // ---- groups ----
+    // A group is a shape of type 'group': { id, type: 'group', gid, label, x, y, w, h, fill, stroke,
+    // note..., members: [shape ids], conns: [connection ids] }. `gid` is the Group ID the user
+    // edits; `id` stays internal so connections keep working. Members may be groups themselves.
+    // The frame always fits its members (plus padding and a title row), so moving a member
+    // resizes the frame and moving the group moves its members. A connection belongs to a group
+    // when both of its shapes were in the selection that made the group.
+    const GROUP_PAD = 18, GROUP_HEAD = 30;
+    function isGroup(s) { return !!s && s.type === 'group'; }
+    function shapeById(id) { return shapes.find(s => s.id === id) || null; }
+    function parentGroupOf(id) { return shapes.find(g => g.type === 'group' && g.members && g.members.indexOf(id) !== -1) || null; }
+    function groupDescendants(g, out) {
+      out = out || new Set();
+      (g.members || []).forEach(id => {
+        if (out.has(id)) return;
+        out.add(id);
+        const m = shapeById(id);
+        if (isGroup(m)) groupDescendants(m, out);
+      });
+      return out;
+    }
+    function groupDepth(s) {
+      let d = 0, p = parentGroupOf(s.id);
+      const seen = new Set();
+      while (p && !seen.has(p.id)) { seen.add(p.id); d++; p = parentGroupOf(p.id); }
+      return d;
+    }
+    // Ids plus everything inside any group among them, each once.
+    function withDescendants(ids) {
+      const all = new Set();
+      ids.forEach(id => { all.add(id); const s = shapeById(id); if (isGroup(s)) groupDescendants(s, all); });
+      return all;
+    }
+    function moveShapesBy(ids, dx, dy) {
+      if (!dx && !dy) return;
+      const all = withDescendants(ids);
+      shapes.forEach(s => { if (all.has(s.id)) { s.x += dx; s.y += dy; } });
+    }
+    function fitGroups() {
+      const groups = shapes.filter(isGroup);
+      if (!groups.length) return;
+      groups.sort((a, b) => groupDepth(b) - groupDepth(a));   // innermost first
+      groups.forEach(g => {
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        (g.members || []).forEach(id => {
+          const m = shapeById(id);
+          if (!m) return;
+          minX = Math.min(minX, m.x); minY = Math.min(minY, m.y);
+          maxX = Math.max(maxX, m.x + m.w); maxY = Math.max(maxY, m.y + m.h);
+        });
+        if (minX === Infinity) return;
+        const x = minX - GROUP_PAD, y = minY - GROUP_PAD - GROUP_HEAD;
+        const w = maxX - minX + 2 * GROUP_PAD, h = maxY - minY + 2 * GROUP_PAD + GROUP_HEAD;
+        if (g.x !== x) g.x = x;
+        if (g.y !== y) g.y = y;
+        if (g.w !== w) g.w = w;
+        if (g.h !== h) g.h = h;
+      });
+    }
+    watch(() => shapes.map(s => s.x + ',' + s.y + ',' + s.w + ',' + s.h + (s.members ? ':' + s.members.join('|') : '')).join(';'), fitGroups);
+    // Outer groups first, so inner frames draw on top of outer ones.
+    const groupFrames = computed(() => shapes.filter(isGroup).sort((a, b) => groupDepth(a) - groupDepth(b)));
+    // Plain shapes, then groups: a group's ports and note icon stay above its members.
+    const shapeLayer = computed(() => shapes.filter(s => !isGroup(s)).concat(groupFrames.value));
+    function uniqueGid() {
+      const used = new Set(shapes.filter(isGroup).map(g => String(g.gid)));
+      let n = 1;
+      while (used.has('G' + n)) n++;
+      return 'G' + n;
+    }
+    function groupShapes(ids, opts) {
+      opts = opts || {};
+      ids = Array.from(new Set((ids || []).map(String))).filter(id => shapeById(id));
+      if (!ids.length) return null;
+      const picked = new Set(ids);
+      // keep only the outermost picked items: a member of a picked group comes along anyway
+      const top = ids.filter(id => {
+        let p = parentGroupOf(id);
+        while (p) { if (picked.has(p.id)) return false; p = parentGroupOf(p.id); }
+        return true;
+      });
+      const parents = top.map(parentGroupOf);
+      const common = parents.every(p => p === parents[0]) ? parents[0] : null;
+      const inside = withDescendants(top);
+      // connections whose two shapes were both picked, not already owned by a group inside
+      const owned = new Set();
+      inside.forEach(id => { const s = shapeById(id); if (isGroup(s)) (s.conns || []).forEach(c => owned.add(c)); });
+      const conns = connections.filter(c => picked.has(c.from) && picked.has(c.to) && !owned.has(c.id)).map(c => c.id);
+      parents.forEach((p, i) => { if (p) { const k = p.members.indexOf(top[i]); if (k !== -1) p.members.splice(k, 1); } });
+      shapes.forEach(g => { if (g.conns && !inside.has(g.id)) g.conns = g.conns.filter(c => conns.indexOf(c) === -1); });
+      const gid = opts.gid && !gidTaken(opts.gid) ? String(opts.gid).trim() : uniqueGid();
+      const id = uid('shape');
+      shapes.push({
+        id, type: 'group', gid,
+        x: 0, y: 0, w: 0, h: 0,
+        label: opts.label !== undefined ? String(opts.label) : 'Group ' + gid.replace(/^G/, ''),
+        fill: opts.fill || '#EAF1FC', stroke: opts.stroke || '#5B6B8C',
+        note: opts.note || '',
+        noteOpen: false, noteOffsetX: null, noteOffsetY: null, noteW: null, noteH: null,
+        members: top, conns,
+      });
+      if (common) common.members.push(id);
+      fitGroups();
+      selectShape(id);
+      return id;
+    }
+    function ungroupShape(id) {
+      const g = shapeById(id);
+      if (!isGroup(g)) return null;
+      const members = (g.members || []).slice(), conns = (g.conns || []).slice();
+      const parent = parentGroupOf(id);
+      if (parent) {
+        parent.members.splice(parent.members.indexOf(id), 1, ...members);
+        conns.forEach(c => { if (parent.conns.indexOf(c) === -1) parent.conns.push(c); });
+      }
+      g.members = [];
+      removeShape(id);   // also removes connections drawn to the group itself
+      selectMany({ shapes: members, connections: conns });
+      return members;
+    }
+    function gidTaken(gid, exceptId) {
+      gid = String(gid).trim();
+      return shapes.some(g => isGroup(g) && g.id !== exceptId && String(g.gid) === gid);
+    }
+    const gidError = ref('');
+    function setGroupId(g, value) {
+      const v = String(value == null ? '' : value).trim();
+      if (!v) { gidError.value = 'The Group ID cannot be empty.'; return false; }
+      if (gidTaken(v, g.id)) { gidError.value = 'Another group already uses "' + v + '".'; return false; }
+      gidError.value = '';
+      g.gid = v;
+      return true;
+    }
+    function groupSelected() {
+      const ids = multiCount.value > 0 ? multi.shapes.slice() : (selectedShapeId.value ? [selectedShapeId.value] : []);
+      return groupShapes(ids);
+    }
+    function ungroupSelected() {
+      const ids = multiCount.value > 0 ? multi.shapes.filter(id => isGroup(shapeById(id))) : (selectedShapeId.value ? [selectedShapeId.value] : []);
+      const out = { shapes: [], connections: [] };
+      ids.forEach(id => {
+        const g = shapeById(id);
+        if (!isGroup(g)) return;
+        out.connections.push(...(g.conns || []));
+        out.shapes.push(...(ungroupShape(id) || []));
+      });
+      if (ids.length > 1) selectMany(out);
+      return out.shapes.length > 0;
     }
 
     // ---- multi-selection: Shift-click an item, or Shift-drag a box on empty canvas ----
@@ -1488,7 +1737,8 @@ const app = createApp({
       const inside = (x, y) => x >= minX && x <= maxX && y >= minY && y <= maxY;
       const add = (arr, id) => { if (arr.indexOf(id) === -1) arr.push(id); };
       shapes.forEach(sh => {
-        if (sh.x <= maxX && sh.x + sh.w >= minX && sh.y <= maxY && sh.y + sh.h >= minY) add(multi.shapes, sh.id);
+        if (isGroup(sh) ? (sh.x >= minX && sh.x + sh.w <= maxX && sh.y >= minY && sh.y + sh.h <= maxY)
+                        : (sh.x <= maxX && sh.x + sh.w >= minX && sh.y <= maxY && sh.y + sh.h >= minY)) add(multi.shapes, sh.id);
       });
       lines.forEach(l => {
         let hit = false;
@@ -1508,7 +1758,7 @@ const app = createApp({
       });
     }
 
-    function selectShape(id) { clearMulti(); selectedShapeId.value = id; selectedConnId.value = null; selectedLineId.value = null; showApiDoc.value = false; }
+    function selectShape(id) { clearMulti(); gidError.value = ''; selectedShapeId.value = id; selectedConnId.value = null; selectedLineId.value = null; showApiDoc.value = false; }
     function selectConnection(id) { clearMulti(); selectedConnId.value = id; selectedShapeId.value = null; selectedLineId.value = null; showApiDoc.value = false; }
     function selectLine(id) { clearMulti(); selectedLineId.value = id; selectedShapeId.value = null; selectedConnId.value = null; showApiDoc.value = false; }
     function onConnMouseDown(conn, evt) {
@@ -1642,8 +1892,11 @@ const app = createApp({
       }
       e.stopPropagation();
     }
+    // A paste can bring open note cards along; those must not take focus away from the canvas.
+    let noteAutofocusOffUntil = 0;
     function onNoteTextareaMounted(vnode) {
       nextTick(() => {
+        if (performance.now() < noteAutofocusOffUntil) return;
         vnode.el.focus();
         const len = vnode.el.value.length;
         vnode.el.setSelectionRange(len, len);
@@ -1712,7 +1965,7 @@ const app = createApp({
       evt.preventDefault();
       const pt = clientToWorld(evt.clientX, evt.clientY);
       Object.assign(resizing, { active: true, id: shape.id, ax: hd.ax, ay: hd.ay, startX: pt.x, startY: pt.y,
-                                x: shape.x, y: shape.y, w: shape.w, h: shape.h });
+                                x: shape.x, y: shape.y, w: shape.w, h: shape.h, snap: groupSnap(shape) });
     }
     function applyResize(pt, keepRatio) {
       const shape = shapes.find(s => s.id === resizing.id);
@@ -1730,17 +1983,41 @@ const app = createApp({
       // the edge opposite to the dragged handle stays where it was
       shape.x = resizing.ax === -1 ? resizing.x + resizing.w - w : resizing.x;
       shape.y = resizing.ay === -1 ? resizing.y + resizing.h - h : resizing.y;
+      if (isGroup(shape) && resizing.snap) scaleGroup(shape, resizing, resizing.snap);
+    }
+    // Positions and sizes of everything inside a group, taken when a resize starts.
+    function groupSnap(g) {
+      if (!isGroup(g)) return null;
+      return Array.from(groupDescendants(g)).map(shapeById).filter(Boolean).map(s => ({ id: s.id, x: s.x, y: s.y, w: s.w, h: s.h, group: isGroup(s) }));
+    }
+    // Maps the inside of the old frame (from) onto the inside of the group's new frame.
+    function scaleGroup(g, from, snap) {
+      const iw0 = Math.max(1, from.w - 2 * GROUP_PAD), ih0 = Math.max(1, from.h - 2 * GROUP_PAD - GROUP_HEAD);
+      const iw1 = Math.max(1, g.w - 2 * GROUP_PAD), ih1 = Math.max(1, g.h - 2 * GROUP_PAD - GROUP_HEAD);
+      const kx = iw1 / iw0, ky = ih1 / ih0;
+      const ox0 = from.x + GROUP_PAD, oy0 = from.y + GROUP_PAD + GROUP_HEAD;
+      const ox1 = g.x + GROUP_PAD, oy1 = g.y + GROUP_PAD + GROUP_HEAD;
+      snap.forEach(o => {
+        const s = shapeById(o.id);
+        if (!s || o.group) return;     // inner groups refit around their members
+        s.x = Math.round(ox1 + (o.x - ox0) * kx); s.y = Math.round(oy1 + (o.y - oy0) * ky);
+        s.w = Math.max(MIN_SHAPE_W, Math.round(o.w * kx)); s.h = Math.max(MIN_SHAPE_H, Math.round(o.h * ky));
+      });
     }
     function setShapeSize(shape, key, value) {
       const n = Math.round(parseFloat(value));
       if (!isFinite(n)) return;
+      if (isGroup(shape)) { resizeShape(shape.id, key === 'w' ? n : null, key === 'h' ? n : null); return; }
       shape[key] = Math.max(key === 'w' ? MIN_SHAPE_W : MIN_SHAPE_H, n);
     }
     function resizeShape(id, w, h) {
       const shape = shapes.find(s => s.id === id);
       if (!shape) return false;
-      if (w !== undefined && w !== null) setShapeSize(shape, 'w', w);
-      if (h !== undefined && h !== null) setShapeSize(shape, 'h', h);
+      const from = { x: shape.x, y: shape.y, w: shape.w, h: shape.h }, snap = groupSnap(shape);
+      const setSize = (key, value) => { const n = Math.round(parseFloat(value)); if (isFinite(n)) shape[key] = Math.max(key === 'w' ? MIN_SHAPE_W : MIN_SHAPE_H, n); };
+      if (w !== undefined && w !== null) setSize('w', w);
+      if (h !== undefined && h !== null) setSize('h', h);
+      if (snap) { scaleGroup(shape, from, snap); fitGroups(); }
       return true;
     }
 
@@ -1874,7 +2151,7 @@ const app = createApp({
       const dx = pt.x - groupDrag.lastX, dy = pt.y - groupDrag.lastY;
       groupDrag.lastX = pt.x; groupDrag.lastY = pt.y;
       if (!clickState.moved) return;     // below the drag threshold: still a click
-      shapes.forEach(sh => { if (multi.shapes.indexOf(sh.id) !== -1) { sh.x += dx; sh.y += dy; } });
+      moveShapesBy(multi.shapes, dx, dy);
       lines.forEach(l => { if (multi.lines.indexOf(l.id) !== -1) l.points.forEach(q => { q.x += dx; q.y += dy; }); });
     }
     function endGroupDrag() {
@@ -2085,8 +2362,7 @@ const app = createApp({
       } else if (dragging.active) {
         const shape = shapes.find(s => s.id === dragging.id);
         if (!shape) return;
-        shape.x = pt.x - dragging.offsetX;
-        shape.y = pt.y - dragging.offsetY;
+        moveShapesBy([shape.id], pt.x - dragging.offsetX - shape.x, pt.y - dragging.offsetY - shape.y);
       } else if (noteDrag.active && noteDrag.mode === 'resize') {
         const pos = notePos(noteDrag.obj);
         noteDrag.obj.noteW = Math.round(noteSize(pt.x + noteDrag.grabX - pos.x, NOTE_MIN_W, NOTE_MIN_W));
@@ -2149,7 +2425,8 @@ const app = createApp({
     function resetView() { viewport.x = 0; viewport.y = 0; viewport.scale = 1; }
 
     function portPoint(shape, port) {
-      const y = shape.y + shape.h / 2;
+      // a group's ports sit at the bottom of its title row, clear of its members' ports
+      const y = shape.y + (shape.type === 'group' ? GROUP_HEAD : shape.h / 2);
       const x = port === 'start' ? shape.x : shape.x + shape.w;
       return { x, y };
     }
@@ -2324,6 +2601,7 @@ const app = createApp({
       const obstacles = [];
       geo.shapes.forEach(s => {
         const own = s.id === from.id || s.id === to.id;
+        if (!own && s.desc && (s.desc.has(from.id) || s.desc.has(to.id))) return;
         const r = own
           ? { left: s.x + 1, right: s.x + s.w - 1, top: s.y + 1, bottom: s.y + s.h - 1 }
           : { left: s.x - pad, right: s.x + s.w + pad, top: s.y - pad, bottom: s.y + s.h + pad };
@@ -2344,7 +2622,7 @@ const app = createApp({
       const geo = { shapes: [], xEdges: [], yEdges: [] };
       const byId = new Map();
       shapes.forEach(s => {
-        const g = { id: s.id, x: s.x, y: s.y, w: s.w, h: s.h };
+        const g = { id: s.id, type: s.type, x: s.x, y: s.y, w: s.w, h: s.h, desc: isGroup(s) ? groupDescendants(s) : null };
         geo.shapes.push(g);
         byId.set(g.id, g);
         geo.xEdges.push(g.x - ROUTE_CLEAR, g.x + g.w + ROUTE_CLEAR);
@@ -2449,8 +2727,7 @@ const app = createApp({
           const target = targets.find(tg => tg.id === init.id);
           const shape = shapes.find(s => s.id === init.id);
           if (target && shape) {
-            shape.x = init.x + (target.x - init.x) * e;
-            shape.y = init.y + (target.y - init.y) * e;
+            moveShapesBy([shape.id], init.x + (target.x - init.x) * e - shape.x, init.y + (target.y - init.y) * e - shape.y);
           }
         });
         if (t < 1) requestAnimationFrame(frame);
@@ -2460,13 +2737,19 @@ const app = createApp({
 
     function autoArrange() {
       if (shapes.length === 0) return;
-      const ids = shapes.map(s => s.id);
+      const ids = shapes.filter(s => !parentGroupOf(s.id)).map(s => s.id);
+      const topOf = id => { let cur = id, p, guard = 0; while ((p = parentGroupOf(cur)) && guard++ < 50) cur = p.id; return cur; };
+      const edges = [];
+      connections.forEach(c => {
+        const f = topOf(c.from), t = topOf(c.to);
+        if (f !== t && !edges.some(e => e[0] === f && e[1] === t)) edges.push([f, t]);
+      });
       const outAdj = new Map(ids.map(id => [id, []]));
       const inDeg = new Map(ids.map(id => [id, 0]));
-      connections.forEach(c => {
-        if (outAdj.has(c.from) && outAdj.has(c.to)) {
-          outAdj.get(c.from).push(c.to);
-          inDeg.set(c.to, inDeg.get(c.to) + 1);
+      edges.forEach(([f, t]) => {
+        if (outAdj.has(f) && outAdj.has(t)) {
+          outAdj.get(f).push(t);
+          inDeg.set(t, inDeg.get(t) + 1);
         }
       });
 
@@ -2502,7 +2785,7 @@ const app = createApp({
       layerKeys.forEach(l => layerGroups.get(l).forEach((id, i) => orderIndex.set(id, i)));
 
       const inAdj = new Map(ids.map(id => [id, []]));
-      connections.forEach(c => { if (inAdj.has(c.to)) inAdj.get(c.to).push(c.from); });
+      edges.forEach(([f, t]) => { if (inAdj.has(t) && inAdj.has(f)) inAdj.get(t).push(f); });
 
       function reorderPass(useIn) {
         layerKeys.forEach(l => {
@@ -2896,7 +3179,19 @@ const app = createApp({
       const offsetY = PPTX_MARGIN + (availH - bboxH * scale) / 2;
       const toSlide = (x, y) => ({ x: offsetX + (x - minX) * scale, y: offsetY + (y - minY) * scale });
 
+      groupFrames.value.forEach(g => {
+        const pos = toSlide(g.x, g.y);
+        slide.addText((g.gid ? g.gid + '  ' : '') + (g.label || ''), {
+          shape: pptx.ShapeType.roundRect, rectRadius: 0.1,
+          x: pos.x, y: pos.y, w: g.w * scale, h: g.h * scale,
+          fill: { color: (g.fill || '#EAF1FC').replace('#', ''), transparency: 40 },
+          line: { color: (g.stroke || '#5B6B8C').replace('#', ''), width: 1.25, dashType: 'dash' },
+          align: 'left', valign: 'top', fontFace: 'Arial', fontSize: 11, bold: true, color: '14213D',
+          margin: [4, 8, 4, 8], wrap: false,
+        });
+      });
       shapes.forEach(s => {
+        if (isGroup(s)) return;
         const pos = toSlide(s.x, s.y);
         slide.addText(s.label || '', {
           shape: pptx.ShapeType[PPTX_SHAPE_TYPE[s.type]] || pptx.ShapeType.rect,
@@ -3049,6 +3344,20 @@ const app = createApp({
       ctx.setTransform(k, 0, 0, k, (PNG_PAD - minX) * k, (PNG_PAD - minY) * k);
       ctx.lineJoin = 'round'; ctx.lineCap = 'round';
 
+      // group frames: under everything else, outer groups first
+      groupFrames.value.forEach(g => {
+        const r = Math.min(14, g.w / 2, g.h / 2);
+        ctx.beginPath();
+        ctx.moveTo(g.x + r, g.y); ctx.lineTo(g.x + g.w - r, g.y); ctx.arcTo(g.x + g.w, g.y, g.x + g.w, g.y + r, r);
+        ctx.lineTo(g.x + g.w, g.y + g.h - r); ctx.arcTo(g.x + g.w, g.y + g.h, g.x + g.w - r, g.y + g.h, r);
+        ctx.lineTo(g.x + r, g.y + g.h); ctx.arcTo(g.x, g.y + g.h, g.x, g.y + g.h - r, r);
+        ctx.lineTo(g.x, g.y + r); ctx.arcTo(g.x, g.y, g.x + r, g.y, r); ctx.closePath();
+        ctx.globalAlpha = 0.55; ctx.fillStyle = g.fill || '#EAF1FC'; ctx.fill(); ctx.globalAlpha = 1;
+        ctx.setLineDash([7, 4]); ctx.strokeStyle = g.stroke || '#5B6B8C'; ctx.lineWidth = 1.6; ctx.stroke(); ctx.setLineDash([]);
+        ctx.font = '600 12px ' + PNG_FONT; ctx.fillStyle = '#14213D'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        ctx.fillText((g.gid ? g.gid + '  ' : '') + (g.label || ''), g.x + 12, g.y + GROUP_HEAD / 2 + 2, Math.max(10, g.w - 36));
+      });
+
       // connections: routed polyline, arrow head at the end, optional label
       connections.forEach((c, i) => {
         const pts = routes[i];
@@ -3085,6 +3394,7 @@ const app = createApp({
 
       // shapes: fill, outline, centered wrapped label
       shapes.forEach(s => {
+        if (isGroup(s)) return;
         ctx.fillStyle = s.fill || '#FFFFFF';
         ctx.strokeStyle = s.stroke || '#14213D';
         ctx.lineWidth = 1.6;
@@ -3204,6 +3514,96 @@ const app = createApp({
       else if (selectedLineId.value) removeLine(selectedLineId.value);
     }
 
+    // ---- copy / paste (Ctrl/Cmd+C, Ctrl/Cmd+V) ----
+    // Copies whole items (size, label, colours, notes and note cards included). A connection is
+    // copied only when both of its shapes are copied too. The clipboard lives in memory, so it
+    // also pastes into another open tab. Each paste lands a further step down and to the right.
+    const PASTE_STEP = 24;
+    let clipboard = null;
+    let pasteCount = 0;
+    function copySelected() {
+      let sh = [], cn = [], ln = [];
+      if (multiCount.value > 0) { sh = multi.shapes.slice(); cn = multi.conns.slice(); ln = multi.lines.slice(); }
+      else if (selectedShapeId.value) sh = [selectedShapeId.value];
+      else if (selectedLineId.value) ln = [selectedLineId.value];
+      if (!sh.length && !ln.length) return false;
+      clipboard = buildClip(sh, cn, ln);
+      pasteCount = 0;
+      return true;
+    }
+    // A group brings everything inside it. Connections that run between two copied shapes come
+    // along even if they were not picked.
+    function buildClip(sh, cn, ln) {
+      cn = (cn || []).slice();
+      const shSet = withDescendants(sh || []);
+      connections.forEach(c => { if (shSet.has(c.from) && shSet.has(c.to) && cn.indexOf(c.id) === -1) cn.push(c.id); });
+      const clone = o => JSON.parse(JSON.stringify(o));
+      return {
+        shapes: shapes.filter(s => shSet.has(s.id)).map(clone),
+        conns: connections.filter(c => cn.indexOf(c.id) !== -1 && shSet.has(c.from) && shSet.has(c.to)).map(clone),
+        lines: lines.filter(l => (ln || []).indexOf(l.id) !== -1).map(clone),
+      };
+    }
+    function pasteClipboard() {
+      if (!clipboard) return false;
+      pasteCount++;
+      const d = PASTE_STEP * pasteCount;
+      pasteClip(clipboard, d, d);
+      return true;
+    }
+    // Adds copies of a clip moved by (dx, dy) and selects them. Returns the new ids and an
+    // old id → new id map.
+    function pasteClip(clip, dx, dy) {
+      noteAutofocusOffUntil = performance.now() + 300;
+      const idMap = {}, connMap = {};
+      const newShapes = [], newConns = [], newLines = [];
+      const clipboard = clip;
+      const pastedIds = new Set(clipboard.shapes.map(s => s.id));
+      clipboard.shapes.forEach(s => {
+        const copy = JSON.parse(JSON.stringify(s));
+        copy.id = uid('shape');
+        copy.x += dx; copy.y += dy;
+        idMap[s.id] = copy.id;
+        if (isGroup(copy)) copy.gid = uniqueGid();
+        shapes.push(copy);
+        // select only the outermost pasted items: members follow their group
+        if (!clipboard.shapes.some(g => isGroup(g) && (g.members || []).indexOf(s.id) !== -1)) newShapes.push(copy.id);
+      });
+      clipboard.conns.forEach(c => {
+        if (!idMap[c.from] || !idMap[c.to]) return;
+        const copy = JSON.parse(JSON.stringify(c));
+        copy.id = uid('conn');
+        copy.from = idMap[c.from]; copy.to = idMap[c.to];
+        connections.push(copy);
+        connMap[c.id] = copy.id;
+        if (!clipboard.shapes.some(g => isGroup(g) && (g.conns || []).indexOf(c.id) !== -1)) newConns.push(copy.id);
+      });
+      // point pasted groups at the pasted copies of their members and connections
+      clipboard.shapes.forEach(s => {
+        if (!isGroup(s)) return;
+        const g = shapeById(idMap[s.id]);
+        g.members = (s.members || []).filter(id => pastedIds.has(id)).map(id => idMap[id]);
+        g.conns = (s.conns || []).filter(id => connMap[id]).map(id => connMap[id]);
+      });
+      clipboard.lines.forEach(l => {
+        const copy = JSON.parse(JSON.stringify(l));
+        copy.id = 'line_' + (nextLineId++) + idTag();
+        copy.points = copy.points.map(q => ({ x: q.x + dx, y: q.y + dy }));
+        lines.push(copy);
+        newLines.push(copy.id);
+        idMap[l.id] = copy.id;
+      });
+      Object.assign(idMap, connMap);
+      const total = newShapes.length + newConns.length + newLines.length;
+      if (total === 1 && newShapes.length) selectShape(newShapes[0]);
+      else if (total === 1 && newLines.length) selectLine(newLines[0]);
+      else selectMany({ shapes: newShapes, connections: newConns, lines: newLines });
+      return { shapes: newShapes, connections: newConns, lines: newLines, idMap };
+    }
+    function duplicateSelected() {
+      if (copySelected()) pasteClipboard();
+    }
+
     // ==== Agent API: validated console calls (DiagramAPI) and WebMCP tools ====
     // These calls throw an Error with a clear message on bad input, so a person at the console
     // or an LLM can correct the call. Deletes go through requestDelete, which asks the user first.
@@ -3244,9 +3644,77 @@ const app = createApp({
     }
     function describeItem(f) {
       const o = f.obj;
+      if (f.kind === 'shape' && isGroup(o)) return { id: o.id, text: 'group ' + o.gid + (o.label ? ' "' + o.label + '"' : '') + ' and everything in it' };
       if (f.kind === 'shape') return { id: o.id, text: o.type + ' ' + (o.label ? '"' + o.label + '"' : o.id) };
       if (f.kind === 'connection') return { id: o.id, text: 'connection ' + shapeName(o.from) + ' → ' + shapeName(o.to) + (o.label ? ' "' + o.label + '"' : '') };
       return { id: o.id, text: (o.kind === 'free' ? 'drawing ' : 'line ') + o.id };
+    }
+
+    // A group can be named by its internal id or by its Group ID.
+    function apiFindGroup(ref) {
+      const g = shapeById(String(ref)) || shapes.find(x => isGroup(x) && String(x.gid) === String(ref));
+      if (!isGroup(g)) throw new Error('No group with id or Group ID "' + ref + '"');
+      return g;
+    }
+    function groupInfo(g) {
+      return { id: g.id, groupId: g.gid, label: g.label, members: (g.members || []).slice(), connections: (g.conns || []).slice() };
+    }
+    function apiGroup(ids, opts) {
+      if (!Array.isArray(ids) || !ids.length) throw new Error('shapeIds must be a non-empty list of shape ids');
+      ids.forEach(id => { if (!shapeById(String(id))) throw new Error('No shape with id "' + id + '"'); });
+      opts = opts || {};
+      if (opts.groupId !== undefined && opts.gid === undefined) opts = Object.assign({}, opts, { gid: opts.groupId });
+      if (opts.gid !== undefined) {
+        const v = String(opts.gid).trim();
+        if (!v) throw new Error('groupId cannot be empty');
+        if (gidTaken(v)) throw new Error('Another group already uses Group ID "' + v + '"');
+      }
+      const fill = apiColor(opts.fill, 'fill');
+      const id = groupShapes(ids.map(String), { gid: opts.gid, label: opts.label, fill, note: opts.note !== undefined ? String(opts.note) : '' });
+      const g = shapeById(id);
+      if (opts.noteOpen) g.noteOpen = true;
+      return groupInfo(g);
+    }
+    function apiUpdateGroup(ref, opts) {
+      const g = apiFindGroup(ref);
+      opts = opts || {};
+      const fill = apiColor(opts.fill, 'fill');
+      if (opts.groupId !== undefined && !setGroupId(g, opts.groupId)) throw new Error(gidError.value);
+      if (opts.label !== undefined) g.label = String(opts.label);
+      if (fill) g.fill = fill;
+      if (opts.note !== undefined) g.note = String(opts.note);
+      if (opts.noteOpen !== undefined) g.noteOpen = !!opts.noteOpen;
+      return groupInfo(g);
+    }
+    // Ungrouping deletes connections drawn to the group itself, so the user is asked first
+    // when there are any.
+    function apiUngroup(ref, opts) {
+      const g = apiFindGroup(ref);
+      opts = opts || {};
+      const attached = connections.filter(c => c.from === g.id || c.to === g.id).map(c => c.id);
+      const run = () => { const conns = (g.conns || []).slice(); const members = ungroupShape(g.id) || []; return { members, connections: conns, deletedConnections: attached, cancelled: false }; };
+      if (!attached.length) return Promise.resolve(run());
+      return requestDelete(attached, {
+        reason: 'Ungrouping ' + g.gid + ' removes the connections drawn to the group itself.' + (opts.reason ? ' ' + String(opts.reason) : ''),
+        source: opts.source || 'A script',
+      }).then(r => {
+        if (r.cancelled) return { members: [], connections: [], deletedConnections: [], cancelled: true };
+        return shapes.includes(g) ? run() : { members: [], connections: [], deletedConnections: r.deleted, cancelled: false };
+      });
+    }
+    function apiDuplicate(ids, opts) {
+      if (!Array.isArray(ids) || !ids.length) throw new Error('ids must be a non-empty list of shape, connection or drawing ids');
+      opts = opts || {};
+      const sh = [], cn = [], ln = [];
+      ids.forEach(id => {
+        const f = findItem(id);
+        if (!f) throw new Error('No item with id "' + id + '"');
+        (f.kind === 'shape' ? sh : f.kind === 'connection' ? cn : ln).push(f.obj.id);
+      });
+      if (!sh.length && !ln.length) throw new Error('Pick at least one shape or drawing; a connection is copied only with both of its shapes');
+      const dx = apiNum(opts.dx, 'dx'), dy = apiNum(opts.dy, 'dy');
+      const r = pasteClip(buildClip(sh, cn, ln), dx === undefined ? PASTE_STEP : dx, dy === undefined ? PASTE_STEP : dy);
+      return { shapes: r.shapes, connections: r.connections, drawings: r.lines, idMap: r.idMap };
     }
 
     function apiAddShape(type, opts) {
@@ -3433,25 +3901,27 @@ const app = createApp({
         if (f) found.push(f); else missing.push(String(id));
       });
       if (!found.length) return Promise.resolve({ deleted: [], missing, cancelled: false });
-      const shapeIds = new Set(found.filter(f => f.kind === 'shape').map(f => f.obj.id));
+      // a group takes everything inside it along
+      const shapeIds = withDescendants(found.filter(f => f.kind === 'shape').map(f => f.obj.id));
       const cascade = connections.filter(c => (shapeIds.has(c.from) || shapeIds.has(c.to)) && !seen.has(c.id)).length;
+      const cascadeShapes = [...shapeIds].filter(id => !seen.has(id)).length;
       if (deleteRequest.value) deleteRequest.value.answer(false);   // one request at a time
       return new Promise(resolve => {
         deleteRequest.value = {
-          items: found.map(describeItem), cascade,
+          items: found.map(describeItem), cascade, cascadeShapes,
           reason: opts.reason ? String(opts.reason).slice(0, 300) : '',
           source: opts.source || 'A script',
           answer: (ok) => { deleteRequest.value = null; resolve(ok); },
         };
       }).then(ok => {
         if (!ok) return { deleted: [], missing, cancelled: true };
-        const before = new Set(connections.map(c => c.id));
+        const before = new Set(connections.map(c => c.id).concat(shapes.map(x => x.id)));
         const deleted = [];
         // Look the ids up again: the diagram can change while the dialog is open.
         found.filter(f => f.kind === 'connection').forEach(f => { if (connections.includes(f.obj)) { removeConnection(f.obj.id); deleted.push(f.obj.id); } });
         found.filter(f => f.kind === 'shape').forEach(f => { if (shapes.includes(f.obj)) { removeShape(f.obj.id); deleted.push(f.obj.id); } });
         found.filter(f => f.kind === 'line').forEach(f => { if (lines.includes(f.obj)) { removeLine(f.obj.id); deleted.push(f.obj.id); } });
-        const alsoDeleted = [...before].filter(id => !connections.some(c => c.id === id) && !deleted.includes(id));
+        const alsoDeleted = [...before].filter(id => !connections.some(c => c.id === id) && !shapes.some(x => x.id === id) && !deleted.includes(id));
         clearMulti();
         return { deleted, alsoDeleted, missing, cancelled: false };
       });
@@ -3461,7 +3931,9 @@ const app = createApp({
       const r = (n) => Math.round(n);
       return {
         connectionStyle: getConnectionStyle(),
-        shapes: shapes.map(s => ({ id: s.id, type: s.type, label: s.label, x: r(s.x), y: r(s.y), w: r(s.w), h: r(s.h), fill: s.fill, note: s.note || '' })),
+        shapes: shapes.map(s => Object.assign({ id: s.id, type: s.type, label: s.label, x: r(s.x), y: r(s.y), w: r(s.w), h: r(s.h), fill: s.fill, note: s.note || '' },
+          isGroup(s) ? { groupId: s.gid, members: (s.members || []).slice(), connections: (s.conns || []).slice() } : {},
+          parentGroupOf(s.id) ? { inGroup: parentGroupOf(s.id).id } : {})),
         connections: connections.map(c => ({ id: c.id, from: c.from, to: c.to, label: c.label || '', kind: connKindOf(c), fromPort: c.fromPort, toPort: c.toPort, note: c.note || '' })),
         drawings: lines.map(l => {
           let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -3490,7 +3962,7 @@ const app = createApp({
     };
     const agentTools = [
       tool('get_diagram',
-        'Read the current Discussion Studio diagram: shapes (id, type, label, position, size, note), connections (id, from, to, label, kind, ports, note), handwritten drawings (id, bounding box, note) and the connection style. Coordinates are canvas units; x grows right, y grows down. Call this first to learn ids and free space.',
+        'Read the current Discussion Studio diagram: shapes (id, type, label, position, size, note; a shape inside a group has inGroup = the group\'s id; a group has type "group", groupId, members and connections), connections (id, from, to, label, kind, ports, note), handwritten drawings (id, bounding box, note) and the connection style. Coordinates are canvas units; x grows right, y grows down. Call this first to learn ids and free space.',
         {}, [], () => diagramSummary(), { readOnlyHint: true, untrustedContentHint: true }),
       tool('add_shape',
         'Add a shape to the diagram canvas. Returns its id. Default sizes: rectangle 140x70, circle 100x100, diamond 140x100. Leave about 60 units between shapes so connections stay readable.',
@@ -3534,11 +4006,43 @@ const app = createApp({
           roughness: { type: 'number', minimum: 0, maximum: 3, description: 'How wobbly the pen is, 0 to 3 (default 1)' },
         }, noteProps), [],
         (a) => ({ id: addHandwrittenShape(a.shape || 'rectangle', a) })),
+      tool('create_group',
+        'Put shapes in a group. A group is a shape of type "group": a frame around its members with a Group ID and a label. It can be connected like any shape (use its id), and moving it moves its members. A connection goes into the group only when both of its shapes are in shapeIds. Groups can contain groups. Returns the group id, Group ID, members and connections.',
+        Object.assign({
+          shapeIds: { type: 'array', items: { type: 'string' }, minItems: 1, description: 'Ids of the shapes (or groups) to put in the group' },
+          groupId: { type: 'string', description: 'Group ID shown on the frame, unique among groups (default G1, G2, ...)' },
+          label: { type: 'string', description: 'Group title (default "Group n")' },
+          fill: colorProp('Frame fill color'),
+        }, noteProps), ['shapeIds'],
+        (a) => apiGroup(a.shapeIds, a)),
+      tool('update_group',
+        'Change a group: its Group ID (must stay unique), label, fill or note. Name the group by its id or its Group ID.',
+        Object.assign({
+          id: { type: 'string', description: 'The group\'s id or Group ID' },
+          groupId: { type: 'string', description: 'New Group ID' },
+          label: { type: 'string', description: 'New label' },
+          fill: colorProp('Frame fill color'),
+        }, noteProps), ['id'],
+        (a) => apiUpdateGroup(a.id, a)),
+      tool('ungroup',
+        'Remove a group but keep its members and connections. Connections drawn to the group itself are deleted, so when there are any the user is asked to allow it first; if they decline, nothing changes and cancelled is true.',
+        { id: { type: 'string', description: 'The group\'s id or Group ID' },
+          reason: { type: 'string', description: 'Short reason shown to the user if a permission dialog is needed' } }, ['id'],
+        (a, client) => {
+          const run = () => apiUngroup(a.id, { reason: a.reason, source: 'An AI assistant' });
+          return client && typeof client.requestUserInteraction === 'function' ? client.requestUserInteraction(run) : run();
+        }, { consequentialHint: true }),
+      tool('duplicate_items',
+        'Copy shapes, groups and drawings and paste the copies moved by (dx, dy), default 24 down and right. Copies keep size, label, colors and notes. A group is copied with everything in it and gets a new Group ID. Connections between two copied shapes are copied too. Returns the new ids and idMap (old id to new id).',
+        { ids: { type: 'array', items: { type: 'string' }, minItems: 1, description: 'Ids of shapes, groups, drawings (and optionally connections) to copy' },
+          dx: { type: 'number', description: 'Horizontal offset of the copies (default 24)' },
+          dy: { type: 'number', description: 'Vertical offset of the copies (default 24)' } }, ['ids'],
+        (a) => apiDuplicate(a.ids, a)),
       tool('auto_arrange',
-        'Lay out all shapes left to right by connection order. Drawings do not move.',
+        'Lay out all shapes left to right by connection order. A group moves as one block with its members inside. Drawings do not move.',
         {}, [], () => { autoArrange(); return { ok: true }; }),
       tool('delete_items',
-        'Delete shapes, connections or drawings by id. The user is always asked to allow the delete first; if they decline, nothing is deleted and cancelled is true. Deleting a shape also deletes its connections.',
+        'Delete shapes, groups, connections or drawings by id. The user is always asked to allow the delete first; if they decline, nothing is deleted and cancelled is true. Deleting a shape also deletes its connections. Deleting a group also deletes everything inside it (use ungroup to keep the members).',
         { ids: { type: 'array', items: { type: 'string' }, minItems: 1, description: 'Ids to delete' },
           reason: { type: 'string', description: 'Short reason shown to the user in the permission dialog' } }, ['ids'],
         (a, client) => {
@@ -3611,6 +4115,14 @@ const app = createApp({
       if ((e.key === 'Delete' || e.key === 'Backspace') && tag !== 'INPUT' && tag !== 'TEXTAREA') {
         e.preventDefault();
         deleteSelected();
+      }
+      const editing = tag === 'INPUT' || tag === 'TEXTAREA' || (e.target && e.target.isContentEditable);
+      if ((e.ctrlKey || e.metaKey) && !e.altKey && !editing) {
+        const k = e.key.toLowerCase();
+        if (k === 'c') { if (copySelected()) e.preventDefault(); }
+        else if (k === 'v') { if (pasteClipboard()) e.preventDefault(); }
+        else if (k === 'd') { e.preventDefault(); duplicateSelected(); }
+        else if (k === 'g') { e.preventDefault(); if (e.shiftKey) ungroupSelected(); else groupSelected(); }
       }
       if (e.key === 'Escape') {
         multiMode.value = false;
@@ -4067,6 +4579,11 @@ const app = createApp({
         setConnectionKind: (id, kind) => { const c = connections.find(x => x.id === id); if (c) c.kind = connKindOf({ kind }); return !!c; },
         autoArrange, clearAll, resetAll, exportJSON, exportPPTX, exportPNG, loadState, getState,
         selectShape, selectConnection, clearSelection, selectMany, deleteSelected,
+        copySelected, paste: pasteClipboard, duplicateSelected,
+        group: (ids, opts) => apiGroup(ids, opts).id, updateGroup: apiUpdateGroup, ungroup: (id, opts) => apiUngroup(id, opts), groupSelected, ungroupSelected,
+        duplicate: apiDuplicate,
+        setGroupId: (id, gid) => { const g = shapeById(id); if (!isGroup(g)) throw new Error('No group with id "' + id + '"'); if (!setGroupId(g, gid)) throw new Error(gidError.value); return true; },
+        findGroup: (gid) => { const g = shapes.find(x => isGroup(x) && String(x.gid) === String(gid)); return g ? g.id : null; },
         setEdgeStyle: (style) => { if (style === 'elbow' || style === 'point') edgeStyle.value = style; },
         // Agent API (validated; throws an Error with a clear message on bad input)
         connect: apiConnect,
@@ -4131,6 +4648,7 @@ const app = createApp({
       collab, shareDialog, shareName, shareCopied, shareLink, isLocalFile, remoteCursors, activeDoc, initials,
       openShareDialog, cancelShareDialog, confirmShareName, onShareNameKeydown, onShareInputMounted, copyShareLink, stopCollab,
       toggleNote, onNoteKeydown, onNoteTextareaMounted, onNoteBoxMouseDown, onNoteResizeDown, noteAnchor, notePos, noteW, noteH, NOTE_W, NOTE_H,
+      groupFrames, shapeLayer, GROUP_HEAD, groupPalette: GROUP_PALETTE, groupSelected, ungroupSelected, ungroupShape, setGroupId, gidError, parentGroupOf,
     };
   }
 });

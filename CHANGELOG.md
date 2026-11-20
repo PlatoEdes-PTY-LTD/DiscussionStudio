@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-20
+
+- Added: groups. Select shapes and press `Ctrl`/`Cmd`+`G`, or click **Group** in the panel. A connection goes into the group when both of its shapes are selected. Each group has an editable Group ID (unique), a label, a fill, and a note. A group works like a shape: drag it to move its contents, resize it to scale them, connect it to other shapes, copy and paste it, and group it again. Ungroup with `Ctrl`/`Cmd`+`Shift`+`G`. Deleting a group deletes its contents. Groups appear in PNG and PowerPoint exports and in `describe()`. New `DiagramAPI` calls: `group`, `updateGroup`, `ungroup`, `groupSelected`, `ungroupSelected`, `setGroupId`, `findGroup`, `duplicate`.
+- Added: WebMCP tools `create_group`, `update_group`, `ungroup`, and `duplicate_items` (now twelve tools). `get_diagram` shows groups (`groupId`, `members`, `connections`) and `inGroup` on shapes inside a group. `ungroup` asks first when it would delete connections drawn to the group. `delete_items` on a group also deletes its contents, and the **Allow delete?** dialog says how many shapes that is.
+- Added: copy and paste. Select shapes (one or many, lines too) and press `Ctrl`/`Cmd`+`C`, then `Ctrl`/`Cmd`+`V` to paste a copy offset on the canvas; each further paste steps further. `Ctrl`/`Cmd`+`D` duplicates. Copies keep their size, label, colours, and notes, and connections between copied shapes are copied too. New `DiagramAPI` calls: `copySelected`, `paste`, `duplicateSelected`.
+
 ## 2026-11-17
 
 - Changed: elbow connections take the shortest route for their ports. They go around shapes instead of through them, use the gap between two shapes instead of going around both, and no longer lie on top of other connections. Connections into the same port join into one line. PNG and PowerPoint exports use the same routes.

@@ -136,7 +136,7 @@ All data is in three reactive arrays: `shapes`, `connections`, and `lines`. Note
 | Field | Type | Description |
 |---|---|---|
 | `id` | string | `shape_1`, `shape_2`, and so on. |
-| `type` | string | `rectangle`, `circle`, or `diamond`. |
+| `type` | string | `rectangle`, `circle`, `diamond`, or `group`. |
 | `x`, `y` | number | Top-left position in canvas units. |
 | `w`, `h` | number | Width and height. |
 | `label` | string | Text in the shape. |
@@ -145,6 +145,14 @@ All data is in three reactive arrays: `shapes`, `connections`, and `lines`. Note
 | `note` | string | Note text. |
 | `noteOpen` | boolean | `true` when the note card is visible. |
 | `noteOffsetX`, `noteOffsetY` | number or null | Offset of the note card from its anchor. |
+
+A group (`type: 'group'`) has these extra fields. See section 6C.
+
+| Field | Type | Description |
+|---|---|---|
+| `gid` | string | The Group ID. The user can edit it. It is unique among groups. |
+| `members` | array | Ids of the shapes (and groups) directly in the group. |
+| `conns` | array | Ids of the connections in the group. |
 
 ### 5.2 Connection
 
@@ -301,6 +309,33 @@ Multi-selection works only in `select` mode. In a tool mode, `Shift` has no effe
 6. `deleteMulti` removes the connections first, then the shapes, then the lines. `removeShape` also removes the connections of the shape. The other remove functions ignore an id that does not exist.
 
 The user can drag a multi-selection by any selected shape or line. Selected connections cannot start a drag; they follow their shapes. Delete is the only other action on a multi-selection.
+
+## 6C. Groups, copy and paste
+
+### 6C.1 Use
+
+| Action | Result |
+|---|---|
+| Select shapes, then click **Group** in the panel or press `Ctrl`/`Cmd`+`G` | Makes a group of the selected shapes. A connection goes into the group only when both of its shapes are selected. |
+| Select a group, then click **Ungroup** or press `Ctrl`/`Cmd`+`Shift`+`G` | Removes the group. The members and the connections stay. Connections to the group itself are deleted. |
+| Edit **Group ID** in the panel | Sets the group's ID. An empty or duplicate ID is refused and the panel shows why. |
+| Drag a group by its frame | Moves the group and everything in it. |
+| Drag a member | Moves the member. The frame grows or shrinks to fit. |
+| Resize a group | Scales the positions and sizes of its members. |
+| Delete a group | Deletes the group and everything in it. |
+| `Ctrl`/`Cmd`+`C`, then `Ctrl`/`Cmd`+`V` | Copies the selection and pastes a copy 24 units down and right (more for each further paste). `Ctrl`/`Cmd`+`D` duplicates. |
+
+A group is a shape: it has a label, a note, a fill, two connection ports, and it can be connected, selected, copied, and grouped again (groups can be nested). Its ports sit at the bottom of its title row, so they do not sit next to its members' ports.
+
+### 6C.2 How it works
+
+1. The frame is derived: `fitGroups` sets each group's `x`, `y`, `w`, `h` to the box of its members plus `GROUP_PAD` and a title row of `GROUP_HEAD`. A `watch` on all shape positions and sizes calls it, innermost groups first.
+2. `moveShapesBy(ids, dx, dy)` moves shapes and everything inside any group among them, each once. Single drag, multi-selection drag, and `animateTo` use it.
+3. Group frames render in their own loop before connections, outer groups first, so members and inner connections stay on top and clickable. Ports, note icon and resize handles of a group render with the other shapes (`shapeLayer`, groups last).
+4. In elbow routing, a group is an obstacle only for a connection whose two shapes are both outside it.
+5. `autoArrange` lays out only top-level items. A connection to a member counts as a connection to its outermost group.
+6. Copy takes the selected shapes, everything inside selected groups, and every connection between two copied shapes. Paste gives each copy a new id, gives each pasted group a new Group ID, and points pasted groups at the pasted members and connections. The clipboard is in memory, so paste also works in another tab. A pasted note card does not take keyboard focus.
+7. PNG and PowerPoint exports draw groups as dashed rounded frames with the Group ID and label in the top-left, under everything else.
 
 ---
 
@@ -675,6 +710,10 @@ The polyfill keeps only the annotations that it knows: `readOnlyHint`, `conseque
 | `set_connection_style` | `setConnectionStyle` | |
 | `set_note` | `setNote` | |
 | `add_handwritten_shape` | `addHandwrittenShape` | |
+| `create_group` | `apiGroup` | Rejects unknown shape ids and a duplicate Group ID. |
+| `update_group` | `apiUpdateGroup` | Takes the internal id or the Group ID. |
+| `ungroup` | `apiUngroup` | `consequentialHint`. When connections are drawn to the group itself, asks the user through `requestDelete` before it removes them. |
+| `duplicate_items` | `apiDuplicate` | Uses `buildClip` and `pasteClip`, like copy and paste, but does not touch the user's clipboard. Returns `idMap`. |
 | `auto_arrange` | `autoArrange` | |
 | `delete_items` | `requestDelete` | `consequentialHint`, `destructiveHint`. Always asks the user. When the agent client has `requestUserInteraction`, the dialog runs inside it. |
 
@@ -682,8 +721,8 @@ Each tool returns `{ content: [{ type: 'text', text: <JSON> }] }`. An error retu
 
 **Test.** Do both tests. Serve the folder with `python3 -m http.server` and open `http://localhost:<port>/discussion-studio.html`; a polyfill needs a secure context, and `localhost` is one.
 
-1. Mock: add a `navigator.modelContext` with only `registerTool` through `page.addInitScript`. Check that eight tools register. Call each tool's `execute`. For `delete_items`, check all three answers: `Don't allow`, `Escape`, and `Delete`.
-2. Polyfill: install `@mcp-b/global` in a scratch folder (not in this project) and inject `dist/index.iife.js` with `page.addInitScript`. Get the tools with `document.modelContext.getTools()` and run each with `document.modelContext.executeTool(tool, args)`, as an agent does. Call `DiagramAPI.registerWebMCP()` again and check that there are still eight tools.
+1. Mock: add a `navigator.modelContext` with only `registerTool` through `page.addInitScript`. Check that twelve tools register. Call each tool's `execute`. For `delete_items`, check all three answers: `Don't allow`, `Escape`, and `Delete`.
+2. Polyfill: install `@mcp-b/global` in a scratch folder (not in this project) and inject `dist/index.iife.js` with `page.addInitScript`. Get the tools with `document.modelContext.getTools()` and run each with `document.modelContext.executeTool(tool, args)`, as an agent does. Call `DiagramAPI.registerWebMCP()` again and check that there are still twelve tools.
 
 The tests are in the `tests` folder: `cd tests && npm install && npm test`. See `tests/README.md`. See also `agent.md`, the guide for AI agents that use these tools.
 
@@ -803,3 +842,4 @@ Do all of these tests. Do not trust the code by inspection alone.
 | 24 | Added live sharing with PeerJS: Share button, name dialogs, per-item sync through the host, presence dots, remote pointers. |
 | 25 | Added the agent API (`connect`, `setConnectionStyle`, `setNote`, `addHandwrittenShape`, `deleteItems`, `describe`), the **Allow delete?** dialog, and WebMCP tool registration. `addShape` now checks its input. |
 | 26 | Replaced elbow routing. All connections are routed together: shortest route for the given ports, around shapes, through gaps between shapes, without lying on top of other connections; connections into one port share a trunk. Added `DiagramAPI.getConnectionRoute`. |
+| 27 | Added copy and paste, groups, and the WebMCP tools `create_group`, `update_group`, `ungroup`, and `duplicate_items`. The **Allow delete?** dialog lists the shapes inside a deleted group. |

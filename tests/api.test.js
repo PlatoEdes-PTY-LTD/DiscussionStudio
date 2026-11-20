@@ -22,7 +22,7 @@ const assert = (c, m) => { if (!c) { throw new Error('FAIL: ' + m); } console.lo
   await page.waitForFunction(() => window.DiagramAPI);
 
   const names = await page.evaluate(() => Object.keys(window.__tools));
-  assert(names.length === 8 && names.includes('delete_items'), 'WebMCP tools registered: ' + names.join(', '));
+  assert(names.length === 12 && names.includes('delete_items') && names.includes('create_group'), 'WebMCP tools registered: ' + names.join(', '));
 
   // Console API
   const r = await page.evaluate(() => {
