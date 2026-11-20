@@ -327,6 +327,8 @@ The user can drag a multi-selection by any selected shape or line. Selected conn
 
 A group is a shape: it has a label, a note, a fill, two connection ports, and it can be connected, selected, copied, and grouped again (groups can be nested). Its ports sit at the bottom of its title row, so they do not sit next to its members' ports.
 
+**Context menu.** Right-click the canvas, or long-press on a touch screen, for Copy, Paste here, Duplicate, Group, Ungroup, Select group, and Delete. Entries that do not apply are disabled.
+
 ### 6C.2 How it works
 
 1. The frame is derived: `fitGroups` sets each group's `x`, `y`, `w`, `h` to the box of its members plus `GROUP_PAD` and a title row of `GROUP_HEAD`. A `watch` on all shape positions and sizes calls it, innermost groups first.
@@ -336,6 +338,7 @@ A group is a shape: it has a label, a note, a fill, two connection ports, and it
 5. `autoArrange` lays out only top-level items. A connection to a member counts as a connection to its outermost group.
 6. Copy takes the selected shapes, everything inside selected groups, and every connection between two copied shapes. Paste gives each copy a new id, gives each pasted group a new Group ID, and points pasted groups at the pasted members and connections. The clipboard is in memory, so paste also works in another tab. A pasted note card does not take keyboard focus.
 7. PNG and PowerPoint exports draw groups as dashed rounded frames with the Group ID and label in the top-left, under everything else.
+8. Context menu: shapes, frames, connections and lines carry `data-kind` (`s`, `c`, `l`) and `data-id`. `onCanvasContextMenu` finds the item with `closest('[data-kind]')` and calls `openContextMenu`, which selects the item if it is not already selected, stops any drag, and places the menu (`position: fixed`, kept inside the window). A right-button `pointerdown` is stopped in `onSvgMouseDownCapture`, so it never selects, drags, or pans. On touch, `startLongPress` opens the menu after 550 ms unless the finger moves more than 10 px, a second finger lands, or the finger lifts. `closeContextMenu(false)` ignores the backdrop's `contextmenu` for 700 ms, so the browser's own long-press event does not close the menu it just opened. `pasteAt` pastes the clipboard with its top-left corner at the pointer. On a Mac, Ctrl-click keeps its meaning (add to selection) and does not open the menu.
 
 ---
 

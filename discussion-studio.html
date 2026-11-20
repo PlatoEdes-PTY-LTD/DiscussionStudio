@@ -203,6 +203,22 @@
   .connect-wrap{position:relative;}
   .tbtn .caret{margin-left:2px;opacity:.8;font-size:10px;}
   .menu-backdrop{position:fixed;inset:0;z-index:20;}
+  .board{-webkit-touch-callout:none;}
+  .ctx-menu{
+    position:fixed;z-index:21;min-width:200px;padding:5px;
+    background:var(--panel);color:var(--ink);border:1px solid var(--border);border-radius:10px;
+    box-shadow:0 12px 30px -10px rgba(20,33,61,.35);animation:pop .12s ease;
+  }
+  .ctx-menu button{
+    display:flex;align-items:center;justify-content:space-between;gap:18px;width:100%;padding:7px 10px;
+    border:none;border-radius:7px;background:transparent;color:var(--ink);text-align:left;cursor:pointer;
+    font-family:'IBM Plex Sans',sans-serif;font-size:13px;
+  }
+  .ctx-menu button:hover:not(:disabled), .ctx-menu button:focus-visible{background:var(--menu-hover);outline:none;}
+  .ctx-menu button:disabled{color:var(--ink-soft);opacity:.55;cursor:default;}
+  .ctx-menu button.danger:not(:disabled){color:var(--warn);}
+  .ctx-menu kbd{font:500 11px/1 'IBM Plex Sans',sans-serif;color:var(--ink-soft);background:none;border:none;}
+  .ctx-sep{height:1px;margin:4px 6px;background:var(--border);}
   .connect-menu{
     position:absolute;top:calc(100% + 6px);left:0;z-index:21;min-width:275px;
     background:var(--panel);color:var(--ink);border:1px solid var(--border);border-radius:10px;
@@ -723,7 +739,7 @@ const TEMPLATE = `
     <main class="canvas-wrap">
       <svg class="board" ref="svgEl" :class="{'mode-connect': mode==='connect', 'mode-draw': mode==='line' || mode==='draw'}"
            @pointerdown.capture="onSvgMouseDownCapture" @pointerdown="onSvgMouseDown" @pointermove="onMouseMove" @pointerup="onMouseUp" @pointercancel="onMouseUp" @pointerleave="onMouseUp"
-           @click="onCanvasClick" @wheel="onWheel">
+           @click="onCanvasClick" @wheel="onWheel" @contextmenu="onCanvasContextMenu">
         <defs>
           <pattern id="dotgrid" width="24" height="24" patternUnits="userSpaceOnUse">
             <circle cx="2" cy="2" r="1.4" fill="var(--grid-dot)" />
@@ -754,7 +770,7 @@ const TEMPLATE = `
           <rect class="canvas-bg" x="-4000" y="-4000" width="9000" height="9000" fill="url(#dotgrid)" />
 
           <!-- group frames sit under connections and shapes, so their members stay clickable -->
-          <g v-for="g in groupFrames" :key="'frame-' + g.id" class="shape-group group-frame"
+          <g v-for="g in groupFrames" :key="'frame-' + g.id" class="shape-group group-frame" data-kind="s" :data-id="g.id"
              :class="{selected: g.id===selectedShapeId, multi: isMulti('s', g.id), 'connect-source': g.id===connectFrom}"
              :transform="'translate(' + g.x + ' ' + g.y + ')'"
              @pointerdown="onShapeMouseDown(g, $event)" @click.stop @dblclick.stop="openTextDialog(g)">
@@ -765,7 +781,7 @@ const TEMPLATE = `
             </foreignObject>
           </g>
 
-          <g v-for="conn in connections" :key="conn.id" class="conn-group" :class="{selected: conn.id===selectedConnId, multi: isMulti('c', conn.id)}"
+          <g v-for="conn in connections" :key="conn.id" data-kind="c" :data-id="conn.id" class="conn-group" :class="{selected: conn.id===selectedConnId, multi: isMulti('c', conn.id)}"
              @pointerdown.stop="onConnMouseDown(conn, $event)" @click.stop @dblclick.stop="openTextDialog(conn)">
             <path class="conn-hit" :d="connPath(conn)" />
             <path class="conn-path" :d="connPath(conn)" :marker-start="connMarkerStart(conn)" :marker-end="connMarkerEnd(conn)" />
@@ -793,7 +809,7 @@ const TEMPLATE = `
                 :y1="edgeStyle==='point' ? boundaryPoint(connectFromShape, mousePos.x, mousePos.y).y : portPoint(connectFromShape, connectFromPort || 'end').y"
                 :x2="mousePos.x" :y2="mousePos.y" />
 
-          <g v-for="shape in shapeLayer" :key="shape.id" class="shape-group" :data-group="shape.type==='group' ? '' : null"
+          <g v-for="shape in shapeLayer" :key="shape.id" data-kind="s" :data-id="shape.id" class="shape-group" :data-group="shape.type==='group' ? '' : null"
              :class="{selected: shape.id===selectedShapeId, multi: isMulti('s', shape.id), 'connect-source': shape.id===connectFrom}"
              :transform="'translate(' + shape.x + ' ' + shape.y + ')'"
              @pointerdown="onShapeMouseDown(shape, $event)" @click.stop @dblclick.stop="openTextDialog(shape)">
@@ -846,7 +862,7 @@ const TEMPLATE = `
           </g>
 
           <!-- free lines and freehand drawings -->
-          <g v-for="l in lines" :key="l.id" class="line-group" :class="{selected: l.id===selectedLineId, multi: isMulti('l', l.id)}">
+          <g v-for="l in lines" :key="l.id" data-kind="l" :data-id="l.id" class="line-group" :class="{selected: l.id===selectedLineId, multi: isMulti('l', l.id)}">
             <path v-if="l.id===selectedLineId || isMulti('l', l.id)" class="line-halo" :d="linePath(l)" :stroke-width="l.width + 8" />
             <path class="line-hit" :d="linePath(l)" @pointerdown.stop="onLineMouseDown(l, $event)" @click.stop />
             <path class="line-path" :d="linePath(l)" :stroke="lineInk(l.stroke)" :stroke-width="l.width" />
@@ -934,6 +950,19 @@ const TEMPLATE = `
         <button type="button" @click="collab.toast = ''" title="Dismiss">×</button>
       </div>
 
+      <template v-if="ctxMenu.open">
+        <div class="menu-backdrop" @pointerdown="closeContextMenu()" @contextmenu.prevent="closeContextMenu()" @wheel="closeContextMenu()"></div>
+        <div class="ctx-menu" ref="ctxMenuEl" role="menu" aria-label="Canvas actions" :style="{left: ctxMenu.x + 'px', top: ctxMenu.y + 'px'}"
+             @keydown="onContextMenuKeydown" @contextmenu.prevent>
+          <template v-for="(it, i) in ctxMenuItems" :key="i">
+            <div v-if="it.sep" class="ctx-sep" role="separator"></div>
+            <button v-else type="button" role="menuitem" :disabled="!it.enabled" :class="{danger: it.danger}" @click="runContextAction(it.id)">
+              <span>{{ it.label }}</span><kbd v-if="it.keys">{{ it.keys }}</kbd>
+            </button>
+          </template>
+        </div>
+      </template>
+
       <div class="zoom-hud">
         <button @click="zoomBy(0.85)" title="Zoom out">–</button>
         <span class="zoom-pct">{{ Math.round(viewport.scale*100) }}%</span>
@@ -945,8 +974,8 @@ const TEMPLATE = `
       <div class="canvas-hint multi-hint" v-else-if="multiMode && mode==='select'">Select many: tap items to add or remove them · drag on empty canvas to draw a box · tap the button again to finish</div>
       <div class="canvas-hint" v-else-if="mode==='line'">Drag to draw a line · hold Shift for 45° angles · press Escape or click Line again to finish</div>
       <div class="canvas-hint" v-else-if="mode==='draw'">Drag to draw freehand · press Escape or click Draw again to finish</div>
-      <div class="canvas-hint" v-else-if="isTouch">Double-tap a shape or connector to edit its label · tap a port to connect · tap empty canvas to add a rectangle · pinch to zoom</div>
-      <div class="canvas-hint" v-else>Double-click a shape or connector to edit its label · click a port to connect · click empty canvas to add a rectangle</div>
+      <div class="canvas-hint" v-else-if="isTouch">Double-tap a shape or connector to edit its label · tap a port to connect · tap empty canvas to add a rectangle · long-press for copy, paste and group · pinch to zoom</div>
+      <div class="canvas-hint" v-else>Double-click a shape or connector to edit its label · click a port to connect · click empty canvas to add a rectangle · right-click for copy, paste and group</div>
     </main>
 
     <aside class="panel" v-if="panelVisible && !showApiDoc">
@@ -2260,10 +2289,13 @@ const app = createApp({
     }
 
     function onSvgMouseDownCapture(evt) {
+      // the right button opens the context menu (contextmenu event); it never selects or drags
+      if (evt.pointerType !== 'touch' && evt.button === 2) { evt.stopPropagation(); return; }
       if (evt.pointerType === 'touch') {
-        if (evt.isPrimary) { touchPts.clear(); pinch.active = false; }   // a new gesture: forget stale fingers
+        if (evt.isPrimary) { touchPts.clear(); pinch.active = false; startLongPress(evt); }   // a new gesture: forget stale fingers
         touchPts.set(evt.pointerId, { x: evt.clientX, y: evt.clientY });
         if (touchPts.size >= 2) {
+          cancelLongPress();
           evt.stopPropagation();
           if (touchPts.size === 2) startPinch();
           return;
@@ -2324,6 +2356,7 @@ const app = createApp({
         touchPts.set(evt.pointerId, { x: evt.clientX, y: evt.clientY });
         if (pinch.active) { if (touchPts.size >= 2) movePinch(); return; }
       }
+      if (longPress.timer && Math.hypot(evt.clientX - longPress.x, evt.clientY - longPress.y) > LONG_PRESS_SLOP) cancelLongPress();
       const pt = clientToWorld(evt.clientX, evt.clientY);
       mousePos.x = pt.x;
       mousePos.y = pt.y;
@@ -2380,6 +2413,7 @@ const app = createApp({
     }
 
     function onMouseUp(evt) {
+      cancelLongPress();
       if (evt && evt.pointerType === 'touch') {
         touchPts.delete(evt.pointerId);
         if (pinch.active) {
@@ -3521,6 +3555,7 @@ const app = createApp({
     const PASTE_STEP = 24;
     let clipboard = null;
     let pasteCount = 0;
+    const hasClipboard = ref(false);
     function copySelected() {
       let sh = [], cn = [], ln = [];
       if (multiCount.value > 0) { sh = multi.shapes.slice(); cn = multi.conns.slice(); ln = multi.lines.slice(); }
@@ -3528,6 +3563,7 @@ const app = createApp({
       else if (selectedLineId.value) ln = [selectedLineId.value];
       if (!sh.length && !ln.length) return false;
       clipboard = buildClip(sh, cn, ln);
+      hasClipboard.value = true;
       pasteCount = 0;
       return true;
     }
@@ -3602,6 +3638,133 @@ const app = createApp({
     }
     function duplicateSelected() {
       if (copySelected()) pasteClipboard();
+    }
+    // Pastes the clipboard so that its top-left corner lands on (wx, wy).
+    function pasteAt(wx, wy) {
+      if (!clipboard) return false;
+      let minX = Infinity, minY = Infinity;
+      clipboard.shapes.forEach(s => { minX = Math.min(minX, s.x); minY = Math.min(minY, s.y); });
+      clipboard.lines.forEach(l => l.points.forEach(q => { minX = Math.min(minX, q.x); minY = Math.min(minY, q.y); }));
+      if (!isFinite(minX)) return false;
+      pasteClip(clipboard, Math.round(wx - minX), Math.round(wy - minY));
+      return true;
+    }
+
+    // ---- canvas context menu: right-click, or a long press on a touch screen ----
+    // Right-clicking an item that is not selected selects it first; right-clicking a selected
+    // item or empty canvas keeps the selection. "Paste here" pastes at the pointer.
+    const IS_MAC = /Mac|iPhone|iPad|iPod/.test((navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent || '');
+    const ctxMenu = reactive({ open: false, x: 0, y: 0, wx: 0, wy: 0, openedAt: 0 });
+    const ctxMenuEl = ref(null);
+    const LONG_PRESS_MS = 550, LONG_PRESS_SLOP = 10;
+    const longPress = { timer: null, x: 0, y: 0 };
+    function selectionIds() {
+      if (multiCount.value > 0) return { shapes: multi.shapes.slice(), conns: multi.conns.slice(), lines: multi.lines.slice() };
+      return {
+        shapes: selectedShapeId.value ? [selectedShapeId.value] : [],
+        conns: selectedConnId.value ? [selectedConnId.value] : [],
+        lines: selectedLineId.value ? [selectedLineId.value] : [],
+      };
+    }
+    const ctxMenuItems = computed(() => {
+      const sel = selectionIds();
+      const k = (c, shift) => IS_MAC ? (shift ? '\u21E7\u2318' : '\u2318') + c : 'Ctrl+' + (shift ? 'Shift+' : '') + c;
+      const canCopy = sel.shapes.length + sel.lines.length > 0;
+      const parent = sel.shapes.length === 1 && sel.conns.length + sel.lines.length === 0 ? parentGroupOf(sel.shapes[0]) : null;
+      const items = [
+        { id: 'copy', label: 'Copy', keys: k('C'), enabled: canCopy },
+        { id: 'paste', label: 'Paste here', keys: k('V'), enabled: hasClipboard.value },
+        { id: 'duplicate', label: 'Duplicate', keys: k('D'), enabled: canCopy },
+        { sep: true },
+        { id: 'group', label: sel.shapes.length > 1 ? 'Group ' + sel.shapes.length + ' shapes' : 'Group', keys: k('G'), enabled: sel.shapes.length > 0 },
+        { id: 'ungroup', label: 'Ungroup', keys: k('G', true), enabled: sel.shapes.some(id => isGroup(shapeById(id))) },
+      ];
+      if (parent) items.push({ id: 'selectParent', label: 'Select group ' + parent.gid, enabled: true });
+      items.push({ sep: true }, { id: 'delete', label: 'Delete', keys: IS_MAC ? '\u232B' : 'Del', danger: true,
+        enabled: sel.shapes.length + sel.conns.length + sel.lines.length > 0 });
+      return items;
+    });
+    function stopPointerGestures() {
+      cancelLongPress();
+      dragging.active = false; dragging.id = null; groupDrag.active = false; panning.active = false;
+      marquee.active = false; resizing.active = false; lineDrag.active = false; lineHandleDrag.active = false;
+      noteDrag.active = false; noteDrag.obj = null;
+      clickState.moved = true;      // the release that follows is not a click
+      pointerIsDown = false;
+    }
+    function openContextMenu(clientX, clientY, el) {
+      stopPointerGestures();
+      connectMenuOpen.value = false;
+      const hit = el && el.closest ? el.closest('[data-kind]') : null;
+      if (hit) {
+        const kind = hit.getAttribute('data-kind'), id = hit.getAttribute('data-id');
+        const inSel = multiCount.value > 0 ? isMulti(kind, id)
+          : (kind === 's' ? selectedShapeId.value : kind === 'c' ? selectedConnId.value : selectedLineId.value) === id;
+        if (!inSel) { if (kind === 's') selectShape(id); else if (kind === 'c') selectConnection(id); else selectLine(id); }
+      }
+      const w = clientToWorld(clientX, clientY);
+      Object.assign(ctxMenu, { open: true, x: clientX, y: clientY, wx: w.x, wy: w.y, openedAt: performance.now() });
+      nextTick(() => {
+        const m = ctxMenuEl.value;
+        if (!m) return;
+        const r = m.getBoundingClientRect();
+        if (ctxMenu.x + r.width > window.innerWidth - 8) ctxMenu.x = Math.max(8, window.innerWidth - r.width - 8);
+        if (ctxMenu.y + r.height > window.innerHeight - 8) ctxMenu.y = Math.max(8, window.innerHeight - r.height - 8);
+        const first = m.querySelector('button:not(:disabled)');
+        if (first) first.focus({ preventScroll: true });
+      });
+    }
+    // force=false ignores the right-click or long-press that opened the menu a moment ago.
+    function closeContextMenu(force) {
+      if (!ctxMenu.open) return;
+      if (force === false && performance.now() - ctxMenu.openedAt < 700) return;
+      ctxMenu.open = false;
+    }
+    function onCanvasContextMenu(evt) {
+      const t = evt.target;
+      if (t && (t.tagName === 'TEXTAREA' || t.tagName === 'INPUT' || t.isContentEditable)) return;   // keep the text menu in notes
+      evt.preventDefault();
+      if (ctxMenu.open && performance.now() - ctxMenu.openedAt < 1000) return;   // already opened by a long press
+      // On a Mac, Ctrl-click is "add to selection" here, not a right-click.
+      if (IS_MAC && evt.ctrlKey && !evt.metaKey && evt.button === 0) return;
+      openContextMenu(evt.clientX, evt.clientY, t);
+    }
+    function startLongPress(evt) {
+      cancelLongPress();
+      if (mode.value === 'line' || mode.value === 'draw') return;
+      longPress.x = evt.clientX; longPress.y = evt.clientY;
+      longPress.timer = setTimeout(() => {
+        longPress.timer = null;
+        if (touchPts.size > 1 || pinch.active || ctxMenu.open) return;
+        openContextMenu(longPress.x, longPress.y, document.elementFromPoint(longPress.x, longPress.y));
+      }, LONG_PRESS_MS);
+    }
+    function cancelLongPress() {
+      if (longPress.timer) { clearTimeout(longPress.timer); longPress.timer = null; }
+    }
+    function runContextAction(id) {
+      const wx = ctxMenu.wx, wy = ctxMenu.wy;
+      closeContextMenu(true);
+      if (id === 'copy') copySelected();
+      else if (id === 'paste') pasteAt(wx, wy);
+      else if (id === 'duplicate') duplicateSelected();
+      else if (id === 'group') groupSelected();
+      else if (id === 'ungroup') ungroupSelected();
+      else if (id === 'delete') deleteSelected();
+      else if (id === 'selectParent') { const sel = selectionIds(); const p = sel.shapes.length === 1 ? parentGroupOf(sel.shapes[0]) : null; if (p) selectShape(p.id); }
+    }
+    function onContextMenuKeydown(e) {
+      const btns = Array.from(ctxMenuEl.value ? ctxMenuEl.value.querySelectorAll('button:not(:disabled)') : []);
+      const i = btns.indexOf(document.activeElement);
+      if (e.key === 'Escape' || e.key === 'Tab') { e.preventDefault(); e.stopPropagation(); closeContextMenu(true); if (svgEl.value) svgEl.value.focus && svgEl.value.focus(); return; }
+      if (!btns.length) return;
+      let next = -1;
+      if (e.key === 'ArrowDown') next = (i + 1) % btns.length;
+      else if (e.key === 'ArrowUp') next = (i - 1 + btns.length) % btns.length;
+      else if (e.key === 'Home') next = 0;
+      else if (e.key === 'End') next = btns.length - 1;
+      if (next !== -1) { e.preventDefault(); btns[next].focus(); }
+      e.stopPropagation();   // keys in the menu are not canvas shortcuts
     }
 
     // ==== Agent API: validated console calls (DiagramAPI) and WebMCP tools ====
@@ -4084,6 +4247,10 @@ const app = createApp({
 
     function onKeydown(e) {
       const tag = e.target && e.target.tagName;
+      if (ctxMenu.open) {
+        if (e.key === 'Escape') { closeContextMenu(true); return; }
+        closeContextMenu(true);    // a shortcut acts on the selection; the menu goes away
+      }
       if (shareDialog.value) {
         if (e.key === 'Escape') cancelShareDialog();
         return;
@@ -4648,6 +4815,7 @@ const app = createApp({
       collab, shareDialog, shareName, shareCopied, shareLink, isLocalFile, remoteCursors, activeDoc, initials,
       openShareDialog, cancelShareDialog, confirmShareName, onShareNameKeydown, onShareInputMounted, copyShareLink, stopCollab,
       toggleNote, onNoteKeydown, onNoteTextareaMounted, onNoteBoxMouseDown, onNoteResizeDown, noteAnchor, notePos, noteW, noteH, NOTE_W, NOTE_H,
+      ctxMenu, ctxMenuEl, ctxMenuItems, onCanvasContextMenu, closeContextMenu, runContextAction, onContextMenuKeydown,
       groupFrames, shapeLayer, GROUP_HEAD, groupPalette: GROUP_PALETTE, groupSelected, ungroupSelected, ungroupShape, setGroupId, gidError, parentGroupOf,
     };
   }

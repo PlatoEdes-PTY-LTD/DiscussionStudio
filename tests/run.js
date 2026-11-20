@@ -34,6 +34,7 @@ server.listen(0, '127.0.0.1', async () => {
     ['routing.test.js', url],
     ['copypaste.test.js', url],
     ['groups.test.js', url],
+    ['contextmenu.test.js', url],
   ];
   const failed = [];
   for (const [file, target] of runs) {
