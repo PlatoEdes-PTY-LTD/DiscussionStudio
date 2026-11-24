@@ -38,7 +38,7 @@ Each tool returns `{ content: [{ type: "text", text: "<JSON>" }] }`. On bad inpu
 
 ## Connections
 
-- `kind`: `arrow` (default), `one-many` (crow's foot at the target), `many-many` (crow's feet at both ends).
+- `kind`: `arrow` (default), `double-arrow` (arrows at both ends), `one-many` (crow's foot at the target), `many-many` (crow's feet at both ends).
 - Ports: `start` is the left side of a shape and `end` is the right side. The default is from `end` to `start`, which suits a left-to-right flow.
 - A shape cannot connect to itself. Two connections with the same shapes and the same ports are refused.
 - **The connection style applies to the whole diagram.** `elbow` draws horizontal and vertical segments between the ports. `straight` draws a direct line between the shape centers and ignores the ports. Change it only when the person asks, because it changes every connection.

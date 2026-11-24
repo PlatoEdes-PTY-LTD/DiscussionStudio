@@ -630,6 +630,7 @@ const ICONS = {
   moon: '<svg width="18" height="18" viewBox="0 0 22 22" fill="none"><path d="M18 13.2A7.5 7.5 0 0 1 8.8 4a7.5 7.5 0 1 0 9.2 9.2z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>',
   sun: '<svg width="18" height="18" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="3.8"/><path d="M11 2.5v2M11 17.5v2M2.5 11h2M17.5 11h2M5 5l1.4 1.4M15.6 15.6 17 17M5 17l1.4-1.4M15.6 6.4 17 5"/></svg>',
   kindArrow: '<svg class="kind-icon" width="44" height="16" viewBox="0 0 44 16" fill="none"><line x1="3" y1="8" x2="33" y2="8" stroke="currentColor" stroke-width="1.8"/><path d="M31 3.5 L41 8 L31 12.5 z" fill="currentColor"/></svg>',
+  kindDoubleArrow: '<svg class="kind-icon" width="44" height="16" viewBox="0 0 44 16" fill="none"><line x1="11" y1="8" x2="33" y2="8" stroke="currentColor" stroke-width="1.8"/><path d="M13 3.5 L3 8 L13 12.5 z M31 3.5 L41 8 L31 12.5 z" fill="currentColor"/></svg>',
   kindOneMany: '<svg class="kind-icon" width="44" height="16" viewBox="0 0 44 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="3" y1="8" x2="41" y2="8"/><path d="M29 8 L41 2 M29 8 L41 14"/></svg>',
   kindManyMany: '<svg class="kind-icon" width="44" height="16" viewBox="0 0 44 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="3" y1="8" x2="41" y2="8"/><path d="M15 8 L3 2 M15 8 L3 14 M29 8 L41 2 M29 8 L41 14"/></svg>',
   rect: '<svg width="18" height="18" viewBox="0 0 22 22" fill="none"><rect x="3" y="5" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.8"/></svg>',
@@ -1146,7 +1147,9 @@ const TEMPLATE = `
         <code>DiagramAPI.addConnection(fromId, toId, 'label?', 'note?', fromPort, toPort, kind)
 // fromPort/toPort: 'start' (left) | 'end' (right)
 // defaults: fromPort='end', toPort='start'
-// kind: 'arrow' (default) | 'one-many' | 'many-many'
+// kind: 'arrow' (default) | 'double-arrow'
+//   | 'one-many' | 'many-many'
+//   double-arrow: arrow at both ends
 //   one-many: crow's foot at the target
 //   many-many: crow's foot at both ends
 DiagramAPI.setConnectionKind(id, kind)</code>
@@ -1381,26 +1384,32 @@ const app = createApp({
     const edgeStyle = ref('elbow'); // 'elbow' | 'point' — global rendering mode for all connections
     const connectFrom = ref(null);
     const connectFromPort = ref(null);
-    // connection types: an arrow at the target (default), a crow's foot at the target
+    // connection types: an arrow at the target (default), arrows at both ends, a crow's foot at the target
     // (one-to-many), or crow's feet at both ends (many-to-many). Stored as conn.kind;
     // a connection without a kind (older files) is an arrow.
     const CONN_KINDS = [
       { id: 'arrow', name: 'Arrow', short: 'Arrow', icon: 'kindArrow', desc: 'Default. Arrow at the target end', hint: 'a link' },
+      { id: 'double-arrow', name: 'Double arrow', short: 'Double', icon: 'kindDoubleArrow', desc: 'Arrows at both ends', hint: 'a two-way link' },
       { id: 'one-many', name: 'One to many', short: '1 : N', icon: 'kindOneMany', desc: "Crow's foot at the target end", hint: 'a one-to-many link' },
       { id: 'many-many', name: 'Many to many', short: 'N : N', icon: 'kindManyMany', desc: "Crow's feet at both ends", hint: 'a many-to-many link' },
     ];
+    const CONN_KIND_IDS = CONN_KINDS.map(k => k.id);
     const connKinds = CONN_KINDS;
     const connKind = ref('arrow');       // type used for the next connection
     const connectMenuOpen = ref(false);
-    function connKindOf(c) { return c && (c.kind === 'one-many' || c.kind === 'many-many') ? c.kind : 'arrow'; }
+    function connKindOf(c) { return c && CONN_KIND_IDS.includes(c.kind) ? c.kind : 'arrow'; }
+    function isArrowKind(kind) { return kind === 'arrow' || kind === 'double-arrow'; }
+    function arrowMarker(c) { return c.id === selectedConnId.value ? 'url(#arrow-selected)' : 'url(#arrow)'; }
     function crowMarker(c) {
       return 'url(#crow' + (edgeStyle.value === 'elbow' ? '-port' : '') + (c.id === selectedConnId.value ? '-selected' : '') + ')';
     }
     function connMarkerEnd(c) {
-      if (connKindOf(c) !== 'arrow') return crowMarker(c);
-      return c.id === selectedConnId.value ? 'url(#arrow-selected)' : 'url(#arrow)';
+      return isArrowKind(connKindOf(c)) ? arrowMarker(c) : crowMarker(c);
     }
-    function connMarkerStart(c) { return connKindOf(c) === 'many-many' ? crowMarker(c) : null; }
+    function connMarkerStart(c) {
+      const kind = connKindOf(c);
+      return kind === 'many-many' ? crowMarker(c) : kind === 'double-arrow' ? arrowMarker(c) : null;
+    }
     // The two toe lines of a crow's foot whose toes touch `tip`, coming from the direction of `from`.
     const CROW_LEN = 14, CROW_SPREAD = 7;
     function crowFootSegments(tip, from, len, spread) {
@@ -1546,7 +1555,7 @@ const app = createApp({
         id, from: fromId, to: toId, label: label || '', note: note || '',
         noteOpen: false, noteOffsetX: null, noteOffsetY: null, noteW: null, noteH: null,
         fromPort: fp, toPort: tp,
-        kind: (kind === 'one-many' || kind === 'many-many') ? kind : 'arrow',
+        kind: connKindOf({ kind }),
       });
       selectConnection(id);
       return id;
@@ -3146,20 +3155,21 @@ const app = createApp({
     const PPTX_SHAPE_TYPE = { rectangle: 'rect', circle: 'ellipse', diamond: 'diamond' };
     const PPTX_SLIDE_W = 13.333, PPTX_SLIDE_H = 7.5, PPTX_MARGIN = 0.6;
 
-    function pptxAddLineSegment(slide, pptx, p1, p2, isLast, style) {
+    function pptxAddLineSegment(slide, pptx, p1, p2, isLast, style, isFirst) {
       const dx = p2.x - p1.x, dy = p2.y - p1.y;
       if (Math.abs(dx) < 0.005 && Math.abs(dy) < 0.005) return; // skip a zero-length segment
       const x = Math.min(p1.x, p2.x), y = Math.min(p1.y, p2.y);
       const w = Math.abs(dx) || 0.01, h = Math.abs(dy) || 0.01;
-      // A line shape's bounding box only has two possible diagonals; flip to the "/" one
-      // when dx and dy have opposite signs (default is the "\" top-left-to-bottom-right one).
-      const flipV = (dx * dy) < 0;
+      // A line shape runs from the top left to the bottom right of its box. Flip each axis
+      // that runs the other way, so the line starts at p1 and its arrowheads are at the right ends.
+      const flipH = dx < 0, flipV = dy < 0;
       slide.addShape(pptx.ShapeType.line, {
-        x, y, w, h, flipV,
+        x, y, w, h, flipH, flipV,
         line: {
           color: (style && style.color) || '1450AB',
           width: (style && style.width) || 1.25,
           // connections (no style) always end in an arrow; lines only when they have one
+          beginArrowType: (isFirst && style && style.startArrow) ? 'triangle' : 'none',
           endArrowType: (isLast && (!style || style.arrow)) ? 'triangle' : 'none',
         },
       });
@@ -3248,12 +3258,12 @@ const app = createApp({
           if (Math.abs(pts[i].x - prev.x) > 0.005 || Math.abs(pts[i].y - prev.y) > 0.005) cleaned.push(pts[i]);
         }
         const kind = connKindOf(c);
-        const connStyle = { color: '1450AB', width: 1.25, arrow: kind === 'arrow' };
+        const connStyle = { color: '1450AB', width: 1.25, arrow: isArrowKind(kind), startArrow: kind === 'double-arrow' };
         for (let i = 0; i < cleaned.length - 1; i++) {
-          pptxAddLineSegment(slide, pptx, cleaned[i], cleaned[i + 1], i === cleaned.length - 2, connStyle);
+          pptxAddLineSegment(slide, pptx, cleaned[i], cleaned[i + 1], i === cleaned.length - 2, connStyle, i === 0);
         }
         // crow's feet: two short toe lines at the target (and at the source for many-to-many)
-        if (kind !== 'arrow' && cleaned.length >= 2) {
+        if (!isArrowKind(kind) && cleaned.length >= 2) {
           const ends = [[cleaned[cleaned.length - 1], cleaned[cleaned.length - 2]]];
           if (kind === 'many-many') ends.push([cleaned[0], cleaned[1]]);
           ends.forEach(([tip, from]) => crowFootSegments(tip, from, CROW_LEN * scale, CROW_SPREAD * scale)
@@ -3392,7 +3402,7 @@ const app = createApp({
         ctx.fillText((g.gid ? g.gid + '  ' : '') + (g.label || ''), g.x + 12, g.y + GROUP_HEAD / 2 + 2, Math.max(10, g.w - 36));
       });
 
-      // connections: routed polyline, arrow head at the end, optional label
+      // connections: routed polyline, arrow heads at the end (or both ends), optional label
       connections.forEach((c, i) => {
         const pts = routes[i];
         if (!pts || pts.length < 2) return;
@@ -3402,12 +3412,22 @@ const app = createApp({
         for (let j = pts.length - 2; j >= 0; j--) { prev = pts[j]; if (Math.hypot(last.x - prev.x, last.y - prev.y) > 0.5) break; }
         const kind = connKindOf(c);
         ctx.strokeStyle = col; ctx.lineWidth = 1.8;
-        if (kind === 'arrow') {
+        if (isArrowKind(kind)) {
+          const both = kind === 'double-arrow';
           const len = Math.hypot(last.x - prev.x, last.y - prev.y);
-          const size = Math.min(8 * 1.8, len);
+          const size = Math.min(8 * 1.8, both && pts.length === 2 ? len / 2 : len);
           const ux = len ? (last.x - prev.x) / len : 0, uy = len ? (last.y - prev.y) / len : 0;
           const body = pts.slice(0, -1).concat([{ x: last.x - ux * size * 0.8, y: last.y - uy * size * 0.8 }]);
-          pngPolyline(ctx, body);
+          if (both) {
+            const first = pts[0], next = distinctNeighbor(pts, 0, 1);
+            const d = Math.hypot(next.x - first.x, next.y - first.y);
+            const s = Math.min(size, d), k = d ? s * 0.8 / d : 0;
+            body[0] = { x: first.x + (next.x - first.x) * k, y: first.y + (next.y - first.y) * k };
+            pngPolyline(ctx, body);
+            pngArrowHead(ctx, first, next, s, col);
+          } else {
+            pngPolyline(ctx, body);
+          }
           pngArrowHead(ctx, last, prev, size, col);
         } else {
           pngPolyline(ctx, pts);
@@ -3771,7 +3791,6 @@ const app = createApp({
     // These calls throw an Error with a clear message on bad input, so a person at the console
     // or an LLM can correct the call. Deletes go through requestDelete, which asks the user first.
     const SHAPE_TYPES = ['rectangle', 'circle', 'diamond'];
-    const CONN_KIND_IDS = ['arrow', 'one-many', 'many-many'];
     const PORTS = ['start', 'end'];
     const SKETCH_KINDS = ['rectangle', 'circle', 'diamond', 'triangle', 'arrow', 'underline'];
     const SKETCH_SIZES = {
@@ -4138,7 +4157,7 @@ const app = createApp({
         }, noteProps), [],
         (a) => ({ id: apiAddShape(a.type || 'rectangle', a) })),
       tool('connect_shapes',
-        'Connect two shapes with a connector. Returns the connection id. Ports: "start" is the left side of a shape, "end" the right side (default from end to start). kind: arrow (default), one-many (crow\'s foot at target), many-many (crow\'s feet at both ends).',
+        'Connect two shapes with a connector. Returns the connection id. Ports: "start" is the left side of a shape, "end" the right side (default from end to start). kind: arrow (default), double-arrow (arrows at both ends), one-many (crow\'s foot at target), many-many (crow\'s feet at both ends).',
         Object.assign({
           from: { type: 'string', description: 'Id of the source shape' },
           to: { type: 'string', description: 'Id of the target shape' },
@@ -4316,7 +4335,7 @@ const app = createApp({
     }
     function startConnect(kind) {
       multiMode.value = false;
-      connKind.value = (kind === 'one-many' || kind === 'many-many') ? kind : 'arrow';
+      connKind.value = connKindOf({ kind });
       connectMenuOpen.value = false;
       mode.value = 'connect';
       connectFrom.value = null;

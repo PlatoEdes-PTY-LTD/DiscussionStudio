@@ -54,6 +54,25 @@ const assert = (c, m) => { if (!c) { throw new Error('FAIL: ' + m); } console.lo
   await page.screenshot({ path: path.join(__dirname, 'screenshots', 'shot-elbow.png') });
   await page.evaluate(() => DiagramAPI.setConnectionStyle('straight'));
 
+  // Double arrow: arrows at both ends on screen, and every other kind keeps its ends
+  const ends = await page.evaluate(async () => {
+    const A = DiagramAPI, before = A.getState(), out = {};
+    const id = before.connections[0].id;
+    for (const k of ['double-arrow', 'arrow', 'one-many', 'many-many', 'bogus']) {
+      A.setConnectionKind(id, k); A.selectShape(before.shapes[0].id);
+      await new Promise(r => requestAnimationFrame(r));
+      const p = document.querySelector('.conn-path');
+      out[k] = [A.getState().connections[0].kind, p.getAttribute('marker-start'), p.getAttribute('marker-end')].join(' ');
+    }
+    A.setConnectionKind(id, 'double-arrow');
+    A.loadState(A.getState());
+    out.reloaded = A.getState().connections[0].kind;
+    A.loadState(before);
+    return out;
+  });
+  assert(ends['double-arrow'] === 'double-arrow url(#arrow) url(#arrow)' && ends.reloaded === 'double-arrow', 'double arrow has arrows at both ends and survives a reload');
+  assert(ends.arrow === 'arrow  url(#arrow)' && ends['one-many'] === 'one-many  url(#crow)' && ends['many-many'] === 'many-many url(#crow) url(#crow)' && ends.bogus === ends.arrow, 'other connection kinds unchanged');
+
   // WebMCP tools via mocked agent
   const t = await page.evaluate(async () => {
     const T = window.__tools;

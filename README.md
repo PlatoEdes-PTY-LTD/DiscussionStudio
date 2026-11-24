@@ -17,7 +17,7 @@ A conversation can move faster than a document or a traditional diagramming work
 - **Shapes** — rectangles, circles, and diamonds. Click empty canvas to drop a rectangle.
 - **Resizable shapes** — select a shape and drag a handle, or type an exact width and height. Circles become ellipses.
 - **Connections** — link shapes from any side (`start` / `end` ports). All four port combinations route cleanly.
-- **Connection types** — click Connect and pick one: an arrow at the target (the default), a crow's foot at the target (one to many), or crow's feet at both ends (many to many). Change the type of a connection later in the side panel.
+- **Connection types** — click Connect and pick one: an arrow at the target (the default), arrows at both ends (double arrow), a crow's foot at the target (one to many), or crow's feet at both ends (many to many). Change the type of a connection later in the side panel.
 - **Two line styles** — orthogonal elbow lines or straight point-to-point lines, switchable for the whole diagram.
 - **Lines and freehand** — draw straight lines (with an optional arrow) or sketch freehand. Pick a color and thickness. Select a line to move it, drag its end handles, add a note, or delete it. Thin lines stay easy to click at any zoom level.
 - **Select many** — Shift-click (or `Ctrl`/`Cmd`-click) items, or Shift-drag a box on empty canvas, to select shapes, connections, and lines together. The side panel shows how many are selected. Delete them in one step.

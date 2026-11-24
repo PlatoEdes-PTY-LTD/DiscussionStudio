@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-25
+
+- Added: a connection type, Double arrow, with arrows at both ends. Pick it from Connect or in the side panel, or use `kind: 'double-arrow'` in `DiagramAPI` and the WebMCP tools. PNG and PowerPoint exports include both arrows.
+- Fixed: in PowerPoint exports, arrowheads on lines that run right to left or straight up are now at the correct end.
+
 ## 2026-11-20
 
 - Added: a context menu on the canvas. Right-click (or long-press on a touch screen) for Copy, Paste here (at the pointer), Duplicate, Group, Ungroup, Select group (on a shape inside a group), and Delete. Each entry shows its shortcut; entries that do not apply are greyed out. Right-clicking an item that is not selected selects it first. The arrow keys, Enter, and Escape work in the menu. On a Mac, Ctrl-click still adds to the selection.

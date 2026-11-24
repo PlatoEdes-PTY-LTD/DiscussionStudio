@@ -31,7 +31,7 @@ Use these terms in the same way in all code, comments, and messages to the user.
 | Line | A free straight line with two end points. It is not tied to a shape. It can have an arrow. |
 | Freehand drawing | A free line that the user draws with the mouse. It has many points. |
 | Tool | A mode of the canvas: `select`, `connect`, `line`, or `draw`. |
-| Connection | A line between two shapes. Its type sets the ends: an arrow at the target, a crow's foot at the target (one to many), or crow's feet at both ends (many to many). |
+| Connection | A line between two shapes. Its type sets the ends: an arrow at the target, arrows at both ends (double arrow), a crow's foot at the target (one to many), or crow's feet at both ends (many to many). |
 | Port | A connection point on the side of a shape. `start` is the left side. `end` is the right side. |
 | Note | A text card attached to one shape, one connection, or one line. A dotted line ties it to its owner. |
 | Label | The short text that shows inside a shape or on a connection. |
@@ -161,7 +161,7 @@ A group (`type: 'group'`) has these extra fields. See section 6C.
 | `id` | string | `conn_1`, `conn_2`, and so on. |
 | `from`, `to` | string | The ids of the two shapes. |
 | `fromPort`, `toPort` | string | `start` or `end`. Default: `fromPort` is `end`, `toPort` is `start`. |
-| `kind` | string | `arrow`, `one-many`, or `many-many`. Default: `arrow`. A connection without `kind` (an older file) is an arrow. |
+| `kind` | string | `arrow`, `double-arrow`, `one-many`, or `many-many`. Default: `arrow`. A connection without `kind` (an older file) is an arrow. |
 | `label` | string | Text on the line. |
 | `note`, `noteOpen`, `noteOffsetX`, `noteOffsetY` | | Same meaning as for a shape. |
 
@@ -225,7 +225,7 @@ The application does not save data to browser storage. See Section 13.
 
 ### 6.1 Toolbar actions
 
-The toolbar is in the top bar. It has these actions: add rectangle, add circle, add diamond, Connect (opens a menu of connection types: Arrow, One to many, Many to many; choosing one starts connect mode, and clicking Connect while connecting stops it), Auto-arrange, the connection style toggle (elbow or point), panel visibility, Developer API help, export JSON, export PowerPoint, export PNG, import JSON, and reset all data.
+The toolbar is in the top bar. It has these actions: add rectangle, add circle, add diamond, Connect (opens a menu of connection types: Arrow, Double arrow, One to many, Many to many; choosing one starts connect mode, and clicking Connect while connecting stops it), Auto-arrange, the connection style toggle (elbow or point), panel visibility, Developer API help, export JSON, export PowerPoint, export PNG, import JSON, and reset all data.
 
 The **Share** button starts or shows a live session (Section 10A). While a session is on, its label is **Live**, and a row of colored dots with initials before it shows the people in the session. A click on the dots or on **Live** opens the session dialog.
 
@@ -525,7 +525,7 @@ PowerPoint export and PNG export need at least one shape or line. If the canvas 
 The function `exportPPTX(name)` uses PptxGenJS.
 
 - Each shape becomes a native PowerPoint shape (rectangle, ellipse, or diamond) with a centered label.
-- Each connection becomes one or more PowerPoint lines with an arrowhead on the last line. The style (elbow or point) follows the current `edgeStyle`.
+- Each connection becomes one or more PowerPoint lines with an arrowhead on the last line (and on the first line for a double arrow). The style (elbow or point) follows the current `edgeStyle`.
 - Each line becomes PowerPoint lines. See Section 7A.3.
 - The diagram is scaled to fit one slide.
 - Notes are not included.
