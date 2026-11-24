@@ -252,6 +252,7 @@ A tab bar is below the top bar. It shows all open files. See Section 9A.
 | Double-click a shape or a connection | Opens the label edit dialog. |
 | Hover or select a shape | Shows its four ports as solid dots. Ports are hidden otherwise. On a touch screen, all ports show while connecting. |
 | Click a port on a shape | Starts a connection from that port. |
+| Drag an end handle of the selected connection | Moves that end to another port, on the same shape or a different one. It snaps to a port within 22 pixels, or to the nearest port of the shape under the pointer. Dropping elsewhere, leaving the canvas, or `Escape` puts it back. A self connection or a duplicate is refused. |
 | Click a second port | Completes the connection. |
 | `Delete` or `Backspace` | Deletes the selected item or the whole multi-selection. This is not active when the cursor is in a text field. |
 | `Escape` | Cancels connect mode and clears the selection. It also closes dialogs. |
@@ -667,6 +668,7 @@ The name is saved in `localStorage` under `discussion-studio-name`.
 | `autoArrange()` | Arranges shapes in layers from left to right, by link dependency. |
 | `getState()` | Returns a copy of `{ shapes, connections, lines, edgeStyle }`. |
 | `loadState(data)` | Replaces the data of the active file. Does not change the file name. |
+| `reconnect(id, end, shapeId, port)` | Moves one end (`from` or `to`) of a connection to a port. Returns `false` and changes nothing when the result is a self connection or a duplicate, or an argument is wrong. A group drops the connection when its shapes are no longer both inside. |
 | `exportJSON(name?)` | Downloads JSON at once. No dialog. |
 | `exportPPTX(name?)` | Downloads PowerPoint at once. Returns a promise. No dialog. |
 | `exportPNG(name?)` | Downloads PNG at once. No dialog. |

@@ -337,9 +337,14 @@
   .connect-icon.active .port-dot{fill:var(--green);}
   .connect-icon .port-hit{fill:transparent;}
   /* no hover on touch screens: a hidden port cannot be tapped; while connecting, every port shows */
+  .connect-icon.drop{opacity:1;}
+  .connect-icon.drop .port-dot{fill:var(--green);r:7px;}
+  .conn-end{cursor:grab;stroke:var(--hl);}
+  .board.mode-reconnect, .board.mode-reconnect *{cursor:grabbing;}
+  .board.mode-reconnect .conn-end{pointer-events:none;}
   @media (hover: none){
     .board:not(.mode-connect) .shape-group:not(.selected):not(.multi) > .connect-icon:not(.active){opacity:0;pointer-events:none;}
-    .mode-connect .shape-group > .connect-icon{opacity:1;}
+    .mode-connect .shape-group > .connect-icon, .board .shape-group.hovered > .connect-icon{opacity:1;}
   }
 
   .note-tether{stroke:var(--ink-soft);stroke-width:1.3;stroke-dasharray:4 4;fill:none;pointer-events:none;}
@@ -745,7 +750,7 @@ const TEMPLATE = `
 
   <div class="workspace">
     <main class="canvas-wrap">
-      <svg class="board" ref="svgEl" :class="{'mode-connect': mode==='connect', 'mode-draw': mode==='line' || mode==='draw'}"
+      <svg class="board" ref="svgEl" :class="{'mode-connect': mode==='connect', 'mode-reconnect': endDrag.active && endDrag.moved, 'mode-draw': mode==='line' || mode==='draw'}"
            @pointerdown.capture="onSvgMouseDownCapture" @pointerdown="onSvgMouseDown" @pointermove="onMouseMove" @pointerup="onMouseUp" @pointercancel="onMouseUp" @pointerleave="onMouseUp"
            @click="onCanvasClick" @wheel="onWheel" @contextmenu="onCanvasContextMenu">
         <defs>
@@ -812,7 +817,7 @@ const TEMPLATE = `
                 :x2="mousePos.x" :y2="mousePos.y" />
 
           <g v-for="shape in shapeLayer" :key="shape.id" data-kind="s" :data-id="shape.id" class="shape-group" :data-group="shape.type==='group' ? '' : null"
-             :class="{selected: shape.id===selectedShapeId, hovered: shape.id===hoverGroupId, multi: isMulti('s', shape.id), 'connect-source': shape.id===connectFrom}"
+             :class="{selected: shape.id===selectedShapeId, hovered: shape.id===hoverGroupId || (endDrag.target && endDrag.target.shape===shape.id), multi: isMulti('s', shape.id), 'connect-source': shape.id===connectFrom}"
              :transform="'translate(' + shape.x + ' ' + shape.y + ')'"
              @pointerdown="onShapeMouseDown(shape, $event)" @click.stop @dblclick.stop="openTextDialog(shape)">
             <rect v-if="shape.type==='rectangle'" :width="shape.w" :height="shape.h" rx="10" ry="10"
@@ -845,7 +850,7 @@ const TEMPLATE = `
             </g>
 
             <g v-for="p in portDefs" :key="p.id" class="connect-icon" :data-port="p.id"
-               :class="['port-' + p.id, {active: shape.id===connectFrom && connectFromPort===p.id}]"
+               :class="['port-' + p.id, {active: shape.id===connectFrom && connectFromPort===p.id, drop: endDrag.target && endDrag.target.shape===shape.id && endDrag.target.port===p.id}]"
                :transform="'translate(' + portOffset(shape, p.id).x + ' ' + portOffset(shape, p.id).y + ')'"
                @pointerdown.stop @click.stop="onPortClick(shape, p.id)">
               <title>{{ p.name }} ({{ p.side }})</title>
@@ -876,6 +881,14 @@ const TEMPLATE = `
           <g v-if="drawingLine">
             <path class="line-path" :d="linePath(drawingLine)" :stroke="lineInk(lineStyle.stroke)" :stroke-width="lineStyle.width" />
             <polygon v-if="arrowHead(drawingLine)" :points="arrowHead(drawingLine)" :fill="lineInk(lineStyle.stroke)" :stroke="lineInk(lineStyle.stroke)" stroke-width="1" stroke-linejoin="round" />
+          </g>
+
+          <!-- ends of the selected connection: drag one to another port -->
+          <g v-if="selectedConn && mode==='select' && connEnds" class="conn-ends">
+            <line v-if="endDrag.active && endDrag.moved" class="ghost-line" :x1="connEnds[endDrag.end==='from' ? 'to' : 'from'].x" :y1="connEnds[endDrag.end==='from' ? 'to' : 'from'].y"
+                  :x2="connEnds[endDrag.end].x" :y2="connEnds[endDrag.end].y" />
+            <circle v-for="end in ['from', 'to']" :key="end" :class="'line-handle conn-end conn-end-' + end" :cx="connEnds[end].x" :cy="connEnds[end].y" r="6"
+                    @pointerdown.stop="onConnEndDown(end, $event)" @click.stop="onConnEndClick(end)"><title>Drag to another connection point</title></circle>
           </g>
 
           <!-- persistent note cards: one per shape/connection with noteOpen, tethered by a dotted line -->
@@ -1144,7 +1157,9 @@ const TEMPLATE = `
 //   double-arrow: arrow at both ends
 //   one-many: crow's foot at the target
 //   many-many: crow's foot at both ends
-DiagramAPI.setConnectionKind(id, kind)</code>
+DiagramAPI.setConnectionKind(id, kind)
+// move one end ('from' | 'to') to a port:
+DiagramAPI.reconnect(id, end, shapeId, port)</code>
         <code>DiagramAPI.removeShape(id)
 DiagramAPI.removeConnection(id)
 DiagramAPI.resizeShape(id, w?, h?)
@@ -1468,6 +1483,7 @@ const app = createApp({
     // and line together (connections and notes follow their shapes). A press that does not
     // move acts as a click on that item: see endGroupDrag.
     const groupDrag = reactive({ active: false, kind: null, id: null, addKey: false, lastX: 0, lastY: 0 });
+    const endDrag = reactive({ active: false, moved: false, id: null, end: 'to', x: 0, y: 0, target: null });  // an end of a connection being dragged to another port
     const lineHandleDrag = reactive({ active: false, id: null, idx: 0 });
     const mousePos = reactive({ x: 0, y: 0 });
     const showApiDoc = ref(false);
@@ -1564,6 +1580,83 @@ const app = createApp({
       });
       selectConnection(id);
       return id;
+    }
+
+    // Moves one end ('from' or 'to') of a connection to a port of a shape. Returns false, and
+    // changes nothing, when the result would be a self connection or a duplicate.
+    function canReconnect(conn, end, shapeId, port) {
+      const other = end === 'from' ? 'to' : 'from';
+      if (!conn || (end !== 'from' && end !== 'to') || !PORTS.includes(port)) return false;
+      if (conn[other] === shapeId || !shapes.some(s => s.id === shapeId)) return false;
+      const next = { from: conn.from, to: conn.to, fromPort: fromPortOf(conn), toPort: toPortOf(conn) };
+      next[end] = shapeId; next[end + 'Port'] = port;
+      return !connections.some(c => c.id !== conn.id && c.from === next.from && c.to === next.to && fromPortOf(c) === next.fromPort && toPortOf(c) === next.toPort);
+    }
+    function reconnect(id, end, shapeId, port) {
+      const conn = connections.find(c => c.id === id);
+      if (!canReconnect(conn, end, shapeId, port)) return false;
+      conn[end] = shapeId;
+      conn[end + 'Port'] = port;
+      // a group keeps a connection only while both of its shapes are inside the group
+      shapes.forEach(g => {
+        const i = g.conns ? g.conns.indexOf(id) : -1;
+        if (i === -1) return;
+        const inside = groupDescendants(g);
+        if (!inside.has(conn.from) || !inside.has(conn.to)) g.conns.splice(i, 1);
+      });
+      return true;
+    }
+    const END_SNAP = 22;      // screen pixels around a port where a dragged end snaps to it
+    // Where a dragged end would land: the nearest port in reach, or else the nearest port of the
+    // shape under the pointer. null when there is none.
+    function endDropTarget(conn, end, pt) {
+      const nearestPort = (list, reach) => {
+        let best = null, d = reach;
+        list.forEach(s => PORTS.forEach(port => {
+          const q = portPoint(s, port), k = Math.hypot(q.x - pt.x, q.y - pt.y);
+          if (k < d && canReconnect(conn, end, s.id, port)) { d = k; best = { shape: s.id, port, x: q.x, y: q.y }; }
+        }));
+        return best;
+      };
+      const near = nearestPort(shapes, END_SNAP / viewport.scale);
+      if (near) return near;
+      const inside = s => pt.x >= s.x && pt.x <= s.x + s.w && pt.y >= s.y && pt.y <= s.y + s.h;
+      const under = shapes.filter(s => !isGroup(s) && inside(s)).pop() || groupFrames.value.filter(inside).pop();
+      return under ? nearestPort([under], Infinity) : null;
+    }
+    // The two end points of the selected connection; a dragged end follows the pointer.
+    const connEnds = computed(() => {
+      const conn = connections.find(c => c.id === selectedConnId.value);
+      const pts = conn && (edgeStyle.value === 'point' ? connRoutePointToPoint(conn) : connRoute(conn));
+      if (!pts) return null;
+      const out = { from: pts[0], to: pts[pts.length - 1] };
+      if (endDrag.active && endDrag.moved && endDrag.id === conn.id) out[endDrag.end] = endDrag.target || { x: endDrag.x, y: endDrag.y };
+      return out;
+    });
+    function onConnEndDown(end, evt) {
+      if (evt.button !== 0) return;
+      evt.preventDefault();
+      Object.assign(endDrag, { active: true, moved: false, id: selectedConnId.value, end, target: null });
+    }
+    function moveConnEnd(pt) {
+      const conn = connections.find(c => c.id === endDrag.id);
+      if (!conn) { cancelEndDrag(); return; }
+      endDrag.moved = true;
+      endDrag.x = pt.x; endDrag.y = pt.y;
+      endDrag.target = endDropTarget(conn, endDrag.end, pt);
+    }
+    function cancelEndDrag() { endDrag.active = false; endDrag.moved = false; endDrag.target = null; }
+    function finishEndDrag() {
+      const t = endDrag.target;
+      if (endDrag.active && endDrag.moved && t) reconnect(endDrag.id, endDrag.end, t.shape, t.port);
+      cancelEndDrag();
+    }
+    // A click without a drag acts on the port under the handle: it starts a new connection there.
+    function onConnEndClick(end) {
+      const conn = connections.find(c => c.id === selectedConnId.value);
+      if (!conn || clickState.moved || edgeStyle.value === 'point') return;
+      const shape = shapes.find(s => s.id === conn[end]);
+      if (shape) onPortClick(shape, end === 'from' ? fromPortOf(conn) : toPortOf(conn));
     }
 
     function removeConnection(id) {
@@ -1963,7 +2056,7 @@ const app = createApp({
       dragging.active = false; dragging.id = null; groupDrag.active = false;
       panning.active = false;
       noteDrag.active = false; noteDrag.obj = null;
-      drawing.active = false; lineDrag.active = false; lineHandleDrag.active = false; resizing.active = false;
+      drawing.active = false; lineDrag.active = false; lineHandleDrag.active = false; resizing.active = false; cancelEndDrag();
       textDialogTarget.value = null;
       exportDialog.value = null;
       importedFileName.value = '';
@@ -2285,7 +2378,7 @@ const app = createApp({
     function startPinch() {
       drawing.active = false; drawing.points = [];
       marquee.active = false; resizing.active = false;
-      lineDrag.active = false; lineHandleDrag.active = false;
+      lineDrag.active = false; lineHandleDrag.active = false; cancelEndDrag();
       dragging.active = false; dragging.id = null; groupDrag.active = false;
       noteDrag.active = false; noteDrag.obj = null;
       panning.active = false;
@@ -2384,6 +2477,8 @@ const app = createApp({
         marquee.x1 = pt.x; marquee.y1 = pt.y;
       } else if (groupDrag.active) {
         moveGroupDrag(pt);
+      } else if (endDrag.active) {
+        if (clickState.moved) moveConnEnd(pt);
       } else if (resizing.active) {
         applyResize(pt, evt.shiftKey);
       } else if (drawing.active) {
@@ -2436,6 +2531,8 @@ const app = createApp({
           return;
         }
       }
+      // leaving the canvas or a cancelled touch drops nothing
+      if (evt && evt.type !== 'pointerup') cancelEndDrag(); else finishEndDrag();
       if (marquee.active) finishMarquee();
       endGroupDrag();
       commitDrawing();
@@ -2991,7 +3088,7 @@ const app = createApp({
       dragging.active = false; dragging.id = null; groupDrag.active = false;
       panning.active = false;
       noteDrag.active = false; noteDrag.obj = null;
-      drawing.active = false; lineDrag.active = false; lineHandleDrag.active = false; resizing.active = false;
+      drawing.active = false; lineDrag.active = false; lineHandleDrag.active = false; resizing.active = false; cancelEndDrag();
       textDialogTarget.value = null;
       exportDialog.value = null;
       showClearConfirm.value = false;
@@ -3750,7 +3847,7 @@ const app = createApp({
     function stopPointerGestures() {
       cancelLongPress();
       dragging.active = false; dragging.id = null; groupDrag.active = false; panning.active = false;
-      marquee.active = false; resizing.active = false; lineDrag.active = false; lineHandleDrag.active = false;
+      marquee.active = false; resizing.active = false; lineDrag.active = false; lineHandleDrag.active = false; cancelEndDrag();
       noteDrag.active = false; noteDrag.obj = null;
       clickState.moved = true;      // the release that follows is not a click
       pointerIsDown = false;
@@ -4340,6 +4437,10 @@ const app = createApp({
         if (e.key === 'Escape') connectMenuOpen.value = false;
         return;
       }
+      if (endDrag.active) {      // Escape puts a dragged connection end back; other keys wait
+        if (e.key === 'Escape') { cancelEndDrag(); clickState.moved = true; }
+        return;
+      }
       if ((e.key === 'Delete' || e.key === 'Backspace') && tag !== 'INPUT' && tag !== 'TEXTAREA') {
         e.preventDefault();
         deleteSelected();
@@ -4804,6 +4905,7 @@ const app = createApp({
         listDocuments, switchDocument: switchDoc, newDocument: newDoc, openDocument,
         closeDocument: closeDoc,
         addShape: apiAddShape, removeShape, addConnection, removeConnection,
+        reconnect,
         setConnectionKind: (id, kind) => { const c = connections.find(x => x.id === id); if (c) c.kind = connKindOf({ kind }); return !!c; },
         autoArrange, clearAll, resetAll, exportJSON, exportPPTX, exportPNG, loadState, getState,
         selectShape, selectConnection, clearSelection, selectMany, deleteSelected,
@@ -4857,7 +4959,7 @@ const app = createApp({
     const viewportTransform = computed(() => 'translate(' + viewport.x + ' ' + viewport.y + ') scale(' + viewport.scale + ')');
 
     return {
-      shapes, connections, mode, edgeStyle, connectFrom, connectFromPort, connectFromShape, hoverGroupId, selectedShapeId, selectedConnId,
+      shapes, connections, mode, edgeStyle, connectFrom, connectFromPort, connectFromShape, hoverGroupId, endDrag, connEnds, onConnEndDown, onConnEndClick, selectedShapeId, selectedConnId,
       selectedShape, selectedConn, svgEl, fileInput, viewport, mousePos, viewportTransform,
       showApiDoc, palette, icons: ICONS, panelVisible, hasObjects, showClearConfirm, deleteRequest, answerDelete,
       addShape, removeShape, addConnection, removeConnection, selectShape, selectConnection, clearSelection,

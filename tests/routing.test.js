@@ -183,7 +183,7 @@ const assert = (c, m) => { if (!c) throw new Error('FAIL: ' + m); console.log('o
   assert([hidden, hovered, other, selected].join() === '0,1,0,1', 'ports show only on a hovered or selected shape');
 
   // 7e. The same for a group: hovering its frame shows its ports.
-  const gid = await page.evaluate(ids => { const g = DiagramAPI.group(ids).id; DiagramAPI.clearSelection(); return g; }, pIds);
+  await page.evaluate(ids => { DiagramAPI.group(ids); DiagramAPI.clearSelection(); }, pIds);
   const gOp = async () => { await page.waitForTimeout(250); return page.evaluate(() => getComputedStyle(document.querySelector('.shape-group[data-group] .port-top')).opacity); };
   const g0 = await gOp();
   const frame = await page.locator('.group-frame').boundingBox();
