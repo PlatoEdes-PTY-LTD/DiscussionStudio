@@ -170,6 +170,27 @@ const assert = (c, m) => { if (!c) throw new Error('FAIL: ' + m); console.log('o
   assert(new Set(made).size === 16, 'clicking ports makes all 16 link types: ' + made.join(' '));
   await page.screenshot({ path: path.join(__dirname, 'screenshots', 'shot-ports.png') });
 
+  // 7d. Ports are hidden until the shape is hovered or selected.
+  const pIds = await page.evaluate(() => __setup([{ x: 100, y: 100 }, { x: 450, y: 350 }], []).ids);
+  const opacity = async (id) => { await page.waitForTimeout(250); return page.evaluate(id => getComputedStyle(document.querySelector(`.shape-group[data-id="${id}"] .port-top`)).opacity, id); };
+  await page.mouse.move(900, 700);
+  const hidden = await opacity(pIds[0]);
+  await page.hover(`.shape-group[data-id="${pIds[0]}"] foreignObject`);
+  const hovered = await opacity(pIds[0]), other = await opacity(pIds[1]);
+  await page.mouse.move(900, 700);
+  await page.evaluate(id => DiagramAPI.selectShape(id), pIds[1]);
+  const selected = await opacity(pIds[1]);
+  assert([hidden, hovered, other, selected].join() === '0,1,0,1', 'ports show only on a hovered or selected shape');
+
+  // 7e. The same for a group: hovering its frame shows its ports.
+  const gid = await page.evaluate(ids => { const g = DiagramAPI.group(ids).id; DiagramAPI.clearSelection(); return g; }, pIds);
+  const gOp = async () => { await page.waitForTimeout(250); return page.evaluate(() => getComputedStyle(document.querySelector('.shape-group[data-group] .port-top')).opacity); };
+  const g0 = await gOp();
+  const frame = await page.locator('.group-frame').boundingBox();
+  await page.mouse.move(frame.x + frame.width / 4, frame.y + 12);
+  const g1 = await gOp();
+  assert(g0 === '0' && g1 === '1', 'group ports show when its frame is hovered');
+
   // 8. Speed: 40 shapes, 60 connections; move a shape and time the re-route.
   r = await page.evaluate(() => {
     DiagramAPI.resetAll(); DiagramAPI.setConnectionStyle('elbow');

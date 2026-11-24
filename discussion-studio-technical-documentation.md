@@ -250,8 +250,9 @@ A tab bar is below the top bar. It shows all open files. See Section 9A.
 | `Shift`-click, `Ctrl`-click, or `Cmd`-click a shape, a connection, or a line | Adds it to the multi-selection, or removes it. See Section 6B. |
 | `Shift`-drag on empty canvas | Draws a selection box. See Section 6B. |
 | Double-click a shape or a connection | Opens the label edit dialog. |
-| Click a port icon on a shape | Starts a connection from that port. |
-| Click a second port icon | Completes the connection. |
+| Hover or select a shape | Shows its four ports as solid dots. Ports are hidden otherwise. On a touch screen, all ports show while connecting. |
+| Click a port on a shape | Starts a connection from that port. |
+| Click a second port | Completes the connection. |
 | `Delete` or `Backspace` | Deletes the selected item or the whole multi-selection. This is not active when the cursor is in a text field. |
 | `Escape` | Cancels connect mode and clears the selection. It also closes dialogs. |
 

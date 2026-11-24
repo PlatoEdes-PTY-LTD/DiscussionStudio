@@ -328,13 +328,19 @@
   .note-icon.active circle{stroke:var(--ink);stroke-width:2;}
   .note-icon.has-note.active circle{fill:var(--hl);stroke:var(--ink);}
 
-  .connect-icon{cursor:crosshair;}
-  .connect-icon circle{fill:var(--panel);stroke:var(--ink-soft);stroke-width:1.3;}
-  .connect-icon line, .connect-icon polyline{stroke:var(--ink-soft);stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;fill:none;}
-  .connect-icon:hover circle{stroke:var(--accent);}
-  .connect-icon:hover line, .connect-icon:hover polyline{stroke:var(--accent);}
-  .connect-icon.active circle{fill:var(--green);stroke:var(--green);}
-  .connect-icon.active line, .connect-icon.active polyline{stroke:#fff;}
+  /* ports: solid dots, shown only on a hovered or selected shape (and where a connection starts) */
+  .connect-icon{cursor:crosshair;opacity:0;transition:opacity .12s;}
+  .shape-group:hover > .connect-icon, .shape-group.hovered > .connect-icon, .shape-group.selected > .connect-icon,
+  .shape-group.multi > .connect-icon, .connect-icon.active{opacity:1;}
+  .connect-icon .port-dot{fill:var(--accent);}
+  .connect-icon:hover .port-dot{fill:var(--hl);}
+  .connect-icon.active .port-dot{fill:var(--green);}
+  .connect-icon .port-hit{fill:transparent;}
+  /* no hover on touch screens: a hidden port cannot be tapped; while connecting, every port shows */
+  @media (hover: none){
+    .board:not(.mode-connect) .shape-group:not(.selected):not(.multi) > .connect-icon:not(.active){opacity:0;pointer-events:none;}
+    .mode-connect .shape-group > .connect-icon{opacity:1;}
+  }
 
   .note-tether{stroke:var(--ink-soft);stroke-width:1.3;stroke-dasharray:4 4;fill:none;pointer-events:none;}
 
@@ -759,13 +765,6 @@ const TEMPLATE = `
           <marker id="crow-selected" viewBox="0 0 14 14" refX="14" refY="7" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse" overflow="visible">
             <path d="M 0 7 L 14 0 M 0 7 L 14 14" fill="none" stroke="var(--hl)" stroke-width="2.5" stroke-linecap="round" />
           </marker>
-          <!-- elbow mode: same foot set 9px back so the round port button on the shape's side doesn't hide it -->
-          <marker id="crow-port" viewBox="0 0 23 14" refX="23" refY="7" markerWidth="23" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse" overflow="visible">
-            <path d="M 0 7 L 14 0 M 0 7 L 14 14" fill="none" stroke="var(--conn)" stroke-width="2" stroke-linecap="round" />
-          </marker>
-          <marker id="crow-port-selected" viewBox="0 0 23 14" refX="23" refY="7" markerWidth="23" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse" overflow="visible">
-            <path d="M 0 7 L 14 0 M 0 7 L 14 14" fill="none" stroke="var(--hl)" stroke-width="2.5" stroke-linecap="round" />
-          </marker>
         </defs>
 
         <g :transform="viewportTransform">
@@ -775,6 +774,7 @@ const TEMPLATE = `
           <g v-for="g in groupFrames" :key="'frame-' + g.id" class="shape-group group-frame" data-kind="s" :data-id="g.id"
              :class="{selected: g.id===selectedShapeId, multi: isMulti('s', g.id), 'connect-source': g.id===connectFrom}"
              :transform="'translate(' + g.x + ' ' + g.y + ')'"
+             @pointerenter="hoverGroupId = g.id" @pointerleave="hoverGroupId = null"
              @pointerdown="onShapeMouseDown(g, $event)" @click.stop @dblclick.stop="openTextDialog(g)">
             <rect class="group-body" :width="g.w" :height="g.h" rx="14" ry="14" :fill="g.fill"
                   :stroke="g.id===selectedShapeId ? '#1D6CE0' : g.stroke" :stroke-width="g.id===selectedShapeId ? 2.5 : 1.6" />
@@ -812,7 +812,7 @@ const TEMPLATE = `
                 :x2="mousePos.x" :y2="mousePos.y" />
 
           <g v-for="shape in shapeLayer" :key="shape.id" data-kind="s" :data-id="shape.id" class="shape-group" :data-group="shape.type==='group' ? '' : null"
-             :class="{selected: shape.id===selectedShapeId, multi: isMulti('s', shape.id), 'connect-source': shape.id===connectFrom}"
+             :class="{selected: shape.id===selectedShapeId, hovered: shape.id===hoverGroupId, multi: isMulti('s', shape.id), 'connect-source': shape.id===connectFrom}"
              :transform="'translate(' + shape.x + ' ' + shape.y + ')'"
              @pointerdown="onShapeMouseDown(shape, $event)" @click.stop @dblclick.stop="openTextDialog(shape)">
             <rect v-if="shape.type==='rectangle'" :width="shape.w" :height="shape.h" rx="10" ry="10"
@@ -849,11 +849,7 @@ const TEMPLATE = `
                :transform="'translate(' + portOffset(shape, p.id).x + ' ' + portOffset(shape, p.id).y + ')'"
                @pointerdown.stop @click.stop="onPortClick(shape, p.id)">
               <title>{{ p.name }} ({{ p.side }})</title>
-              <circle class="touch-hit" r="18" /><circle r="8.5" />
-              <g :transform="'rotate(' + p.rot + ')'">
-                <line x1="-4" y1="0" x2="3.5" y2="0" />
-                <polyline points="0.5,-3 3.5,0 0.5,3" />
-              </g>
+              <circle class="touch-hit" r="18" /><circle class="port-hit" r="9" /><circle class="port-dot" r="4.5" />
             </g>
           </g>
 
@@ -970,8 +966,8 @@ const TEMPLATE = `
       <div class="canvas-hint multi-hint" v-else-if="multiMode && mode==='select'">Select many: tap items to add or remove them · drag on empty canvas to draw a box · tap the button again to finish</div>
       <div class="canvas-hint" v-else-if="mode==='line'">Drag to draw a line · hold Shift for 45° angles · press Escape or click Line again to finish</div>
       <div class="canvas-hint" v-else-if="mode==='draw'">Drag to draw freehand · press Escape or click Draw again to finish</div>
-      <div class="canvas-hint" v-else-if="isTouch">Double-tap a shape or connector to edit its label · tap a port to connect · tap empty canvas to add a rectangle · long-press for copy, paste and group · pinch to zoom</div>
-      <div class="canvas-hint" v-else>Double-click a shape or connector to edit its label · click a port to connect · click empty canvas to add a rectangle · right-click for copy, paste and group</div>
+      <div class="canvas-hint" v-else-if="isTouch">Double-tap a shape or connector to edit its label · select a shape, then tap a dot on its edge to connect · tap empty canvas to add a rectangle · long-press for copy, paste and group · pinch to zoom</div>
+      <div class="canvas-hint" v-else>Double-click a shape or connector to edit its label · hover a shape and click a dot on its edge to connect · click empty canvas to add a rectangle · right-click for copy, paste and group</div>
     </main>
 
     <aside class="panel" v-if="panelVisible && !showApiDoc">
@@ -1380,13 +1376,14 @@ const app = createApp({
     const edgeStyle = ref('elbow'); // 'elbow' | 'point' — global rendering mode for all connections
     const connectFrom = ref(null);
     const connectFromPort = ref(null);
-    // Ports: the connection points of a shape. dx, dy point out of the shape; rot turns the icon.
+    const hoverGroupId = ref(null);      // group frame under the pointer (its ports are in another layer)
+    // Ports: the connection points of a shape. dx, dy point out of the shape.
     // The first letters of a connection's two ports are its link type (ES, SS, TB, ...).
     const PORT_DEFS = [
-      { id: 'start', name: 'Start', side: 'left', dx: -1, dy: 0, rot: 180 },
-      { id: 'end', name: 'End', side: 'right', dx: 1, dy: 0, rot: 0 },
-      { id: 'top', name: 'Top', side: 'top', dx: 0, dy: -1, rot: -90 },
-      { id: 'bottom', name: 'Bottom', side: 'bottom', dx: 0, dy: 1, rot: 90 },
+      { id: 'start', name: 'Start', side: 'left', dx: -1, dy: 0 },
+      { id: 'end', name: 'End', side: 'right', dx: 1, dy: 0 },
+      { id: 'top', name: 'Top', side: 'top', dx: 0, dy: -1 },
+      { id: 'bottom', name: 'Bottom', side: 'bottom', dx: 0, dy: 1 },
     ];
     const PORTS = PORT_DEFS.map(p => p.id);
     function portDef(id) { return PORT_DEFS.find(p => p.id === id); }
@@ -1410,7 +1407,7 @@ const app = createApp({
     function isArrowKind(kind) { return kind === 'arrow' || kind === 'double-arrow'; }
     function arrowMarker(c) { return c.id === selectedConnId.value ? 'url(#arrow-selected)' : 'url(#arrow)'; }
     function crowMarker(c) {
-      return 'url(#crow' + (edgeStyle.value === 'elbow' ? '-port' : '') + (c.id === selectedConnId.value ? '-selected' : '') + ')';
+      return 'url(#crow' + (c.id === selectedConnId.value ? '-selected' : '') + ')';
     }
     function connMarkerEnd(c) {
       return isArrowKind(connKindOf(c)) ? arrowMarker(c) : crowMarker(c);
@@ -4860,7 +4857,7 @@ const app = createApp({
     const viewportTransform = computed(() => 'translate(' + viewport.x + ' ' + viewport.y + ') scale(' + viewport.scale + ')');
 
     return {
-      shapes, connections, mode, edgeStyle, connectFrom, connectFromPort, connectFromShape, selectedShapeId, selectedConnId,
+      shapes, connections, mode, edgeStyle, connectFrom, connectFromPort, connectFromShape, hoverGroupId, selectedShapeId, selectedConnId,
       selectedShape, selectedConn, svgEl, fileInput, viewport, mousePos, viewportTransform,
       showApiDoc, palette, icons: ICONS, panelVisible, hasObjects, showClearConfirm, deleteRequest, answerDelete,
       addShape, removeShape, addConnection, removeConnection, selectShape, selectConnection, clearSelection,

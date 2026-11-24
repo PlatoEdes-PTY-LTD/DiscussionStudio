@@ -51,7 +51,7 @@ That is all. The libraries are embedded, so the app works offline. (The page lin
 |---|---|
 | Add a rectangle | Click empty canvas or use the toolbar. |
 | Move a shape | Drag it on the canvas. |
-| Connect shapes | Choose a connection type, then click a port on each shape. |
+| Connect shapes | Choose a connection type, then hover each shape and click one of the dots on its edges. |
 | Edit a shape or connection label | Double-click it. |
 | Draw a line or freehand mark | Choose **Line** or **Draw**, then drag. Press `Escape` to finish or cancel. |
 | Select multiple items | `Shift`-click / `Ctrl`-click / `Cmd`-click, or `Shift`-drag a selection box on empty canvas. |
