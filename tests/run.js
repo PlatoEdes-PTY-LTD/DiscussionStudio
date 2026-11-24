@@ -33,6 +33,7 @@ server.listen(0, '127.0.0.1', async () => {
     ['agent-example.test.js', url],
     ['routing.test.js', url],
     ['reconnect.test.js', url],
+    ['arrange.test.js', url],
     ['copypaste.test.js', url],
     ['groups.test.js', url],
     ['contextmenu.test.js', url],

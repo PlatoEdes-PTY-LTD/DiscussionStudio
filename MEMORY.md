@@ -28,7 +28,7 @@ There is no package manifest, build configuration, or automated test suite in th
 - Connections: shape-to-shape links with `start` (left), `end` (right), `top` and `bottom` ports. Global `edgeStyle` is `elbow` or `point`. Elbow routing supports all 16 port combinations; point routing uses shape boundaries.
 - Notes: draggable cards attached to shapes or connections, stored on their owner with `note`, `noteOpen`, and note-offset fields.
 - Free lines: straight lines with optional arrows and freehand drawings; color, width, movement, and straight-line endpoint editing. Shift snaps straight lines to 45-degree increments.
-- Auto-arrange lays shapes out from left to right by dependency and does not move free lines.
+- Auto-arrange lays shapes out left to right or top to bottom by dependency, optionally reconnecting edges to other ports, and does not move free lines.
 - Multiple documents use tabs, separate viewports, JSON import/export, dirty-state indicators, and close confirmation in the UI.
 - JSON state is `{ shapes, connections, lines, edgeStyle }`. Shape IDs use `shape_`, connection IDs `conn_`, and line IDs `line_` prefixes.
 - Lines use `{ id, kind, points, stroke, width, arrow }`, where `kind` is `line` or `free`. `cleanLines` normalizes input; older JSON without `lines` is supported.

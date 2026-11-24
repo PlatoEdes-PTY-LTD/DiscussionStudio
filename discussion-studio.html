@@ -480,6 +480,8 @@
     font-family:'IBM Plex Sans',sans-serif;font-size:14px;color:var(--ink);background:var(--field-bg);
   }
   .text-dialog-input:focus{outline:none;border-color:var(--accent);}
+  .arrange-box .field{margin-bottom:16px;}
+  .arrange-box .arrange-help{margin:8px 0 0;font-size:12.5px;}
   .modal-actions{display:flex;justify-content:flex-end;gap:8px;}
   .delete-request-list{margin:-8px 0 14px;padding-left:20px;font-size:13px;color:var(--ink);line-height:1.6;max-height:180px;overflow:auto;}
   .delete-request-reason{font-style:italic;}
@@ -704,7 +706,7 @@ const TEMPLATE = `
 
     <div class="divider"></div>
 
-    <button class="tbtn" @click="autoArrange" title="Auto-arrange: lay shapes out by dependency" v-html='icons.arrange + "<span class=tlabel>&nbsp;Auto-arrange</span>"'></button>
+    <button class="tbtn" @click="openArrangeDialog" title="Auto-arrange: lay shapes out by dependency" v-html='icons.arrange + "<span class=tlabel>&nbsp;Auto-arrange</span>"'></button>
 
     <div class="divider"></div>
 
@@ -1135,7 +1137,7 @@ const TEMPLATE = `
 
       <template v-else>
         <h3>Nothing selected</h3>
-        <p class="empty-panel">Click a shape or connection to edit it. Shift-click items, or Shift-drag a box, to select many and delete them together. Use Connect to link two shapes, then Auto-arrange to lay everything out by dependency order — roots on the left, dependents flowing right.</p>
+        <p class="empty-panel">Click a shape or connection to edit it. Shift-click items, or Shift-drag a box, to select many and delete them together. Use Connect to link two shapes, then Auto-arrange to lay everything out by dependency order, left to right or top to bottom.</p>
       </template>
     </aside>
 
@@ -1192,7 +1194,10 @@ DiagramAPI.paste()
 DiagramAPI.duplicateSelected()
 DiagramAPI.duplicate([ids], { dx, dy })
 // → { shapes, connections, drawings, idMap }</code>
-        <code>DiagramAPI.autoArrange()
+        <code>DiagramAPI.autoArrange({ direction, reconnect })
+// direction: 'horizontal' (default) | 'vertical'
+// reconnect: true lets edges move to other
+// connection points (default false)
 // layered left-to-right, top-to-bottom
 // by link dependency</code>
         <code>DiagramAPI.getState()
@@ -1264,6 +1269,32 @@ DiagramAPI.tools             // definitions</code>
         Double-click a shape or connector to rename its <code style="display:inline;padding:2px 5px;margin:0;">label</code> in a small popup dialog. It can also be edited directly in the properties panel.
       </div>
     </aside>
+  </div>
+
+  <div v-if="arrangeDialog" class="modal-overlay" @pointerdown.self="arrangeDialog = null">
+    <div class="modal-box arrange-box" role="dialog" aria-labelledby="arrange-title">
+      <h3 id="arrange-title">Auto-arrange</h3>
+      <div class="field">
+        <label>Direction</label>
+        <div class="port-toggle arrange-direction">
+          <button :class="{active: arrangeDialog.direction==='horizontal'}" :aria-pressed="arrangeDialog.direction==='horizontal'" @click="arrangeDialog.direction='horizontal'">Left to right</button>
+          <button :class="{active: arrangeDialog.direction==='vertical'}" :aria-pressed="arrangeDialog.direction==='vertical'" @click="arrangeDialog.direction='vertical'">Top to bottom</button>
+        </div>
+      </div>
+      <div class="field" v-if="connections.length">
+        <label>Allow reconnecting edges?</label>
+        <div class="port-toggle arrange-reconnect">
+          <button :class="{active: !arrangeDialog.reconnect}" :aria-pressed="!arrangeDialog.reconnect" @click="arrangeDialog.reconnect=false">No, keep them</button>
+          <button :class="{active: arrangeDialog.reconnect}" :aria-pressed="arrangeDialog.reconnect" @click="arrangeDialog.reconnect=true">Yes, reconnect</button>
+        </div>
+        <p class="arrange-help" v-if="arrangeDialog.reconnect">Edges may move to other connection points, so link types (ES, SB, …) can change. The same shapes stay linked.</p>
+        <p class="arrange-help" v-else>Every edge keeps its connection points and link type.</p>
+      </div>
+      <div class="modal-actions">
+        <button class="tbtn-secondary" @click="arrangeDialog = null">Cancel</button>
+        <button class="tbtn-primary arrange-go" ref="arrangeGo" @click="confirmArrange">Arrange</button>
+      </div>
+    </div>
   </div>
 
   <div v-if="showClearConfirm" class="modal-overlay" @pointerdown.self="showClearConfirm = false">
@@ -1488,6 +1519,9 @@ const app = createApp({
     const mousePos = reactive({ x: 0, y: 0 });
     const showApiDoc = ref(false);
     const showClearConfirm = ref(false);
+    const arrangeDialog = ref(null);     // { direction, reconnect } while the Auto-arrange dialog is open
+    const arrangeGo = ref(null);
+    let lastArrange = { direction: 'horizontal', reconnect: false };
     const closeConfirmDoc = ref(null);  // id of the file waiting for close confirmation
     const importedFileName = ref('');   // full name of the last imported file, e.g. "plan.json"
     const exportDialog = ref(null);     // { kind: 'json' | 'pptx', name } while the export dialog is open
@@ -2799,18 +2833,25 @@ const app = createApp({
         const cost = c.part + placedCost(c.pts, placed, best - c.part, conn.k1, conn.k2);
         if (cost < best) { best = cost; bestPts = c.pts; }
       }
+      conn.cost = best;
       return bestPts || simplifyRoute([P1, { x: P2.x, y: P1.y }, P2]);
     }
-    const elbowRoutes = computed(() => {
-      const geo = { shapes: [], xEdges: [], yEdges: [] };
-      const byId = new Map();
+    // `shift` (optional) gives { dx, dy } for a shape that is about to move.
+    function routeGeometry(shift) {
+      const geo = { shapes: [], xEdges: [], yEdges: [], byId: new Map() };
+      const byId = geo.byId;
       shapes.forEach(s => {
-        const g = { id: s.id, type: s.type, x: s.x, y: s.y, w: s.w, h: s.h, desc: isGroup(s) ? groupDescendants(s) : null };
+        const d = (shift && shift(s)) || { dx: 0, dy: 0 };
+        const g = { id: s.id, type: s.type, x: s.x + d.dx, y: s.y + d.dy, w: s.w, h: s.h, desc: isGroup(s) ? groupDescendants(s) : null };
         geo.shapes.push(g);
         byId.set(g.id, g);
         geo.xEdges.push(g.x - ROUTE_CLEAR, g.x + g.w + ROUTE_CLEAR);
         geo.yEdges.push(g.y - ROUTE_CLEAR, g.y + g.h + ROUTE_CLEAR);
       });
+      return geo;
+    }
+    const elbowRoutes = computed(() => {
+      const geo = routeGeometry(), byId = geo.byId;
       const map = new Map();
       const placed = makePlacedIndex();
       connections.forEach(c => {
@@ -2918,7 +2959,68 @@ const app = createApp({
       requestAnimationFrame(frame);
     }
 
-    function autoArrange() {
+    function openArrangeDialog() {
+      if (shapes.length === 0) return;
+      arrangeDialog.value = Object.assign({}, lastArrange);
+      nextTick(() => { if (arrangeGo.value) arrangeGo.value.focus(); });
+    }
+    function confirmArrange() {
+      if (!arrangeDialog.value) return;
+      lastArrange = Object.assign({}, arrangeDialog.value);
+      arrangeDialog.value = null;
+      autoArrange(lastArrange);
+    }
+
+    // Chooses the two ports of every connection for shapes at the given places (geo, see
+    // routeGeometry). Each connection takes the cheapest of its 16 routes next to the routes
+    // of the others. Ports along the flow win close calls, and an edge avoids a port where
+    // another one runs the opposite way, because their lines and arrows would merge.
+    // Returns { connection id: { fromPort, toPort } }; nothing is changed here.
+    const ARRANGE_COST = { offFlow: 40, opposite: 400, refineMax: 80 };
+    function optimizePorts(geo, direction) {
+      const flow = direction === 'vertical' ? ['bottom', 'top'] : ['end', 'start'];
+      const list = connections.filter(c => geo.byId.has(c.from) && geo.byId.has(c.to) && c.from !== c.to);
+      const chosen = new Map();
+      const place = (idx, c) => {
+        const k = chosen.get(c.id);
+        routeSegments(k.pts).forEach(s => placeSegment(idx, s, k.k1, k.k2));
+      };
+      const pick = (c, placed) => {
+        const others = list.filter(o => o !== c && chosen.has(o.id)).map(o => ({ c: o, k: chosen.get(o.id) }));
+        const taken = new Set(others.filter(o => o.c.from === c.from && o.c.to === c.to).map(o => o.k.fromPort + '>' + o.k.toPort));
+        const outgoing = new Set(others.map(o => o.k.k1)), incoming = new Set(others.map(o => o.k.k2));
+        let best = null;
+        PORTS.forEach(fp => PORTS.forEach(tp => {
+          if (taken.has(fp + '>' + tp)) return;
+          const k1 = c.from + ':' + fp, k2 = c.to + ':' + tp;
+          const trial = { fromPort: fp, toPort: tp, k1, k2 };
+          const pts = routeOne(trial, geo.byId.get(c.from), geo.byId.get(c.to), geo, placed);
+          const cost = trial.cost + (fp === flow[0] ? 0 : ARRANGE_COST.offFlow) + (tp === flow[1] ? 0 : ARRANGE_COST.offFlow)
+            + (incoming.has(k1) ? ARRANGE_COST.opposite : 0) + (outgoing.has(k2) ? ARRANGE_COST.opposite : 0);
+          if (!best || cost < best.cost) best = { fromPort: fp, toPort: tp, k1, k2, pts, cost };
+        }));
+        if (best) chosen.set(c.id, best);
+      };
+      const placed = makePlacedIndex();
+      list.forEach(c => { pick(c, placed); if (chosen.has(c.id)) place(placed, c); });
+      // second look: the first choices were made before the later edges were there
+      if (list.length <= ARRANGE_COST.refineMax) list.forEach(c => {
+        const rest = makePlacedIndex();
+        list.forEach(o => { if (o !== c && chosen.has(o.id)) place(rest, o); });
+        pick(c, rest);
+      });
+      const out = {};
+      chosen.forEach((k, id) => { out[id] = { fromPort: k.fromPort, toPort: k.toPort }; });
+      return out;
+    }
+
+    // opts: direction 'horizontal' (layers from left to right, default) or 'vertical' (top to
+    // bottom); reconnect true lets connections move to other ports. Never changes which shapes
+    // a connection links.
+    function autoArrange(opts) {
+      opts = opts || {};
+      const direction = opts.direction || 'horizontal';
+      if (direction !== 'horizontal' && direction !== 'vertical') throw new Error('direction must be "horizontal" or "vertical"');
       if (shapes.length === 0) return;
       const ids = shapes.filter(s => !parentGroupOf(s.id)).map(s => s.id);
       const topOf = id => { let cur = id, p, guard = 0; while ((p = parentGroupOf(cur)) && guard++ < 50) cur = p.id; return cur; };
@@ -2988,21 +3090,32 @@ const app = createApp({
       reorderPass(false);
       reorderPass(true);
 
-      const H_GAP = 90, V_GAP = 36, PAD_X = 60, PAD_Y = 60;
+      // Layers follow each other along the main axis. Each layer is centered across it, and each
+      // shape is centered in its layer, so edges between neighbors run straight.
+      const vertical = direction === 'vertical';
+      const LAYER_GAP = 90, ITEM_GAP = vertical ? 60 : 36, PAD = 60;
+      const mainOf = s => vertical ? s.h : s.w, crossOf = s => vertical ? s.w : s.h;
+      const layers = layerKeys.map(l => layerGroups.get(l).map(shapeById));
+      const spans = layers.map(items => items.reduce((t, s) => t + crossOf(s), 0) + ITEM_GAP * (items.length - 1));
+      const widest = Math.max.apply(null, spans);
       const targets = [];
-      let x = PAD_X;
-      layerKeys.forEach(l => {
-        const group = layerGroups.get(l);
-        const colWidth = Math.max.apply(null, group.map(id => shapes.find(s => s.id === id).w));
-        let y = PAD_Y;
-        group.forEach(id => {
-          const shape = shapes.find(s => s.id === id);
-          targets.push({ id, x, y });
-          y += shape.h + V_GAP;
+      let main = PAD;
+      layers.forEach((items, i) => {
+        const size = Math.max.apply(null, items.map(mainOf));
+        let cross = PAD + (widest - spans[i]) / 2;
+        items.forEach(s => {
+          const m = main + (size - mainOf(s)) / 2;
+          targets.push(vertical ? { id: s.id, x: cross, y: m } : { id: s.id, x: m, y: cross });
+          cross += crossOf(s) + ITEM_GAP;
         });
-        x += colWidth + H_GAP;
+        main += size + LAYER_GAP;
       });
 
+      if (opts.reconnect) {
+        const moves = new Map(targets.map(t => { const s = shapeById(t.id); return [t.id, { dx: t.x - s.x, dy: t.y - s.y }]; }));
+        const ports = optimizePorts(routeGeometry(s => moves.get(topOf(s.id))), direction);
+        connections.forEach(c => { if (ports[c.id]) Object.assign(c, ports[c.id]); });
+      }
       animateTo(targets);
       resetView();
       clearSelection();
@@ -3091,6 +3204,7 @@ const app = createApp({
       drawing.active = false; lineDrag.active = false; lineHandleDrag.active = false; resizing.active = false; cancelEndDrag();
       textDialogTarget.value = null;
       exportDialog.value = null;
+      arrangeDialog.value = null;
       showClearConfirm.value = false;
     }
     function applySnapshot(snap) {
@@ -4361,7 +4475,10 @@ const app = createApp({
         (a) => apiDuplicate(a.ids, a)),
       tool('auto_arrange',
         'Lay out all shapes left to right by connection order. A group moves as one block with its members inside. Drawings do not move.',
-        {}, [], () => { autoArrange(); return { ok: true }; }),
+        {
+          direction: { type: 'string', enum: ['horizontal', 'vertical'], description: 'horizontal = left to right (default), vertical = top to bottom' },
+          reconnect: { type: 'boolean', description: 'true lets connections move to other ports for a cleaner layout, which can change their link types. Default false. Ask the person first.' },
+        }, [], (a) => { autoArrange({ direction: a && a.direction, reconnect: !!(a && a.reconnect) }); return { ok: true }; }),
       tool('delete_items',
         'Delete shapes, groups, connections or drawings by id. The user is always asked to allow the delete first; if they decline, nothing is deleted and cancelled is true. Deleting a shape also deletes its connections. Deleting a group also deletes everything inside it (use ungroup to keep the members).',
         { ids: { type: 'array', items: { type: 'string' }, minItems: 1, description: 'Ids to delete' },
@@ -4415,6 +4532,10 @@ const app = createApp({
       }
       if (deleteRequest.value) {
         if (e.key === 'Escape') answerDelete(false);
+        return;
+      }
+      if (arrangeDialog.value) {
+        if (e.key === 'Escape') arrangeDialog.value = null;
         return;
       }
       if (showClearConfirm.value) {
@@ -4964,7 +5085,7 @@ const app = createApp({
       showApiDoc, palette, icons: ICONS, panelVisible, hasObjects, showClearConfirm, deleteRequest, answerDelete,
       addShape, removeShape, addConnection, removeConnection, selectShape, selectConnection, clearSelection,
       onShapeMouseDown, onPortClick, portPoint, portOffset, portDefs: PORT_DEFS, portDef, fromPortOf, toPortOf, linkType, onSvgMouseDownCapture, onSvgMouseDown, onCanvasClick, onMouseMove, onMouseUp, onWheel, zoomBy, resetView,
-      connPath, connMid, diamondPoints, boundaryPoint, autoArrange, clearAll, resetAll, confirmClearAll, confirmClearAllYes, exportJSON, exportPPTX, exportPNG, importJSON,
+      connPath, connMid, diamondPoints, boundaryPoint, autoArrange, openArrangeDialog, confirmArrange, arrangeDialog, arrangeGo, clearAll, resetAll, confirmClearAll, confirmClearAllYes, exportJSON, exportPPTX, exportPNG, importJSON,
       triggerImport, deleteSelected, toggleConnectMode, getState, loadState, Math,
       theme, toggleTheme, lineInk, isTouch, hasTouch, multiMode, toggleMultiMode,
       connKinds, connKind, connKindOf, connectMenuOpen, onConnectButton, startConnect, connMarkerStart, connMarkerEnd,

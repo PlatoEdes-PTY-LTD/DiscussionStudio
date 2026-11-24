@@ -2,6 +2,7 @@
 
 ## 2026-11-25
 
+- Changed: Auto-arrange asks for the direction (left to right or top to bottom) and whether it may reconnect edges to other connection points. Layers and shapes are now centered, so edges run straighter. `DiagramAPI.autoArrange` and the WebMCP tool `auto_arrange` take `direction` and `reconnect`.
 - Added: drag an end of a selected connection to another connection point, on the same shape or a different one. New `DiagramAPI` call: `reconnect`.
 - Changed: connection points are small solid dots and show only on a hovered or selected shape. On touch screens, select a shape to see its dots; while connecting, all dots show.
 - Added: top and bottom connection points. Every shape and group now has four: Start (left), End (right), Top, and Bottom. All 16 link types work (ES, EE, SS, SE, ST, TS, SB, BS, ET, TE, EB, BE, TT, TB, BT, BB), and the panel and `get_diagram` show the link type. The top and bottom resize handles moved left to make room.

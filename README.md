@@ -26,7 +26,7 @@ A conversation can move faster than a document or a traditional diagramming work
 - **Groups** — Select shapes and press `Ctrl`/`Cmd`+`G` (or click **Group** in the panel) to put them in a group. Connections whose two shapes are both selected go into the group. Each group has a Group ID you can edit, plus a label and a note. A group works like a shape: drag it to move everything inside, resize it to scale its contents, connect it to other shapes, and copy and paste it. `Ctrl`/`Cmd`+`Shift`+`G` ungroups.
 - **Labels** — double-click a shape or connection to rename it.
 - **Notes** — pin draggable note cards to any shape, connection, or line. A dotted line ties each note to its owner.
-- **Auto-arrange** — lays shapes out in layers from left to right by dependency.
+- **Auto-arrange** — lays shapes out in layers by dependency. It asks for the direction (left to right or top to bottom) and whether edges may be reconnected to other connection points for a cleaner layout.
 - **Pan and zoom** — drag the canvas, scroll to zoom.
 - **Import / export** — save and load diagrams as JSON. Export to editable PowerPoint (`.pptx`). Export the whole diagram as a PNG picture, ready to paste into slides, chat, or documents.
 - **Multiple files** — import several JSON files at once. Each opens in its own tab. Switch between them and your changes stay in each one. A dot on a tab shows unexported changes.

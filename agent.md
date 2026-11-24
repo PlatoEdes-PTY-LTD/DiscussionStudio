@@ -25,7 +25,7 @@ Each tool returns `{ content: [{ type: "text", text: "<JSON>" }] }`. On bad inpu
 | `update_group` | `id` (required; id or Group ID), `groupId`, `label`, `fill`, `note`, `noteOpen` | `{ id, groupId, label, members, connections }` |
 | `ungroup` | `id` (required; id or Group ID), `reason` | `{ members, connections, deletedConnections, cancelled }` |
 | `duplicate_items` | `ids` (required), `dx`, `dy` | `{ shapes, connections, drawings, idMap }` |
-| `auto_arrange` | none | `{ ok }` |
+| `auto_arrange` | `direction` (`horizontal` \| `vertical`), `reconnect` (default `false`; `true` lets connections move to other ports, so ask the person first) | `{ ok }` |
 | `delete_items` | `ids` (required), `reason` | `{ deleted, alsoDeleted, missing, cancelled }` |
 
 ## The canvas
@@ -108,7 +108,7 @@ The person may be editing at the same time, and in a live session other people m
 | `update_group` | `updateGroup(idOrGroupId, opts)` |
 | `ungroup` | `await ungroup(idOrGroupId, { reason })` |
 | `duplicate_items` | `duplicate(ids, { dx, dy })` |
-| `auto_arrange` | `autoArrange()` |
+| `auto_arrange` | `autoArrange({ direction, reconnect })` |
 | `delete_items` | `await deleteItems(ids, { reason })` |
 
 The JavaScript calls throw an `Error` instead of returning `isError`.
