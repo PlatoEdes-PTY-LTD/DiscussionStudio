@@ -39,7 +39,7 @@ Each tool returns `{ content: [{ type: "text", text: "<JSON>" }] }`. On bad inpu
 ## Connections
 
 - `kind`: `arrow` (default), `double-arrow` (arrows at both ends), `one-many` (crow's foot at the target), `many-many` (crow's feet at both ends).
-- Ports: `start` is the left side of a shape and `end` is the right side. The default is from `end` to `start`, which suits a left-to-right flow.
+- Ports: `start` is the left side of a shape `end` is the right side, and `top` and `bottom` are the other two. `get_diagram` gives each connection's `link` type from the first letters (`ES`, `SB`, `TE`, ...). The default is from `end` to `start`, which suits a left-to-right flow.
 - A shape cannot connect to itself. Two connections with the same shapes and the same ports are refused.
 - **The connection style applies to the whole diagram.** `elbow` draws horizontal and vertical segments between the ports. `straight` draws a direct line between the shape centers and ignores the ports. Change it only when the person asks, because it changes every connection.
 
@@ -54,7 +54,7 @@ Each tool returns `{ content: [{ type: "text", text: "<JSON>" }] }`. On bad inpu
 - A group is a shape of type `group`: a dashed frame around its members, with a **Group ID** (for example `G1`) and a label in its title row. Use it to gather the shapes of one topic, team, or phase.
 - `create_group` takes shape ids. A connection goes into the group only when both of its shapes are in `shapeIds`. Groups can contain groups.
 - The frame always fits its members, so you do not set its position or size. Move or place the members; the frame follows. `auto_arrange` moves each group as one block.
-- Connect a group like any shape, using its `id` (not its Group ID). Its ports are at the left and right ends of its title row.
+- Connect a group like any shape, using its `id` (not its Group ID). Its `start` and `end` ports are at the ends of its title row; `top` and `bottom` are in the middle of those edges.
 - The Group ID must be unique. `update_group` and `ungroup` accept the `id` or the Group ID.
 - In `get_diagram`, a group has `groupId`, `members`, and `connections`, and every shape inside a group has `inGroup` (the group's `id`).
 - `ungroup` keeps the members and their connections. Connections drawn to the group itself are deleted, so in that case the person is asked first, as with `delete_items`.

@@ -40,8 +40,10 @@ const assert = (c, m) => { if (!c) throw new Error('FAIL: ' + m); console.log('o
       orthogonal: (pts) => segs(pts).every(({ p, q }) => Math.abs(p.x - q.x) < 0.01 || Math.abs(p.y - q.y) < 0.01),
       stubsOk: (pts, fromPort, toPort) => {
         const a = pts[0], b = pts[1], y = pts[pts.length - 2], z = pts[pts.length - 1];
-        const d1 = fromPort === 'start' ? -1 : 1, d2 = toPort === 'start' ? -1 : 1;
-        return Math.abs(a.y - b.y) < 0.01 && (b.x - a.x) * d1 >= 23.9 && Math.abs(y.y - z.y) < 0.01 && (y.x - z.x) * d2 >= 23.9;
+        // the run from the port must point straight out of the shape's side, at least 24 long
+        const out = { start: [-1, 0], end: [1, 0], top: [0, -1], bottom: [0, 1] };
+        const ok = (p, q, [dx, dy]) => (q.x - p.x) * dx + (q.y - p.y) * dy >= 23.9 && Math.abs((q.x - p.x) * dy) + Math.abs((q.y - p.y) * dx) < 0.01;
+        return ok(a, b, out[fromPort]) && ok(z, y, out[toPort]);
       },
     };
     window.__setup = (shapes, conns) => {
@@ -132,7 +134,8 @@ const assert = (c, m) => { if (!c) throw new Error('FAIL: ' + m); console.log('o
   //    either end shape.
   r = await page.evaluate(() => {
     const bad = [];
-    const ports = [['end', 'start'], ['end', 'end'], ['start', 'start'], ['start', 'end']];
+    const all = ['start', 'end', 'top', 'bottom'];
+    const ports = all.flatMap(f => all.map(t => [f, t]));
     const spots = [[400, 300], [700, 300], [100, 300], [400, 40], [400, 560], [700, 40], [100, 560], [430, 330]];
     spots.forEach(([x, y]) => ports.forEach(([fp, tp]) => {
       const { cids } = __setup([{ x: 400, y: 300, label: 'S' }, { x, y, label: 'T' }].slice(0, x === 400 && y === 300 ? 1 : 2).concat(x === 400 && y === 300 ? [{ x: 700, y: 300 }] : []), [[0, 1, fp, tp]]);
@@ -146,6 +149,26 @@ const assert = (c, m) => { if (!c) throw new Error('FAIL: ' + m); console.log('o
   // [430, 330] overlaps the source; a route through the overlap is unavoidable there.
   const realBad = r.filter(b => !b.includes('@430,330'));
   assert(realBad.length === 0, 'all port combinations: orthogonal, valid stubs, no shape crossed' + (realBad.length ? ' ' + realBad.join(', ') : ''));
+
+  // 7b. Top and bottom: straight when aligned, one corner when mixed, and the link type.
+  r = await page.evaluate(() => {
+    const { cids } = __setup([{ x: 60, y: 60 }, { x: 60, y: 260 }, { x: 400, y: 260 }], [[0, 1, 'bottom', 'top'], [0, 2, 'end', 'top'], [1, 2, 'start', 'bottom']]);
+    return { n: cids.slice(0, 2).map(c => __R.route(c).length), links: DiagramAPI.describe().connections.map(c => c.link).join() };
+  });
+  assert(r.n.join() === '2,3' && r.links === 'BT,ET,SB', 'bottom to top is straight, end to top has one corner, link types ' + r.links);
+
+  // 7c. Clicking ports on the canvas makes every one of the 16 link types.
+  const made = [];
+  for (const f of ['start', 'end', 'top', 'bottom']) for (const t of ['start', 'end', 'top', 'bottom']) {
+    const ids = await page.evaluate(() => __setup([{ x: 100, y: 100 }, { x: 450, y: 350 }], []).ids);
+    await page.click(`.shape-group[data-id="${ids[0]}"] .port-${f}`);
+    await page.click(`.shape-group[data-id="${ids[1]}"] .port-${t}`);
+    const c = await page.evaluate(() => DiagramAPI.describe().connections);
+    const panel = await page.locator('.link-type strong').innerText();
+    if (c.length === 1 && c[0].fromPort === f && c[0].toPort === t && panel === c[0].link) made.push(panel);
+  }
+  assert(new Set(made).size === 16, 'clicking ports makes all 16 link types: ' + made.join(' '));
+  await page.screenshot({ path: path.join(__dirname, 'screenshots', 'shot-ports.png') });
 
   // 8. Speed: 40 shapes, 60 connections; move a shape and time the re-route.
   r = await page.evaluate(() => {

@@ -433,6 +433,7 @@
     flex:1;padding:7px 4px;border:none;background:var(--field-bg);color:var(--ink-soft);
     font-family:'IBM Plex Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;
   }
+  .link-type{margin:-4px 0 14px;}
   .port-toggle button+button{border-left:1px solid var(--border);}
   .port-toggle button.active{background:var(--accent);color:#fff;}
   .port-toggle button:hover:not(.active){background:var(--accent-soft);}
@@ -843,22 +844,16 @@ const TEMPLATE = `
               <line x1="-4" y1="2.2" x2="1.5" y2="2.2" />
             </g>
 
-            <g class="connect-icon port-start" title="Start (left)"
-               :class="{active: shape.id===connectFrom && connectFromPort==='start'}"
-               :transform="'translate(0 ' + (shape.type==='group' ? GROUP_HEAD : shape.h/2) + ')'"
-               @pointerdown.stop @click.stop="onPortClick(shape, 'start')">
+            <g v-for="p in portDefs" :key="p.id" class="connect-icon" :data-port="p.id"
+               :class="['port-' + p.id, {active: shape.id===connectFrom && connectFromPort===p.id}]"
+               :transform="'translate(' + portOffset(shape, p.id).x + ' ' + portOffset(shape, p.id).y + ')'"
+               @pointerdown.stop @click.stop="onPortClick(shape, p.id)">
+              <title>{{ p.name }} ({{ p.side }})</title>
               <circle class="touch-hit" r="18" /><circle r="8.5" />
-              <line x1="4" y1="0" x2="-3.5" y2="0" />
-              <polyline points="-0.5,-3 -3.5,0 -0.5,3" />
-            </g>
-
-            <g class="connect-icon port-end" title="End (right)"
-               :class="{active: shape.id===connectFrom && connectFromPort==='end'}"
-               :transform="'translate(' + shape.w + ' ' + (shape.type==='group' ? GROUP_HEAD : shape.h/2) + ')'"
-               @pointerdown.stop @click.stop="onPortClick(shape, 'end')">
-              <circle class="touch-hit" r="18" /><circle r="8.5" />
-              <line x1="-4" y1="0" x2="3.5" y2="0" />
-              <polyline points="0.5,-3 3.5,0 0.5,3" />
+              <g :transform="'rotate(' + p.rot + ')'">
+                <line x1="-4" y1="0" x2="3.5" y2="0" />
+                <polyline points="0.5,-3 3.5,0 0.5,3" />
+              </g>
             </g>
           </g>
 
@@ -1080,27 +1075,26 @@ const TEMPLATE = `
                     :title="k.desc" @click="selectedConn.kind = k.id"><span v-html="icons[k.icon]"></span>{{ k.short }}</button>
           </div>
         </div>
-        <div class="row2">
-          <div class="field">
-            <label>From port</label>
-            <div class="port-toggle">
-              <button :class="{active: selectedConn.fromPort==='end'}" @click="selectedConn.fromPort='end'">End</button>
-              <button :class="{active: selectedConn.fromPort==='start'}" @click="selectedConn.fromPort='start'">Start</button>
-            </div>
-          </div>
-          <div class="field">
-            <label>To port</label>
-            <div class="port-toggle">
-              <button :class="{active: selectedConn.toPort==='start'}" @click="selectedConn.toPort='start'">Start</button>
-              <button :class="{active: selectedConn.toPort==='end'}" @click="selectedConn.toPort='end'">End</button>
-            </div>
+        <div class="field">
+          <label>From port</label>
+          <div class="port-toggle from-ports">
+            <button v-for="p in portDefs" :key="p.id" :class="{active: fromPortOf(selectedConn)===p.id}" :title="p.name + ' (' + p.side + ')'"
+                    @click="selectedConn.fromPort=p.id">{{ p.name }}</button>
           </div>
         </div>
+        <div class="field">
+          <label>To port</label>
+          <div class="port-toggle to-ports">
+            <button v-for="p in portDefs" :key="p.id" :class="{active: toPortOf(selectedConn)===p.id}" :title="p.name + ' (' + p.side + ')'"
+                    @click="selectedConn.toPort=p.id">{{ p.name }}</button>
+          </div>
+        </div>
+        <div class="meta-row link-type">Link type: <strong>{{ linkType(selectedConn) }}</strong> ({{ portDef(fromPortOf(selectedConn)).name }} → {{ portDef(toPortOf(selectedConn)).name }})</div>
         <div class="field">
           <label>Note</label>
           <textarea class="panel-note" v-model="selectedConn.note" placeholder="Add a note…"></textarea>
         </div>
-        <div class="meta-row">{{ selectedConn.from }} ({{ selectedConn.fromPort }}) → {{ selectedConn.to }} ({{ selectedConn.toPort }})</div>
+        <div class="meta-row">{{ selectedConn.from }} ({{ fromPortOf(selectedConn) }}) → {{ selectedConn.to }} ({{ toPortOf(selectedConn) }})</div>
         <button class="delete-btn" @click="removeConnection(selectedConn.id)">Delete connection</button>
       </template>
 
@@ -1146,6 +1140,8 @@ const TEMPLATE = `
 // returns the new shape id</code>
         <code>DiagramAPI.addConnection(fromId, toId, 'label?', 'note?', fromPort, toPort, kind)
 // fromPort/toPort: 'start' (left) | 'end' (right)
+//   | 'top' | 'bottom'
+// Link type = first letters: ES, SB, TE, ...
 // defaults: fromPort='end', toPort='start'
 // kind: 'arrow' (default) | 'double-arrow'
 //   | 'one-many' | 'many-many'
@@ -1249,7 +1245,7 @@ DiagramAPI.getConnectionRoute(id)
 DiagramAPI.registerWebMCP()  // retry
 DiagramAPI.tools             // definitions</code>
         Shape types: <code style="display:inline;padding:2px 5px;margin:0;">'rectangle' | 'circle' | 'diamond'</code>
-        Every connection has a <code style="display:inline;padding:2px 5px;margin:0;">fromPort</code>/<code style="display:inline;padding:2px 5px;margin:0;">toPort</code> — a shape's left side is 'start', right side is 'end'. Any combination is valid (start→start and end→end loop around the side they share). In elbow mode this routes as an orthogonal connector; in point-to-point mode ports are ignored and a straight line is drawn between the shapes' centers, clipped to each boundary. Set ports via a shape's two side handles, the connection's properties panel, or the API.
+        Every connection has a <code style="display:inline;padding:2px 5px;margin:0;">fromPort</code>/<code style="display:inline;padding:2px 5px;margin:0;">toPort</code> — a shape's left side is 'start', right side is 'end', and the other two are 'top' and 'bottom'. The first letters give the link type: ES is End to Start, SB is Start to Bottom. Any combination is valid (start→start and end→end loop around the side they share). In elbow mode this routes as an orthogonal connector; in point-to-point mode ports are ignored and a straight line is drawn between the shapes' centers, clipped to each boundary. Set ports via a shape's four port handles, the connection's properties panel, or the API.
         Every shape and connection also has a plain-text <code style="display:inline;padding:2px 5px;margin:0;">note</code> field. Click its note icon to pin a draggable note card to it (a dotted line ties it to its owner) — multiple notes can stay open at once.
         PowerPoint export renders shapes as native autoshapes and connections as PowerPoint lines in whichever style (elbow or point-to-point) is currently active, scaled to fit one slide. Notes aren't included, since they're canvas annotations rather than part of the diagram.
         To resize a shape, select it and drag a square handle. Hold Shift on a corner to keep the proportions. You can also type a width and height in the properties panel.
@@ -1384,6 +1380,19 @@ const app = createApp({
     const edgeStyle = ref('elbow'); // 'elbow' | 'point' — global rendering mode for all connections
     const connectFrom = ref(null);
     const connectFromPort = ref(null);
+    // Ports: the connection points of a shape. dx, dy point out of the shape; rot turns the icon.
+    // The first letters of a connection's two ports are its link type (ES, SS, TB, ...).
+    const PORT_DEFS = [
+      { id: 'start', name: 'Start', side: 'left', dx: -1, dy: 0, rot: 180 },
+      { id: 'end', name: 'End', side: 'right', dx: 1, dy: 0, rot: 0 },
+      { id: 'top', name: 'Top', side: 'top', dx: 0, dy: -1, rot: -90 },
+      { id: 'bottom', name: 'Bottom', side: 'bottom', dx: 0, dy: 1, rot: 90 },
+    ];
+    const PORTS = PORT_DEFS.map(p => p.id);
+    function portDef(id) { return PORT_DEFS.find(p => p.id === id); }
+    function fromPortOf(c) { return PORTS.includes(c.fromPort) ? c.fromPort : 'end'; }
+    function toPortOf(c) { return PORTS.includes(c.toPort) ? c.toPort : 'start'; }
+    function linkType(c) { return (fromPortOf(c)[0] + toPortOf(c)[0]).toUpperCase(); }
     // connection types: an arrow at the target (default), arrows at both ends, a crow's foot at the target
     // (one-to-many), or crow's feet at both ends (many-to-many). Stored as conn.kind;
     // a connection without a kind (older files) is an arrow.
@@ -1547,8 +1556,7 @@ const app = createApp({
     function addConnection(fromId, toId, label, note, fromPort, toPort, kind) {
       if (fromId === toId) return null;
       if (!shapes.some(s => s.id === fromId) || !shapes.some(s => s.id === toId)) return null;
-      const fp = fromPort || 'end';
-      const tp = toPort || 'start';
+      const fp = fromPortOf({ fromPort }), tp = toPortOf({ toPort });
       if (connections.some(c => c.from === fromId && c.to === toId && c.fromPort === fp && c.toPort === tp)) return null;
       const id = uid('conn');
       connections.push({
@@ -1985,18 +1993,18 @@ const app = createApp({
     }
 
     // ---- resizing shapes ----
-    // A selected shape shows small square handles: corners NW, SW, SE, and the middle of the top
-    // and bottom edges. The left and right handles sit lower on their edge (80% down). The top-right
-    // corner and the middle of the left and right edges are not used because the note icon and the
-    // two connection ports are there. Dragging a corner with Shift held keeps the proportions.
+    // A selected shape shows small square handles: corners NW, SW, SE, and one on each edge. The
+    // left and right handles sit lower on their edge (80% down), the top and bottom ones to the left
+    // (20% across). The top-right corner and the middle of each edge are not used because the note
+    // icon and the four connection ports are there. Dragging a corner with Shift held keeps the proportions.
     const MIN_SHAPE_W = 40, MIN_SHAPE_H = 30;
     const resizeHandles = [
       { k: 'nw', fx: 0,   fy: 0,   ax: -1, ay: -1, cursor: 'nwse-resize' },
-      { k: 'n',  fx: 0.5, fy: 0,   ax: 0,  ay: -1, cursor: 'ns-resize' },
+      { k: 'n',  fx: 0.2, fy: 0,   ax: 0,  ay: -1, cursor: 'ns-resize' },
       { k: 'w',  fx: 0,   fy: 0.8, ax: -1, ay: 0,  cursor: 'ew-resize' },
       { k: 'e',  fx: 1,   fy: 0.8, ax: 1,  ay: 0,  cursor: 'ew-resize' },
       { k: 'sw', fx: 0,   fy: 1,   ax: -1, ay: 1,  cursor: 'nesw-resize' },
-      { k: 's',  fx: 0.5, fy: 1,   ax: 0,  ay: 1,  cursor: 'ns-resize' },
+      { k: 's',  fx: 0.2, fy: 1,   ax: 0,  ay: 1,  cursor: 'ns-resize' },
       { k: 'se', fx: 1,   fy: 1,   ax: 1,  ay: 1,  cursor: 'nwse-resize' },
     ];
     function onResizeHandleDown(shape, hd, evt) {
@@ -2235,9 +2243,9 @@ const app = createApp({
       dragging.offsetY = pt.y - shape.y;
     }
 
-    // Per-shape port handles: click a shape's Start (left) or End (right) port to begin a
+    // Per-shape port handles: click a shape's Start (left), End (right), Top or Bottom port to begin a
     // connection from that exact side, then click another shape's port (or its body, which
-    // defaults to entering at Start) to complete it — any combination of Start/End on either
+    // defaults to entering at Start) to complete it — any combination of ports on either
     // end is allowed. Clicking the same port again cancels.
     function onPortClick(shape, port) {
       if (mode.value === 'connect' && connectFrom.value) {
@@ -2468,16 +2476,21 @@ const app = createApp({
     function resetView() { viewport.x = 0; viewport.y = 0; viewport.scale = 1; }
 
     function portPoint(shape, port) {
-      // a group's ports sit at the bottom of its title row, clear of its members' ports
-      const y = shape.y + (shape.type === 'group' ? GROUP_HEAD : shape.h / 2);
-      const x = port === 'start' ? shape.x : shape.x + shape.w;
-      return { x, y };
+      const o = portOffset(shape, port);
+      return { x: shape.x + o.x, y: shape.y + o.y };
+    }
+    // Port position relative to the shape's top-left corner.
+    function portOffset(shape, port) {
+      if (port === 'top') return { x: shape.w / 2, y: 0 };
+      if (port === 'bottom') return { x: shape.w / 2, y: shape.h };
+      // a group's side ports sit at the bottom of its title row, clear of its members' ports
+      return { x: port === 'start' ? 0 : shape.w, y: shape.type === 'group' ? GROUP_HEAD : shape.h / 2 };
     }
 
     // ---- Elbow routing ----
-    // Every connection leaves its source port and enters its target port horizontally: 'start'
-    // is the left-middle of a shape and 'end' the right-middle (on the boundary for all three
-    // shape types). The first and last segments are at least PORT_STUB long, so arrowheads and
+    // Every connection leaves its source port and enters its target port at a right angle to
+    // the shape's side: horizontally at 'start' (left-middle) and 'end' (right-middle),
+    // vertically at 'top' and 'bottom'. The ports are on the boundary for all three shape types. The first and last segments are at least PORT_STUB long, so arrowheads and
     // crow's feet always sit on a straight run.
     //
     // All connections are routed together, in array order. For each one the router builds
@@ -2486,6 +2499,10 @@ const app = createApp({
     //   B. 5 segments: out of the source to x1, along a horizontal channel at y, to x2, in.
     //      This covers the way around same-side ports (start→start, end→end), targets
     //      "behind" the source, and the gap between two shapes as well as above or below them.
+    // Those two are for ports on the same axis (described for start/end; top/bottom is the same
+    // with x and y swapped). When one port is horizontal and the other vertical:
+    //   C. 2 segments: one corner.
+    //   D. 4 segments: out of the source to a channel, along it, across, and into the target.
     // Candidate channels are the clearance lines beside every shape plus lanes around the
     // midpoints. Cost = length + a penalty per bend + a heavy penalty for passing through a
     // shape + penalties for running on top of, or crossing, connections already routed.
@@ -2596,40 +2613,69 @@ const app = createApp({
     // geo: plain copies of the shapes and their channel lines, made once per routing pass
     // (reading Vue's reactive arrays inside the candidate loops is far too slow).
     function routeOne(conn, from, to, geo, placed) {
-      const fromPort = conn.fromPort || 'end', toPort = conn.toPort || 'start';
-      const p1 = portPoint(from, fromPort), p2 = portPoint(to, toPort);
-      const d1 = fromPort === 'start' ? -1 : 1, d2 = toPort === 'start' ? -1 : 1;
-      const s1x = p1.x + d1 * PORT_STUB, s2x = p2.x + d2 * PORT_STUB;
-      // The two end shapes block only their own inside; other shapes keep half a channel clear.
+      const P1 = portPoint(from, conn.fromPort), P2 = portPoint(to, conn.toPort);
+      const def1 = portDef(conn.fromPort), def2 = portDef(conn.toPort);
+      // Candidates are built in a frame where the source leaves along x. For a top or bottom
+      // source port, x and y are swapped on the way in and back again in add().
+      const swap = def1.dx === 0;
+      const flip = (q) => swap ? { x: q.y, y: q.x } : q;
+      const box = (s) => swap ? { x: s.y, y: s.x, w: s.h, h: s.w } : s;
+      const p1 = flip(P1), p2 = flip(P2), a = box(from), b = box(to);
+      const xEdges = swap ? geo.yEdges : geo.xEdges, yEdges = swap ? geo.xEdges : geo.yEdges;
+      const d1 = def1.dx + def1.dy, d2 = def2.dx + def2.dy;
+      const mixed = (def1.dx === 0) !== (def2.dx === 0);
+      const s1x = p1.x + d1 * PORT_STUB;
       const pad = ROUTE_CLEAR / 2;
       const lanes = (v, sign) => [0, 1, 2, 3].map(k => v + sign * k * LANE_GAP);
       const lanesBoth = (v) => [v, v - LANE_GAP, v + LANE_GAP, v - 2 * LANE_GAP, v + 2 * LANE_GAP];
-      const midX = (s1x + s2x) / 2, midY = (p1.y + p2.y) / 2;
       const okX1 = (x) => (x - p1.x) * d1 >= PORT_STUB - 0.01;
-      const okX2 = (x) => (x - p2.x) * d2 >= PORT_STUB - 0.01;
+      const top = Math.min(a.y, b.y) - ROUTE_CLEAR, bottom = Math.max(a.y + a.h, b.y + b.h) + ROUTE_CLEAR;
+      const gapTop = Math.min(a.y + a.h, b.y + b.h), gapBottom = Math.max(a.y, b.y);
+      const yGap = gapBottom > gapTop ? lanesBoth((gapTop + gapBottom) / 2) : [];
 
       // Build every candidate with its cheap cost (length + bends + tie-break) first.
       const cands = [];
       const add = (pts, tie) => {
-        const simple = simplifyRoute(pts);
+        const simple = simplifyRoute(pts.map(flip));
         let base = (simple.length - 2) * ROUTE_COST.bend + tie;
         for (let i = 0; i < simple.length - 1; i++) base += Math.abs(simple[i + 1].x - simple[i].x) + Math.abs(simple[i + 1].y - simple[i].y);
         cands.push({ pts: simple, base, tie });
       };
 
-      // A: one vertical channel that is beyond both stubs.
-      nearestChannels(geo.xEdges.concat(lanesBoth(midX), lanes(s1x, d1), lanes(s2x, d2)).filter(x => okX1(x) && okX2(x)), midX, ROUTE_MAX_CHANNELS)
-        .forEach(x => add([p1, { x, y: p1.y }, { x, y: p2.y }, p2], ROUTE_COST.center * Math.abs(x - midX)));
+      if (!mixed) {
+        const s2x = p2.x + d2 * PORT_STUB;
+        const midX = (s1x + s2x) / 2, midY = (p1.y + p2.y) / 2;
+        const okX2 = (x) => (x - p2.x) * d2 >= PORT_STUB - 0.01;
+        // A: one vertical channel that is beyond both stubs.
+        nearestChannels(xEdges.concat(lanesBoth(midX), lanes(s1x, d1), lanes(s2x, d2)).filter(x => okX1(x) && okX2(x)), midX, ROUTE_MAX_CHANNELS)
+          .forEach(x => add([p1, { x, y: p1.y }, { x, y: p2.y }, p2], ROUTE_COST.center * Math.abs(x - midX)));
 
-      // B: a horizontal channel between two vertical runs, one beyond each stub.
-      const xs1 = nearestChannels(geo.xEdges.concat(lanes(s1x, d1)).filter(okX1), s1x, 2);
-      const xs2 = nearestChannels(geo.xEdges.concat(lanes(s2x, d2)).filter(okX2), s2x, 2);
-      const top = Math.min(from.y, to.y) - ROUTE_CLEAR, bottom = Math.max(from.y + from.h, to.y + to.h) + ROUTE_CLEAR;
-      const gapTop = Math.min(from.y + from.h, to.y + to.h), gapBottom = Math.max(from.y, to.y);
-      const ys = nearestChannels(geo.yEdges.concat(lanes(top, -1), lanes(bottom, 1), gapBottom > gapTop ? lanesBoth((gapTop + gapBottom) / 2) : [], [p1.y, p2.y]), midY, ROUTE_MAX_DETOURS);
-      xs1.forEach(x1 => xs2.forEach(x2 => ys.forEach(y => {
-        add([p1, { x: x1, y: p1.y }, { x: x1, y }, { x: x2, y }, { x: x2, y: p2.y }, p2], ROUTE_COST.center * Math.abs(y - midY));
-      })));
+        // B: a horizontal channel between two vertical runs, one beyond each stub.
+        const xs1 = nearestChannels(xEdges.concat(lanes(s1x, d1)).filter(okX1), s1x, 2);
+        const xs2 = nearestChannels(xEdges.concat(lanes(s2x, d2)).filter(okX2), s2x, 2);
+        const ys = nearestChannels(yEdges.concat(lanes(top, -1), lanes(bottom, 1), yGap, [p1.y, p2.y]), midY, ROUTE_MAX_DETOURS);
+        xs1.forEach(x1 => xs2.forEach(x2 => ys.forEach(y => {
+          add([p1, { x: x1, y: p1.y }, { x: x1, y }, { x: x2, y }, { x: x2, y: p2.y }, p2], ROUTE_COST.center * Math.abs(y - midY));
+        })));
+      } else {
+        // The target is entered along y.
+        const s2y = p2.y + d2 * PORT_STUB;
+        const okY2 = (y) => (y - p2.y) * d2 >= PORT_STUB - 0.01;
+        // C: one corner.
+        if (okX1(p2.x) && okY2(p1.y)) add([p1, { x: p2.x, y: p1.y }, p2], 0);
+        // D: a vertical channel beyond the source stub, then a horizontal one beyond the target
+        // stub. The channels just outside the two end shapes are always tried.
+        const left = Math.min(a.x, b.x) - ROUTE_CLEAR, right = Math.max(a.x + a.w, b.x + b.w) + ROUTE_CLEAR;
+        const gapL = Math.min(a.x + a.w, b.x + b.w), gapR = Math.max(a.x, b.x);
+        const xGap = gapR > gapL ? [(gapL + gapR) / 2] : [];
+        const xs = nearestChannels(xEdges.concat(lanes(s1x, d1), xGap).filter(okX1), s1x, 4)
+          .concat([b.x - ROUTE_CLEAR, b.x + b.w + ROUTE_CLEAR, left, right].concat(xGap).filter(okX1));
+        const ys = nearestChannels(yEdges.concat(lanes(s2y, d2), yGap).filter(okY2), s2y, 4)
+          .concat([a.y - ROUTE_CLEAR, a.y + a.h + ROUTE_CLEAR, top, bottom].concat(yGap.slice(0, 1)).filter(okY2));
+        new Set(xs).forEach(x => new Set(ys).forEach(y => {
+          add([p1, { x, y: p1.y }, { x, y }, { x: p2.x, y }, p2], ROUTE_COST.center * (Math.abs(x - s1x) + Math.abs(y - s2y)));
+        }));
+      }
 
       // Add the shape penalty (cheap: one test per shape and segment), sort, then add the
       // penalty for other connections (expensive) cheapest first. A candidate whose partial
@@ -2659,7 +2705,7 @@ const app = createApp({
         const cost = c.part + placedCost(c.pts, placed, best - c.part, conn.k1, conn.k2);
         if (cost < best) { best = cost; bestPts = c.pts; }
       }
-      return bestPts || [p1, { x: s1x, y: p1.y }, { x: s2x, y: p2.y }, p2];
+      return bestPts || simplifyRoute([P1, { x: P2.x, y: P1.y }, P2]);
     }
     const elbowRoutes = computed(() => {
       const geo = { shapes: [], xEdges: [], yEdges: [] };
@@ -2676,7 +2722,7 @@ const app = createApp({
       connections.forEach(c => {
         const from = byId.get(c.from), to = byId.get(c.to);
         if (!from || !to) return;
-        const fp = c.fromPort || 'end', tp = c.toPort || 'start';
+        const fp = fromPortOf(c), tp = toPortOf(c);
         const k1 = c.from + ':' + fp, k2 = c.to + ':' + tp;
         const pts = routeOne({ fromPort: fp, toPort: tp, k1, k2 }, from, to, geo, placed);
         map.set(c.id, pts);
@@ -3791,7 +3837,6 @@ const app = createApp({
     // These calls throw an Error with a clear message on bad input, so a person at the console
     // or an LLM can correct the call. Deletes go through requestDelete, which asks the user first.
     const SHAPE_TYPES = ['rectangle', 'circle', 'diamond'];
-    const PORTS = ['start', 'end'];
     const SKETCH_KINDS = ['rectangle', 'circle', 'diamond', 'triangle', 'arrow', 'underline'];
     const SKETCH_SIZES = {
       rectangle: { w: 160, h: 90 }, circle: { w: 110, h: 110 }, diamond: { w: 140, h: 100 },
@@ -3923,7 +3968,7 @@ const app = createApp({
       if (!shapes.some(s => s.id === toId)) throw new Error('No shape with id "' + toId + '"');
       if (fromId === toId) throw new Error('A shape cannot connect to itself');
       const fp = opts.fromPort || 'end', tp = opts.toPort || 'start', kind = opts.kind || 'arrow';
-      if (!PORTS.includes(fp) || !PORTS.includes(tp)) throw new Error('fromPort and toPort must be "start" (left side) or "end" (right side)');
+      if (!PORTS.includes(fp) || !PORTS.includes(tp)) throw new Error('fromPort and toPort must be "start" (left side), "end" (right side), "top" or "bottom"');
       if (!CONN_KIND_IDS.includes(kind)) throw new Error('kind must be one of: ' + CONN_KIND_IDS.join(', '));
       const id = addConnection(fromId, toId, opts.label, opts.note, fp, tp, kind);
       if (!id) throw new Error('These two shapes already have a connection with the same ports');
@@ -4116,7 +4161,7 @@ const app = createApp({
         shapes: shapes.map(s => Object.assign({ id: s.id, type: s.type, label: s.label, x: r(s.x), y: r(s.y), w: r(s.w), h: r(s.h), fill: s.fill, note: s.note || '' },
           isGroup(s) ? { groupId: s.gid, members: (s.members || []).slice(), connections: (s.conns || []).slice() } : {},
           parentGroupOf(s.id) ? { inGroup: parentGroupOf(s.id).id } : {})),
-        connections: connections.map(c => ({ id: c.id, from: c.from, to: c.to, label: c.label || '', kind: connKindOf(c), fromPort: c.fromPort, toPort: c.toPort, note: c.note || '' })),
+        connections: connections.map(c => ({ id: c.id, from: c.from, to: c.to, label: c.label || '', kind: connKindOf(c), fromPort: fromPortOf(c), toPort: toPortOf(c), link: linkType(c), note: c.note || '' })),
         drawings: lines.map(l => {
           let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
           l.points.forEach(q => { minX = Math.min(minX, q.x); minY = Math.min(minY, q.y); maxX = Math.max(maxX, q.x); maxY = Math.max(maxY, q.y); });
@@ -4157,7 +4202,7 @@ const app = createApp({
         }, noteProps), [],
         (a) => ({ id: apiAddShape(a.type || 'rectangle', a) })),
       tool('connect_shapes',
-        'Connect two shapes with a connector. Returns the connection id. Ports: "start" is the left side of a shape, "end" the right side (default from end to start). kind: arrow (default), double-arrow (arrows at both ends), one-many (crow\'s foot at target), many-many (crow\'s feet at both ends).',
+        'Connect two shapes with a connector. Returns the connection id. Ports: "start" is the left side of a shape, "end" the right side, "top" and "bottom" the other two (default from end to start). kind: arrow (default), double-arrow (arrows at both ends), one-many (crow\'s foot at target), many-many (crow\'s feet at both ends).',
         Object.assign({
           from: { type: 'string', description: 'Id of the source shape' },
           to: { type: 'string', description: 'Id of the target shape' },
@@ -4167,7 +4212,7 @@ const app = createApp({
         }, noteProps), ['from', 'to'],
         (a) => ({ id: apiConnect(a.from, a.to, a) })),
       tool('set_connection_style',
-        'Choose how every connector in the diagram is drawn: "elbow" (horizontal and vertical segments between the side ports) or "straight" (a direct line between shape centers). This is one setting for the whole diagram.',
+        'Choose how every connector in the diagram is drawn: "elbow" (horizontal and vertical segments between the ports) or "straight" (a direct line between shape centers). This is one setting for the whole diagram.',
         { style: { type: 'string', enum: ['elbow', 'straight'] } }, ['style'],
         (a) => ({ connectionStyle: setConnectionStyle(a.style) })),
       tool('set_note',
@@ -4819,7 +4864,7 @@ const app = createApp({
       selectedShape, selectedConn, svgEl, fileInput, viewport, mousePos, viewportTransform,
       showApiDoc, palette, icons: ICONS, panelVisible, hasObjects, showClearConfirm, deleteRequest, answerDelete,
       addShape, removeShape, addConnection, removeConnection, selectShape, selectConnection, clearSelection,
-      onShapeMouseDown, onPortClick, portPoint, onSvgMouseDownCapture, onSvgMouseDown, onCanvasClick, onMouseMove, onMouseUp, onWheel, zoomBy, resetView,
+      onShapeMouseDown, onPortClick, portPoint, portOffset, portDefs: PORT_DEFS, portDef, fromPortOf, toPortOf, linkType, onSvgMouseDownCapture, onSvgMouseDown, onCanvasClick, onMouseMove, onMouseUp, onWheel, zoomBy, resetView,
       connPath, connMid, diamondPoints, boundaryPoint, autoArrange, clearAll, resetAll, confirmClearAll, confirmClearAllYes, exportJSON, exportPPTX, exportPNG, importJSON,
       triggerImport, deleteSelected, toggleConnectMode, getState, loadState, Math,
       theme, toggleTheme, lineInk, isTouch, hasTouch, multiMode, toggleMultiMode,

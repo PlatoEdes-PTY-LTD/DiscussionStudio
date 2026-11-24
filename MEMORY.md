@@ -25,7 +25,7 @@ There is no package manifest, build configuration, or automated test suite in th
 ## Features and data
 
 - Shapes: rectangle, circle/ellipse, diamond; draggable and resizable, minimum 40 × 30 canvas units. Shift preserves proportions during corner resizing.
-- Connections: shape-to-shape links with `start` (left) and `end` (right) ports. Global `edgeStyle` is `elbow` or `point`. Elbow routing supports all four port combinations; point routing uses shape boundaries.
+- Connections: shape-to-shape links with `start` (left), `end` (right), `top` and `bottom` ports. Global `edgeStyle` is `elbow` or `point`. Elbow routing supports all 16 port combinations; point routing uses shape boundaries.
 - Notes: draggable cards attached to shapes or connections, stored on their owner with `note`, `noteOpen`, and note-offset fields.
 - Free lines: straight lines with optional arrows and freehand drawings; color, width, movement, and straight-line endpoint editing. Shift snaps straight lines to 45-degree increments.
 - Auto-arrange lays shapes out from left to right by dependency and does not move free lines.

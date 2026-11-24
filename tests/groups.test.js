@@ -50,11 +50,11 @@ const assert = (c, m) => { if (!c) { throw new Error('FAIL: ' + m); } console.lo
   const g1 = st.shapes.find(s => s.id === g.id);
   assert(g1.label === 'Backend' && g1.note === 'group note', 'group label and note edited');
 
-  // drag the group frame by its title row
+  // drag the group frame by its title row (left of the Top port in the middle)
   const box = await page.locator('.group-frame').first().boundingBox();
-  await page.mouse.move(box.x + box.width / 2, box.y + 10);
+  await page.mouse.move(box.x + box.width / 4, box.y + 10);
   await page.mouse.down();
-  await page.mouse.move(box.x + box.width / 2 + 60, box.y + 50, { steps: 5 });
+  await page.mouse.move(box.x + box.width / 4 + 60, box.y + 50, { steps: 5 });
   await page.mouse.up();
   await tick();
   st = await state();

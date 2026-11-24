@@ -2,6 +2,7 @@
 
 ## 2026-11-25
 
+- Added: top and bottom connection points. Every shape and group now has four: Start (left), End (right), Top, and Bottom. All 16 link types work (ES, EE, SS, SE, ST, TS, SB, BS, ET, TE, EB, BE, TT, TB, BT, BB), and the panel and `get_diagram` show the link type. The top and bottom resize handles moved left to make room.
 - Added: a connection type, Double arrow, with arrows at both ends. Pick it from Connect or in the side panel, or use `kind: 'double-arrow'` in `DiagramAPI` and the WebMCP tools. PNG and PowerPoint exports include both arrows.
 - Fixed: in PowerPoint exports, arrowheads on lines that run right to left or straight up are now at the correct end.
 

@@ -32,7 +32,8 @@ Use these terms in the same way in all code, comments, and messages to the user.
 | Freehand drawing | A free line that the user draws with the mouse. It has many points. |
 | Tool | A mode of the canvas: `select`, `connect`, `line`, or `draw`. |
 | Connection | A line between two shapes. Its type sets the ends: an arrow at the target, arrows at both ends (double arrow), a crow's foot at the target (one to many), or crow's feet at both ends (many to many). |
-| Port | A connection point on the side of a shape. `start` is the left side. `end` is the right side. |
+| Port | A connection point on a side of a shape. `start` is the left side, `end` the right side, `top` and `bottom` the other two. |
+| Link type | The first letters of a connection's two ports, for example ES (end to start) or SB (start to bottom). The function `linkType` calculates it; it is not stored. There are 16 link types. |
 | Note | A text card attached to one shape, one connection, or one line. A dotted line ties it to its owner. |
 | Label | The short text that shows inside a shape or on a connection. |
 | Edge style | The drawing mode for all connections. `elbow` or `point`. |
@@ -160,7 +161,7 @@ A group (`type: 'group'`) has these extra fields. See section 6C.
 |---|---|---|
 | `id` | string | `conn_1`, `conn_2`, and so on. |
 | `from`, `to` | string | The ids of the two shapes. |
-| `fromPort`, `toPort` | string | `start` or `end`. Default: `fromPort` is `end`, `toPort` is `start`. |
+| `fromPort`, `toPort` | string | `start`, `end`, `top`, or `bottom`. Default: `fromPort` is `end`, `toPort` is `start`. |
 | `kind` | string | `arrow`, `double-arrow`, `one-many`, or `many-many`. Default: `arrow`. A connection without `kind` (an older file) is an arrow. |
 | `label` | string | Text on the line. |
 | `note`, `noteOpen`, `noteOffsetX`, `noteOffsetY` | | Same meaning as for a shape. |
@@ -325,7 +326,7 @@ The user can drag a multi-selection by any selected shape or line. Selected conn
 | Delete a group | Deletes the group and everything in it. |
 | `Ctrl`/`Cmd`+`C`, then `Ctrl`/`Cmd`+`V` | Copies the selection and pastes a copy 24 units down and right (more for each further paste). `Ctrl`/`Cmd`+`D` duplicates. |
 
-A group is a shape: it has a label, a note, a fill, two connection ports, and it can be connected, selected, copied, and grouped again (groups can be nested). Its ports sit at the bottom of its title row, so they do not sit next to its members' ports.
+A group is a shape: it has a label, a note, a fill, four connection ports, and it can be connected, selected, copied, and grouped again (groups can be nested). Its side ports sit at the bottom of its title row, so they do not sit next to its members' ports.
 
 **Context menu.** Right-click the canvas, or long-press on a touch screen, for Copy, Paste here, Duplicate, Group, Ungroup, Select group, and Delete. Entries that do not apply are disabled.
 
@@ -355,12 +356,17 @@ The global value `edgeStyle` sets the drawing mode for all connections.
 
 The computed value `elbowRoutes` routes all connections in one pass, in the order of the `connections` array. `connRoute(conn)` reads the route from it. Vue caches the value and computes it again only when a shape's position or size, or a connection's ends or ports, change. The pass reads plain copies of the shapes once; do not read the reactive arrays inside the candidate loops, because that is much slower.
 
-The ports are not changed. Each route leaves the source port and enters the target port horizontally, with a straight run of at least `PORT_STUB` (24) units at each end. Arrowheads and crow's feet sit on that run.
+The ports are not changed. Each route leaves the source port and enters the target port at a right angle to the shape's side (horizontal at `start` and `end`, vertical at `top` and `bottom`), with a straight run of at least `PORT_STUB` (24) units at each end. Arrowheads and crow's feet sit on that run.
 
-For each connection, `routeOne` makes candidate routes of two kinds:
+For each connection, `routeOne` makes candidate routes. When both ports are on the same axis there are two kinds (described for `start`/`end`; for `top`/`bottom` x and y are swapped):
 
 - **3 segments.** Out of the source, along a vertical channel at `x`, into the target. The channel must be beyond the run at both ends.
 - **5 segments.** Out of the source to `x1`, along a horizontal channel at `y`, then to `x2` and into the target. This kind covers same-side ports (`end→end`, `start→start`), a target behind the source, and the gap between two shapes as well as the space above or below them.
+
+When one port is horizontal and the other vertical, there are two other kinds:
+
+- **2 segments.** One corner.
+- **4 segments.** Out of the source to a channel, along it, across on a second channel beyond the target's run, and into the target.
 
 Candidate channels are the lines `ROUTE_CLEAR` (18) units beside each shape, plus lanes `LANE_GAP` (12) units apart around the middle, the stubs, and the gap between the two shapes. Each list keeps the channels nearest to the middle (`ROUTE_MAX_CHANNELS`, `ROUTE_MAX_DETOURS`).
 
@@ -397,10 +403,10 @@ When the user selects a shape in `select` mode, seven square handles show on it.
 | Handle | Position | Effect |
 |---|---|---|
 | `nw`, `sw`, `se` | Corners | Change width and height. |
-| `n`, `s` | Middle of top and bottom edge | Change height. |
+| `n`, `s` | Top and bottom edge, 20% across | Change height. |
 | `w`, `e` | Left and right edge, 80% down | Change width. |
 
-There is no handle at the top-right corner or at the middle of the left and right edges. The note icon and the two connection ports are in those places.
+There is no handle at the top-right corner or at the middle of any edge. The note icon and the four connection ports are in those places.
 
 The edge or corner that is opposite to the handle does not move. Hold `Shift` on a corner handle to keep the width-to-height ratio. The minimum size is 40 × 30. The user can also type a width and a height in the properties panel. The panel clamps the values to the minimum.
 
