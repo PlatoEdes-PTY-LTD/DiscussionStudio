@@ -804,7 +804,7 @@ Do all of these tests. Do not trust the code by inspection alone.
 
 | Item | Fact |
 |---|---|
-| Browser storage | Diagrams are not stored. `localStorage` keeps only the theme choice and the live-sharing name. Data exists only while the page is open. This includes all open files. The user must export JSON to keep data. |
+| Browser storage | `sessionStorage` (`discussion-studio-session`) keeps all open files, the active file, and the zoom positions through a page refresh (`saveSession`, `restoreSession`). Each browser tab has its own copy. It is removed when the browser tab closes. Live sessions, the clipboard, and the selection are not kept. `localStorage` keeps only the theme choice and the live-sharing name. The user must export JSON to keep data. |
 | Native dialogs | They can fail in sandboxed viewers. Use modal dialogs. See Section 6.3. |
 | Fonts | The page links Google Fonts. Without network, the browser uses fallback fonts. |
 | Notes in PowerPoint | Not exported. |

@@ -2,6 +2,7 @@
 
 ## 2026-11-25
 
+- Added: refreshing the page keeps the open tabs, their drawings, and their zoom positions. They are held in the browser tab until you close it; export JSON to keep them longer.
 - Changed: Auto-arrange asks for the direction (left to right or top to bottom) and whether it may reconnect edges to other connection points. Layers and shapes are now centered, so edges run straighter. `DiagramAPI.autoArrange` and the WebMCP tool `auto_arrange` take `direction` and `reconnect`.
 - Added: drag an end of a selected connection to another connection point, on the same shape or a different one. New `DiagramAPI` call: `reconnect`.
 - Changed: connection points are small solid dots and show only on a hovered or selected shape. On touch screens, select a shape to see its dots; while connecting, all dots show.

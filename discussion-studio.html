@@ -3292,6 +3292,63 @@ const app = createApp({
       return docs.map(d => ({ id: d.id, name: d.name, active: d.id === activeDocId.value, changed: docDirty(d) }));
     }
 
+    // ---- keep open files across a page refresh ----
+    // Every file (data, name, zoom position, changed mark) is kept in sessionStorage, which belongs
+    // to one browser tab: it survives a refresh, two browser tabs never overwrite each other, and the
+    // browser drops it when the tab is closed. Saved on a short timer and when the page is left.
+    const SESSION_KEY = 'discussion-studio-session';
+    const SESSION_SAVE_MS = 2000;
+    let sessionTimer = null, lastSession = '', sessionSaveFailed = false;
+    function saveSession() {
+      if (!activeDoc.value) return;
+      const json = JSON.stringify({
+        v: 1, active: activeDocId.value, untitledCount,
+        docs: docs.map(d => {
+          const snap = d.id === activeDocId.value ? currentSnapshot() : d.saved;
+          // an unchanged file needs no baseline of its own: it equals the state
+          const changed = stateKey(snap.state) !== d.baseline;
+          return { id: d.id, name: d.name, fileName: d.fileName, state: snap.state, viewport: snap.viewport, baseline: changed ? d.baseline : null };
+        }),
+      });
+      if (json === lastSession) return;
+      try {
+        sessionStorage.setItem(SESSION_KEY, json);
+        lastSession = json;
+        sessionSaveFailed = false;
+      } catch (e) {
+        if (!sessionSaveFailed) showToast('This browser cannot keep your latest changes after a refresh. Export JSON to keep them.', true);
+        sessionSaveFailed = true;
+      }
+    }
+    // Brings the files back. Returns false when there is nothing usable to restore.
+    function restoreSession() {
+      let restored;
+      try {
+        const data = JSON.parse(sessionStorage.getItem(SESSION_KEY));
+        if (!data || !Array.isArray(data.docs) || !data.docs.length) return false;
+        restored = data.docs.map(r => {
+          const st = normalizeState(r.state), v = r.viewport || {};
+          if (!/^doc_\d+$/.test(r.id)) throw new Error('bad file id');
+          if (!st.shapes.every(s => s && typeof s.id === 'string' && ['x', 'y', 'w', 'h'].every(f => Number.isFinite(s[f])))) throw new Error('bad shape');
+          if (!st.connections.every(c => c && typeof c.id === 'string')) throw new Error('bad connection');
+          return {
+            id: r.id, name: String(r.name || 'Untitled'), fileName: String(r.fileName || ''),
+            baseline: typeof r.baseline === 'string' ? r.baseline : stateKey(st),
+            saved: { state: st, viewport: { x: Number(v.x) || 0, y: Number(v.y) || 0, scale: Number(v.scale) > 0 ? Number(v.scale) : 1 } },
+          };
+        });
+        docs.splice(0, docs.length, ...restored);
+        nextDocId = Math.max(...restored.map(d => +d.id.slice(4))) + 1;
+        untitledCount = Number(data.untitledCount) || 0;
+        const cur = docs.find(d => d.id === data.active) || docs[0];
+        activeDocId.value = cur.id;
+        importedFileName.value = cur.fileName;
+        applySnapshot(cur.saved);
+        return true;
+      } catch (e) { return false; }   // storage blocked or damaged data: start fresh
+    }
+    function onVisibilityChange() { if (document.visibilityState === 'hidden') saveSession(); }
+
     // Base name proposed for exports: the imported file's name (minus extension), else "diagram".
     function defaultExportBase() {
       return importedFileName.value.replace(/\.[^.\\/]+$/, '') || 'diagram';
@@ -4964,6 +5021,7 @@ const app = createApp({
       if (userAction) showToast(wasHost ? 'Sharing stopped. The diagram stays in this tab.' : 'You left the session. Your copy stays in this tab.');
     }
     function onPageHide() {
+      saveSession();
       if (collab.status !== 'live') return;
       if (collab.role === 'host') broadcast({ t: 'bye' }); else safeSend(hostConn, { t: 'bye' });
     }
@@ -5006,18 +5064,22 @@ const app = createApp({
       if (systemDark && systemDark.addEventListener) systemDark.addEventListener('change', onSystemTheme);
       document.addEventListener('scroll', keepFrameInPlace, true);
 
-      const a = addShape('rectangle', { x: 80, y: 80, label: 'Start' });
-      const b = addShape('rectangle', { x: 320, y: 40, label: 'Fetch data' });
-      const c = addShape('diamond', { x: 320, y: 220, label: 'Valid?' });
-      const d = addShape('rectangle', { x: 580, y: 40, label: 'Process' });
-      const e2 = addShape('circle', { x: 580, y: 240, label: 'Error' });
-      addConnection(a, b);
-      addConnection(a, c);
-      addConnection(b, d);
-      addConnection(c, e2);
-      clearSelection();
-      const first = addDoc(getState(), untitledName(), '');
-      activeDocId.value = first.id;
+      if (!restoreSession()) {
+        const a = addShape('rectangle', { x: 80, y: 80, label: 'Start' });
+        const b = addShape('rectangle', { x: 320, y: 40, label: 'Fetch data' });
+        const c = addShape('diamond', { x: 320, y: 220, label: 'Valid?' });
+        const d = addShape('rectangle', { x: 580, y: 40, label: 'Process' });
+        const e2 = addShape('circle', { x: 580, y: 240, label: 'Error' });
+        addConnection(a, b);
+        addConnection(a, c);
+        addConnection(b, d);
+        addConnection(c, e2);
+        clearSelection();
+        const first = addDoc(getState(), untitledName(), '');
+        activeDocId.value = first.id;
+      }
+      sessionTimer = setInterval(saveSession, SESSION_SAVE_MS);
+      document.addEventListener('visibilitychange', onVisibilityChange);
 
       window.DiagramAPI = {
         addLine: (x1, y1, x2, y2, opts) => addLine('line', [{ x: x1, y: y1 }, { x: x2, y: y2 }], opts),
@@ -5073,6 +5135,8 @@ const app = createApp({
       document.removeEventListener('scroll', keepFrameInPlace, true);
       window.removeEventListener('keydown', onKeydown);
       window.removeEventListener('pagehide', onPageHide);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      clearInterval(sessionTimer);
       if (collab.status !== 'off') stopCollab(false);
       if (systemDark && systemDark.removeEventListener) systemDark.removeEventListener('change', onSystemTheme);
     });

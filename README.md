@@ -115,7 +115,7 @@ Things to know:
 
 ## Privacy and offline use
 
-Your diagram data is processed in the browser and is not uploaded to a storage service. The app does not save diagrams in browser storage; export JSON to keep a copy. It remembers only your live-sharing name. During live sharing, the diagram travels directly between the browsers in the session. The free PeerJS server only introduces the browsers to each other and does not receive the diagram. The app itself runs offline, with system fonts used when the optional online fonts are unavailable.
+Your diagram data is processed in the browser and is not uploaded to a storage service. Refreshing the page keeps your open tabs and their drawings: they are held in the browser tab's session storage until you close that tab, so export JSON to keep a copy. The app also remembers your theme choice and live-sharing name. A refresh ends your part in a live session; your copy of the diagram stays. During live sharing, the diagram travels directly between the browsers in the session. The free PeerJS server only introduces the browsers to each other and does not receive the diagram. The app itself runs offline, with system fonts used when the optional online fonts are unavailable.
 
 ## Development
 

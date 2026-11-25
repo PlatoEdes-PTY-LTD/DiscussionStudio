@@ -42,9 +42,9 @@ There is no package manifest, build configuration, or automated test suite in th
 - Dirty checks compare serialized diagram data with the baseline; opening, closing, or moving notes also counts as a change.
 - JSON export updates the document name and baseline. PowerPoint export does not mark JSON data as saved.
 - Live sharing (PeerJS 1.5.4 embedded as its own script block): host/guest star, per-item ops `{k:'shapes:id', v}` diffed every 90 ms against `syncBase`, host relays all ops in arrival order, guests skip ops for items with pending local changes. Session ids get a per-person suffix (`shape_7_k2q`). Code lives in the `// ---- live sharing ----` block in `setup()`; see technical docs Section 10A.
-- No browser persistence or undo exists. Closing or reloading the page discards open diagrams; users must export JSON.
+- `sessionStorage` keeps all open files through a refresh (`saveSession`/`restoreSession`); closing the browser tab discards them, so users must export JSON. No undo exists.
 - Reset clears the active document and transient state, resets its viewport and counters, and leaves other tabs intact. It preserves the connection edge style.
-- Initial load creates a sample diagram with five shapes and four connections.
+- Initial load, when there is nothing to restore, creates a sample diagram with five shapes and four connections.
 
 ## Export and API
 
