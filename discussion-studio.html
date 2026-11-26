@@ -102,11 +102,13 @@
   .topbar{
     display:flex;align-items:center;gap:10px;flex-wrap:wrap;row-gap:8px;
     background:linear-gradient(90deg, var(--topbar-a), var(--topbar-b));color:#FFFFFF;
-    padding:10px 16px;
+    padding:10px 62px 10px 16px;   /* room on the right for the pinned help button */
     flex-shrink:0;
     border-bottom:1px solid #0000;
     z-index:5;
+    position:relative;
   }
+  .topbar > .help-btn{position:absolute;top:10px;right:16px;border-color:rgba(255,255,255,.32);}
   .brand{
     font-family:'Space Grotesk', sans-serif;
     font-weight:600;font-size:16px;letter-spacing:0.2px;
@@ -190,6 +192,7 @@
   .tbtn:disabled{opacity:.35;cursor:not-allowed;}
   .tbtn:disabled:hover{background:transparent;}
   .icon-only{padding:7px 8px;}
+  a.tbtn{text-decoration:none;}
 
   .edge-style-toggle{display:flex;border:1px solid rgba(255,255,255,.32);border-radius:8px;overflow:hidden;}
   .edge-style-toggle button{
@@ -266,7 +269,8 @@
     .panel{position:absolute;top:0;right:0;bottom:0;z-index:8;width:min(300px, 88vw) !important;box-shadow:-12px 0 30px -12px rgba(0,0,0,.35);}
     .app-tagline{display:none;}
     .canvas-hint{display:none;}
-    .topbar{padding:8px 10px;gap:6px;}
+    .topbar{padding:8px 52px 8px 10px;gap:6px;}
+    .topbar > .help-btn{top:8px;right:10px;}
   }
   .canvas-wrap{flex:1;position:relative;min-width:0;}
   svg.board{width:100%;height:100%;display:block;cursor:grab;}
@@ -659,6 +663,7 @@ const ICONS = {
   pptx: '<svg width="18" height="18" viewBox="0 0 22 22" fill="none"><rect x="2.5" y="4.5" width="17" height="10.5" rx="1.3" stroke="currentColor" stroke-width="1.7"/><path d="M2.5 15 L9.5 19 M19.5 15 L12.5 19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M7 12 V8 h2 a1.7 1.7 0 0 1 0 3.4 H7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   upload: '<svg width="18" height="18" viewBox="0 0 22 22" fill="none"><path d="M11 14.5 V3.5 M6.5 7.5 L11 3 L15.5 7.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 16.5 V18 a1 1 0 0 0 1 1 h12 a1 1 0 0 0 1-1 v-1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
   trash: '<svg width="18" height="18" viewBox="0 0 22 22" fill="none"><path d="M4.5 6 H17.5 M8.5 6 V4.5 a1 1 0 0 1 1-1 h3 a1 1 0 0 1 1 1 V6 M6.5 6 L7.3 17 a1 1 0 0 0 1 0.9 h5.4 a1 1 0 0 0 1-0.9 L15.5 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  help: '<svg width="18" height="18" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8.2" stroke="currentColor" stroke-width="1.7"/><path d="M8.6 8.7a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.2-2.4 3.7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="11" cy="15.4" r="1.05" fill="currentColor"/></svg>',
   code: '<svg width="18" height="18" viewBox="0 0 22 22" fill="none"><path d="M8 6 L3.5 11 L8 16 M14 6 L18.5 11 L14 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   share: '<svg width="18" height="18" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="8" cy="8" r="3.2"/><path d="M2.5 18.5c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="15.5" cy="7" r="2.5"/><path d="M15 12.2c2.4 0 4.1 1.5 4.6 4.3"/></svg>',
   panel: '<svg width="18" height="18" viewBox="0 0 22 22" fill="none"><rect x="3" y="4" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.7"/><line x1="14" y1="4.5" x2="14" y2="17.5" stroke="currentColor" stroke-width="1.7"/></svg>',
@@ -737,6 +742,8 @@ const TEMPLATE = `
       <input ref="fileInput" type="file" accept="application/json" multiple @change="importJSON" style="display:none" />
       <button class="tbtn icon-only danger" @click="confirmClearAll" title="Reset all data" v-html="icons.trash"></button>
     </div>
+    <!-- pinned to the top-right corner, also when the toolbar wraps onto two rows -->
+    <a class="tbtn icon-only help-btn" href="howto.html" target="_blank" rel="noopener" title="Help — how to use Discussion Studio" aria-label="Help" v-html="icons.help"></a>
   </header>
 
   <div class="tabbar" role="tablist">
