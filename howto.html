@@ -892,7 +892,9 @@ function openDialog(html, wire) {
   layer.addEventListener('pointerdown', (e) => { if (e.target === layer) closeDialog(); });
   $('sbLayer').appendChild(layer);
   wire(layer);
-  const f = layer.querySelector('input[type=text], button.primary'); if (f) f.focus();
+  // focus after the pointer events that opened the dialog have finished, or the canvas takes focus back
+  const f = layer.querySelector('input[type=text], button.primary');
+  if (f) { f.focus(); setTimeout(() => { if (f.isConnected) { f.focus(); if (f.select) f.select(); } }, 0); }
 }
 function closeDialog() { const m = $('sbModal'); if (m) m.remove(); }
 function openTextDialog(item) {
@@ -1045,7 +1047,7 @@ function finishConnect(target) {
   try {
     const id = connect(a, target.shape, { fromPort: pending.port, toPort: target.port, kind: connKind });
     emit('connect', { id, kind: connKind });
-    setSelection([], [id]);
+    clearSel();   // a selected connector's end handles would cover the dots needed for the next connection
   } catch (err) { /* duplicate: ignore */ }
   pending = null;
   render();
@@ -1087,7 +1089,7 @@ board.addEventListener('pointerdown', (e) => {
   }
   if (t.shape) {
     const s = byId(t.shape);
-    if (isDouble('s:' + s.id)) { openTextDialog(s); return; }
+    if (isDouble('s:' + s.id)) { e.preventDefault(); openTextDialog(s); return; }
     if (e.shiftKey || e.ctrlKey || e.metaKey) {
       if (sel.shapes.has(s.id)) sel.shapes.delete(s.id); else sel.shapes.add(s.id);
       if (selCount() > 1) emit('multi', { n: selCount() });
@@ -1098,7 +1100,7 @@ board.addEventListener('pointerdown', (e) => {
     board.setPointerCapture(e.pointerId); render(); return;
   }
   if (t.conn) {
-    if (isDouble('c:' + t.conn)) { openTextDialog(connById(t.conn)); return; }
+    if (isDouble('c:' + t.conn)) { e.preventDefault(); openTextDialog(connById(t.conn)); return; }
     if (e.shiftKey || e.ctrlKey || e.metaKey) {
       if (sel.conns.has(t.conn)) sel.conns.delete(t.conn); else sel.conns.add(t.conn);
       if (selCount() > 1) emit('multi', { n: selCount() });
@@ -1136,6 +1138,11 @@ board.addEventListener('pointerup', (e) => {
     if (d.end === 'from') { c.from = d.target.shape; c.fromPort = d.target.port; }
     else { c.to = d.target.shape; c.toPort = d.target.port; }
     emit('reconnect');
+  } else if (d.kind === 'end' && !d.moved) {
+    // a click (no drag) on an end handle starts a new connection from that connection point
+    const c = connById(d.conn);
+    pending = d.end === 'from' ? { shape: c.from, port: c.fromPort } : { shape: c.to, port: c.toPort };
+    clearSel(); emit('port-click');
   } else if (d.kind === 'marquee' && d.moved) {
     const r = rectOf(d.start, mouse);
     const inside = (s) => s.x >= r.x && s.y >= r.y && s.x + s.w <= r.x + r.w && s.y + s.h <= r.y + r.h;

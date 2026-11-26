@@ -208,31 +208,16 @@
     .window-dot { width: 7px; height: 7px; border-radius: 50%; background: #18a36b; }
     .window-dot:first-child { background: #f57c1f; }
     .window-dot:nth-child(2) { background: #ffc24b; }
-    .mock-tools { display: flex; gap: 5px; margin-left: 12px; }
-    .mock-tool { width: 18px; height: 18px; display: grid; place-items: center; border-radius: 4px; color: #d6e4fb; }
-    .mock-tool svg { width: 11px; height: 11px; }
-    .mock-tool.on { background: var(--warm); color: #fff; }
-    .mock-sep { width: 1px; height: 14px; margin: 0 3px; background: rgb(255 255 255 / 30%); }
-    .window-label { margin-left: auto; color: #cfe0fb; font-family: var(--mono); font-size: 9px; }
-    .mock-tabs { display: flex; gap: 3px; padding: 5px 10px 0; background: #eaf1fc; border-bottom: 1px solid var(--line); }
-    .mock-tab { display: flex; align-items: center; gap: 5px; padding: 4px 10px 5px; border: 1px solid var(--line); border-bottom: 0; border-radius: 6px 6px 0 0; background: #d9e5f8; color: var(--ink-soft); font-size: 9px; }
-    .mock-tab.on { background: var(--paper); color: var(--ink); font-weight: 600; margin-bottom: -1px; }
-    .mock-tab i { width: 5px; height: 5px; border-radius: 50%; background: var(--warm); }
-    .mock-body { display: grid; grid-template-columns: 1fr 118px; }
-    .mock-canvas {
-      position: relative;
-      min-width: 0;
-      background-color: var(--soft);
-      background-image: radial-gradient(var(--grid-dot) 1px, transparent 1.2px);
-      background-size: 14px 14px;
+    .app-window { display: block; position: relative; color: inherit; text-decoration: none; }
+    .app-window:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+    .demo img { display: block; width: 100%; max-width: 100%; height: auto; aspect-ratio: 800 / 415; }
+    .demo-cta {
+      position: absolute; right: 12px; top: 46px; padding: 6px 12px; border-radius: 6px;
+      background: var(--warm); color: #fff; font-size: 13px; font-weight: 600;
+      opacity: 0; transform: translateY(-4px); transition: opacity .18s ease, transform .18s ease;
     }
-    .mock-canvas svg { display: block; width: 100%; height: auto; }
-    .mock-side { padding: 12px 10px; border-left: 1px solid var(--line); background: var(--panel); font-size: 9px; }
-    .mock-side h4 { margin: 0 0 8px; font-family: var(--display); font-size: 11px; }
-    .mock-side ul { margin: 0 0 10px; padding: 0; list-style: none; color: var(--ink-soft); }
-    .mock-side li { display: flex; align-items: center; gap: 5px; padding: 3px 0; }
-    .mock-side li b { width: 7px; height: 7px; border-radius: 2px; background: var(--green-tint); border: 1px solid var(--green); }
-    .mock-delete { padding: 5px; border: 1px solid var(--warm); border-radius: 5px; background: var(--warm-tint); color: var(--warm); text-align: center; font-weight: 600; }
+    .app-window:hover .demo-cta, .app-window:focus-visible .demo-cta { opacity: 1; transform: none; }
+    .window-label { margin-left: auto; color: #cfe0fb; font-family: var(--mono); font-size: 9px; }
     .float-note {
       position: absolute;
       right: -24px;
@@ -412,9 +397,6 @@
       .hero-copy > p { max-width: 460px; }
       .product-scene { width: 100%; }
       .app-window { transform: none; }
-      .mock-body { grid-template-columns: 1fr; }
-      .mock-side { display: none; }
-      .mock-tools .mock-tool:nth-child(n + 6), .mock-tools .mock-sep { display: none; }
       .float-note { right: 8px; bottom: -38px; }
       .trust-row { gap: 16px 22px; padding: 19px 0; }
       .trust-item { font-size: 14px; }
@@ -494,71 +476,21 @@
         </p>
       </div>
 
-      <div class="product-scene" aria-hidden="true">
-        <span class="scene-index">01 / a discussion, mapped</span>
-        <div class="app-window">
-          <div class="window-bar">
+      <div class="product-scene">
+        <span class="scene-index" aria-hidden="true">01 / a discussion, mapped</span>
+        <a class="app-window" href="howto.html" title="Try it yourself in the interactive how-to">
+          <div class="window-bar" aria-hidden="true">
             <span class="window-dot"></span><span class="window-dot"></span><span class="window-dot"></span>
-            <span class="mock-tools">
-              <span class="mock-tool on"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="1.5" y="3" width="9" height="6" rx="1"/></svg></span>
-              <span class="mock-tool"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="6" cy="6" r="4.2"/></svg></span>
-              <span class="mock-tool"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M6 1.5 10.5 6 6 10.5 1.5 6Z"/></svg></span>
-              <span class="mock-sep"></span>
-              <span class="mock-tool"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M2 10 10 2M10 2H6.5M10 2v3.5"/></svg></span>
-              <span class="mock-tool"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M1.5 8c1.5-4 3-4 4.5-1s3 3 4.5-2"/></svg></span>
-              <span class="mock-sep"></span>
-              <span class="mock-tool"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="1.5" y="2" width="9" height="8" rx="1"/><path d="M2 9l3-2.5 2 1.5 1.5-1.5L10 8"/></svg></span>
-            </span>
             <span class="window-label">discussion-studio.html</span>
           </div>
-          <div class="mock-tabs">
-            <span class="mock-tab on">roadmap-review <i></i></span>
-            <span class="mock-tab">retro-notes</span>
-          </div>
-          <div class="mock-body">
-            <div class="mock-canvas">
-              <svg viewBox="0 0 420 270" font-family="IBM Plex Sans, sans-serif">
-                <defs>
-                  <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#1450ab"/></marker>
-                  <marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#f57c1f"/></marker>
-                </defs>
-                <!-- connections -->
-                <path d="M118 70 H150 V70 H178" fill="none" stroke="#1450ab" stroke-width="1.6" marker-end="url(#ah)"/>
-                <path d="M268 70 H290 V140 H302" fill="none" stroke="#1450ab" stroke-width="1.6" marker-end="url(#ah)"/>
-                <path d="M118 70 H140 V178 H178" fill="none" stroke="#1450ab" stroke-width="1.6" marker-end="url(#ah)"/>
-                <path d="M268 178 H290 V140 H302" fill="none" stroke="#1450ab" stroke-width="1.6" marker-end="url(#ah)"/>
-                <rect x="141" y="114" width="40" height="13" rx="3" fill="#f5f8fd"/>
-                <text x="161" y="124" font-size="8.5" fill="#565f68" text-anchor="middle">if not</text>
-                <!-- shapes -->
-                <rect x="28" y="45" width="90" height="50" rx="6" fill="#fff" stroke="#1c2127" stroke-width="1.5"/>
-                <text x="73" y="74" font-size="10.5" fill="#1c2127" text-anchor="middle" font-weight="500">Customer ask</text>
-                <rect x="178" y="45" width="90" height="50" rx="6" fill="#e0f6eb" stroke="#18a36b" stroke-width="2"/>
-                <text x="223" y="74" font-size="10.5" fill="#1c2127" text-anchor="middle" font-weight="500">Quick fix</text>
-                <ellipse cx="223" cy="178" rx="45" ry="26" fill="#e0f6eb" stroke="#18a36b" stroke-width="2"/>
-                <text x="223" y="181" font-size="10.5" fill="#1c2127" text-anchor="middle" font-weight="500">Redesign</text>
-                <path d="M347 108 L392 140 L347 172 L302 140 Z" fill="#fff" stroke="#1c2127" stroke-width="1.5"/>
-                <text x="347" y="143" font-size="10" fill="#1c2127" text-anchor="middle" font-weight="500">Ship Q1?</text>
-                <!-- selection box -->
-                <rect class="marching" x="166" y="34" width="114" height="182" rx="2" fill="#1d6ce0" fill-opacity=".06" stroke="#1d6ce0" stroke-dasharray="4 3"/>
-                <!-- freehand + arrow line -->
-                <path d="M30 228 c12 -14 22 10 34 -2 s18 -12 26 2" fill="none" stroke="#f57c1f" stroke-width="2.4" stroke-linecap="round"/>
-                <path d="M98 232 L150 226" fill="none" stroke="#f57c1f" stroke-width="2" marker-end="url(#ah2)"/>
-                <!-- note -->
-                <path d="M392 140 L396 86" stroke="#8a949c" stroke-dasharray="2 3"/>
-                <rect x="318" y="28" width="92" height="56" rx="5" fill="#fff0e2" stroke="#f9b97d"/>
-                <text x="326" y="43" font-size="7.5" fill="#c75a06" font-weight="600">NOTE — SHIP Q1?</text>
-                <text x="326" y="57" font-size="8.5" fill="#1c2127">Depends on the</text>
-                <text x="326" y="69" font-size="8.5" fill="#1c2127">design review.</text>
-              </svg>
-            </div>
-            <div class="mock-side">
-              <h4>2 selected</h4>
-              <ul><li><b></b>Quick fix</li><li><b></b>Redesign</li></ul>
-              <div class="mock-delete">Delete 2 selected</div>
-            </div>
-          </div>
-        </div>
-        <div class="float-note">
+          <picture class="demo">
+            <source srcset="media/discussion-studio-demo-still.png" media="(prefers-reduced-motion: reduce)">
+            <img src="media/discussion-studio-demo.gif" width="800" height="415"
+                 alt="Demo of Discussion Studio: shapes are added and renamed, connected with arrows, two ideas are grouped, auto-arrange tidies the map, and the diagram is exported.">
+          </picture>
+          <span class="demo-cta">Try it in the interactive how-to <span aria-hidden="true">→</span></span>
+        </a>
+        <div class="float-note" aria-hidden="true">
           <span class="float-note-mark" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M2.5 11.5 6 8.5l2.5 2 2-2 3 3"/></svg></span>
           <span><strong>Export as a picture</strong><small>Sharp PNG of the whole diagram</small></span>
         </div>
